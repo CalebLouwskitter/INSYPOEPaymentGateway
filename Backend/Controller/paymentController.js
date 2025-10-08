@@ -33,7 +33,10 @@ const getPaymentById = async (req, res) => {
         const { id } = req.params;
         const userId = req.user.userId;
 
-        const payment = await Payment.findOne({ _id: id, userId: userId });
+        // Validate and sanitize the ID using mongoose methods
+        const payment = await Payment.findOne()
+            .where('_id').equals(id)
+            .where('userId').equals(userId);
 
         if (!payment) {
             return res.status(404).json({ 
@@ -81,17 +84,18 @@ const createPayment = async (req, res) => {
         // generate unique transaction ID
         const transactionId = generateTransactionId();
 
-        // create the payment
-        const newPayment = await Payment.create({
+        // create the payment with sanitized data
+        const newPayment = new Payment({
             userId: userId,
-            amount: amount,
-            currency: currency || 'USD',
-            paymentMethod: paymentMethod,
+            amount: Number(amount),
+            currency: currency ? String(currency).toUpperCase() : 'USD',
+            paymentMethod: String(paymentMethod),
             transactionId: transactionId,
-            description: description || '',
+            description: description ? String(description) : '',
             metadata: metadata || {},
             status: 'pending'
         });
+        await newPayment.save();
 
         res.status(201).json({
             success: true,
@@ -124,12 +128,10 @@ const updatePaymentStatus = async (req, res) => {
             });
         }
 
-        // find and update the payment
-        const payment = await Payment.findOneAndUpdate(
-            { _id: id, userId: userId },
-            { status: status, updatedAt: Date.now() },
-            { new: true, runValidators: true }
-        );
+        // find and update the payment using secure query methods
+        const payment = await Payment.findOne()
+            .where('_id').equals(id)
+            .where('userId').equals(userId);
 
         if (!payment) {
             return res.status(404).json({ 
@@ -137,6 +139,11 @@ const updatePaymentStatus = async (req, res) => {
                 message: "Payment not found" 
             });
         }
+
+        // Update the payment securely
+        payment.status = status;
+        payment.updatedAt = Date.now();
+        await payment.save();
 
         res.status(200).json({
             success: true,
@@ -159,7 +166,10 @@ const deletePayment = async (req, res) => {
         const { id } = req.params;
         const userId = req.user.userId;
 
-        const payment = await Payment.findOneAndDelete({ _id: id, userId: userId });
+        // Use secure query methods to find and delete
+        const payment = await Payment.findOne()
+            .where('_id').equals(id)
+            .where('userId').equals(userId);
 
         if (!payment) {
             return res.status(404).json({ 
@@ -167,6 +177,8 @@ const deletePayment = async (req, res) => {
                 message: "Payment not found" 
             });
         }
+
+        await payment.deleteOne();
 
         res.status(200).json({
             success: true,

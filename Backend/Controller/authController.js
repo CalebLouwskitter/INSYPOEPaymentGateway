@@ -31,8 +31,11 @@ const register = async (req, res) => {
             return res.status(400).json({ message: "Password must be at least 6 characters long" });
         }
 
+        // Sanitize username to prevent NoSQL injection
+        const sanitizedUsername = String(username).trim();
+        
         // before signing the user up, we need to check if their username is already in use
-        const exists = await User.findOne({ username: username });
+        const exists = await User.findOne().where('username').equals(sanitizedUsername);
         
         // if it is, say no
         if (exists) {
@@ -42,12 +45,13 @@ const register = async (req, res) => {
         // if not, lets hash their password (by providing their password, and the number of random iterations to salt)
         const hashedPassword = await bcrypt.hash(password, 10);
         
-        // create the new user
-        const newUser = await User.create({
-            username: username, 
+        // create the new user with sanitized data
+        const newUser = new User({
+            username: sanitizedUsername, 
             password: hashedPassword,
-            email: email || undefined
+            email: email ? String(email).trim() : undefined
         });
+        await newUser.save();
 
         // generate token with user ID
         const token = generateJwt(username, newUser._id);
@@ -75,8 +79,11 @@ const login = async (req, res) => {
             return res.status(400).json({ message: "Username and password are required" });
         }
 
+        // Sanitize username to prevent NoSQL injection
+        const sanitizedUsername = String(username).trim();
+        
         // find the user in our collection
-        const user = await User.findOne({ username: username });
+        const user = await User.findOne().where('username').equals(sanitizedUsername);
         
         // if the user is not present in our collection, let them know to try again
         if (!user) {
