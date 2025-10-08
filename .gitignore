@@ -71,3 +71,11 @@ coverage/
 *.tgz
 *.zip
 *.rar
+
+# =========================
+# SSL Certificates
+# =========================
+certs/*.pem
+certs/*.key
+certs/*.crt
+!certs/README.md
