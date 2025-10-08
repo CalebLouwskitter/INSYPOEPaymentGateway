@@ -241,6 +241,7 @@ export default function Login() {
                 cursor: 'pointer',
                 fontSize: '16px',
                 fontWeight: 'bold',
+<<<<<<< Updated upstream
                 transition: 'background-color 0.3s ease, color 0.3s ease, transform 0.1s'
               }}
               onMouseOver={(e) => { e.target.style.backgroundColor = PRIMARY_COLOR; e.target.style.color = 'white'; }}
@@ -249,6 +250,14 @@ export default function Login() {
               onMouseUp={(e) => e.target.style.transform = 'scale(1)'}
             >
               Register Now
+=======
+                transition: 'background-color 0.3s ease, color 0.3s ease'
+              }}
+              onMouseOver={(e) => { e.target.style.backgroundColor = PRIMARY_COLOR; e.target.style.color = 'white'; }}
+              onMouseOut={(e) => { e.target.style.backgroundColor = 'transparent'; e.target.style.color = PRIMARY_COLOR; }}
+            >
+              Create Account
+>>>>>>> Stashed changes
             </button>
           </div>
         </div>

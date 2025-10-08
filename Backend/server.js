@@ -11,18 +11,24 @@ require('dotenv').config();
 
 const app = express();
 
-// Middleware
-app.use(helmet());
-app.use(cors());
+// Import security middleware
+const { securityMiddlewares } = require('./Middleware/securityMiddleware.js');
+
+// Import routes
+const authRoutes = require('./Routes/Authrouting.js');
+const paymentRoutes = require('./Routes/paymentRouting.js');
+const testRoutes = require('./Routes/testRoutes.js');
+
+// Apply security middlewares
+securityMiddlewares(app);
+
+// Additional Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
 
 // MongoDB Connection
-mongoose.connect(process.env.MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
+mongoose.connect(process.env.MONGODB_URI)
 .then(() => console.log('MongoDB connected successfully'))
 .catch((err) => console.error('MongoDB connection error:', err));
 
@@ -35,6 +41,11 @@ app.get('/health', (req, res) => {
 app.get('/api/v1', (req, res) => {
   res.json({ message: 'Backend API is running', version: '1.0.0' });
 });
+
+// Mount API routes with versioning
+app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/payments', paymentRoutes);
+app.use('/api/v1/test', testRoutes);
 
 // 404 handler
 app.use((req, res) => {
@@ -66,11 +77,19 @@ if (USE_HTTPS && fs.existsSync(certPath) && fs.existsSync(keyPath)) {
   server = https.createServer(httpsOptions, app);
   server.listen(PORT, () => {
     console.log(`🔒 Backend HTTPS server running on https://localhost:${PORT}`);
+<<<<<<< Updated upstream
+=======
+    console.log(`📡 API Base URL: https://localhost:${PORT}/api/v1`);
+>>>>>>> Stashed changes
   });
 } else {
   server = http.createServer(app);
   server.listen(PORT, () => {
     console.log(`Backend HTTP server running on http://localhost:${PORT}`);
+<<<<<<< Updated upstream
+=======
+    console.log(`📡 API Base URL: http://localhost:${PORT}/api/v1`);
+>>>>>>> Stashed changes
   });
 }
 

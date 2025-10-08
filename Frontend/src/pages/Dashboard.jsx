@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 // importing required react components
 import { useEffect, useState } from "react";
 // as well as our API methods we created
@@ -57,10 +58,89 @@ export default function Dashboard() {
   };
 
   // this method will handle what to do when user input happens in our form element
+=======
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  getAllPayments,
+  getPaymentById,
+  createPayment,
+  updatePaymentStatus,
+  deletePayment,
+  getPaymentStats,
+  logout
+} from "../services/paymentService.js";
+
+export default function Dashboard() {
+  const navigate = useNavigate();
+  const [payments, setPayments] = useState([]);
+  const [selectedPaymentId, setSelectedPaymentId] = useState("");
+  const [stats, setStats] = useState(null);
+  
+  const [formData, setFormData] = useState({
+    amount: "",
+    currency: "USD",
+    paymentMethod: "credit_card",
+    description: "",
+  });
+  
+  const [updateData, setUpdateData] = useState({
+    status: "pending",
+  });
+
+  const fetchPayments = async () => {
+    try {
+      const res = await getAllPayments();
+      setPayments(res.data.data || []);
+    } catch (error) {
+      console.error("Error fetching payments:", error);
+    }
+  };
+
+  const fetchStats = async () => {
+    try {
+      const res = await getPaymentStats();
+      setStats(res.data.data);
+    } catch (error) {
+      console.error("Error fetching stats:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchPayments();
+    fetchStats();
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      navigate('/login');
+    } catch (error) {
+      console.error("Error logging out:", error);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (window.confirm("Are you sure you want to delete this payment?")) {
+      try {
+        await deletePayment(id);
+        alert("Payment deleted successfully!");
+        fetchPayments();
+        fetchStats();
+      } catch (error) {
+        alert("Error deleting payment: " + error.message);
+      }
+    }
+  };
+
+>>>>>>> Stashed changes
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+<<<<<<< Updated upstream
   // same method, different variable
     const handleUpdateInputChange = (e) => {
     setUpdateData({ ...updateData, [e.target.name]: e.target.value });
@@ -98,11 +178,50 @@ export default function Dashboard() {
       setUpdateData(res.data);
     } else {
       setUpdateData({ title: "", author: "", isbn: "", edition: 0 });
+=======
+  const handleUpdateInputChange = (e) => {
+    setUpdateData({ ...updateData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await createPayment({
+        ...formData,
+        amount: parseFloat(formData.amount)
+      });
+      alert("Payment created successfully!");
+      setFormData({ amount: "", currency: "USD", paymentMethod: "credit_card", description: "" });
+      fetchPayments();
+      fetchStats();
+    } catch (error) {
+      alert("Error creating payment: " + error.message);
+    }
+  };
+
+  const handleReset = () => {
+    setFormData({ amount: "", currency: "USD", paymentMethod: "credit_card", description: "" });
+  };
+
+  const handleSelectItem = async (e) => {
+    const _id = e.target.value;
+    setSelectedPaymentId(_id);
+    if (_id) {
+      try {
+        const res = await getPaymentById(_id);
+        setUpdateData({ status: res.data.data.status });
+      } catch (error) {
+        console.error("Error fetching payment:", error);
+      }
+    } else {
+      setUpdateData({ status: "pending" });
+>>>>>>> Stashed changes
     }
   };
 
   const handleUpdate = async (e) => {
     e.preventDefault();
+<<<<<<< Updated upstream
     await updateBook(selectedBookId, updateData);
     alert('Book updated!')
     fetchBooks();
@@ -200,10 +319,162 @@ export default function Dashboard() {
           <br />
           <button type="submit">Submit</button>
           <button type="reset" onClick={handleReset}>
+=======
+    try {
+      await updatePaymentStatus(selectedPaymentId, updateData.status);
+      alert("Payment status updated successfully!");
+      fetchPayments();
+      fetchStats();
+    } catch (error) {
+      alert("Error updating payment: " + error.message);
+    }
+  };
+
+  return (
+    <div style={{ padding: "20px", fontFamily: "Arial, sans-serif" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <h1>Payment Gateway Dashboard</h1>
+        <button onClick={handleLogout} style={{ padding: "10px 20px", backgroundColor: "#dc3545", color: "white", border: "none", borderRadius: "5px", cursor: "pointer" }}>
+          Logout
+        </button>
+      </div>
+
+      {stats && (
+        <div style={{ marginBottom: "30px", padding: "20px", backgroundColor: "#f8f9fa", borderRadius: "5px" }}>
+          <h3>Payment Statistics</h3>
+          <p><strong>Total Payments:</strong> {stats.totalPayments}</p>
+          {stats.statusBreakdown && stats.statusBreakdown.length > 0 && (
+            <div>
+              <strong>Status Breakdown:</strong>
+              <ul>
+                {stats.statusBreakdown.map((item, index) => (
+                  <li key={index}>
+                    {item._id}: {item.count} payments (${item.totalAmount.toFixed(2)})
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
+
+      <div style={{ marginBottom: "30px" }}>
+        <h3>All Payments</h3>
+        <table border="1" style={{ width: "100%", borderCollapse: "collapse" }}>
+          <thead>
+            <tr style={{ backgroundColor: "#007bff", color: "white" }}>
+              <th style={{ padding: "10px" }}>Transaction ID</th>
+              <th style={{ padding: "10px" }}>Amount</th>
+              <th style={{ padding: "10px" }}>Currency</th>
+              <th style={{ padding: "10px" }}>Method</th>
+              <th style={{ padding: "10px" }}>Status</th>
+              <th style={{ padding: "10px" }}>Description</th>
+              <th style={{ padding: "10px" }}>Date</th>
+              <th style={{ padding: "10px" }}>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {payments.length === 0 ? (
+              <tr>
+                <td colSpan="8" style={{ textAlign: "center", padding: "20px" }}>No payments available.</td>
+              </tr>
+            ) : (
+              payments.map((payment) => (
+                <tr key={payment._id}>
+                  <td style={{ padding: "10px" }}>{payment.transactionId}</td>
+                  <td style={{ padding: "10px" }}>${payment.amount.toFixed(2)}</td>
+                  <td style={{ padding: "10px" }}>{payment.currency}</td>
+                  <td style={{ padding: "10px" }}>{payment.paymentMethod}</td>
+                  <td style={{ padding: "10px" }}>
+                    <span style={{
+                      padding: "5px 10px",
+                      borderRadius: "3px",
+                      backgroundColor: payment.status === 'completed' ? '#28a745' : payment.status === 'failed' ? '#dc3545' : payment.status === 'refunded' ? '#ffc107' : '#6c757d',
+                      color: "white"
+                    }}>
+                      {payment.status}
+                    </span>
+                  </td>
+                  <td style={{ padding: "10px" }}>{payment.description || '-'}</td>
+                  <td style={{ padding: "10px" }}>{new Date(payment.createdAt).toLocaleString()}</td>
+                  <td style={{ padding: "10px" }}>
+                    <button
+                      onClick={() => handleDelete(payment._id)}
+                      style={{ padding: "5px 10px", backgroundColor: "#dc3545", color: "white", border: "none", borderRadius: "3px", cursor: "pointer" }}
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      <div style={{ marginBottom: "30px", padding: "20px", backgroundColor: "#e9ecef", borderRadius: "5px" }}>
+        <h3>Create New Payment</h3>
+        <form onSubmit={handleSubmit}>
+          <div style={{ marginBottom: "10px" }}>
+            <label>Amount: </label>
+            <input
+              type="number"
+              name="amount"
+              value={formData.amount}
+              onChange={handleInputChange}
+              required
+              step="0.01"
+              min="0.01"
+              style={{ marginLeft: "10px", padding: "5px" }}
+            />
+          </div>
+          <div style={{ marginBottom: "10px" }}>
+            <label>Currency: </label>
+            <select
+              name="currency"
+              value={formData.currency}
+              onChange={handleInputChange}
+              style={{ marginLeft: "10px", padding: "5px" }}
+            >
+              <option value="USD">USD</option>
+              <option value="EUR">EUR</option>
+              <option value="GBP">GBP</option>
+            </select>
+          </div>
+          <div style={{ marginBottom: "10px" }}>
+            <label>Payment Method: </label>
+            <select
+              name="paymentMethod"
+              value={formData.paymentMethod}
+              onChange={handleInputChange}
+              style={{ marginLeft: "10px", padding: "5px" }}
+            >
+              <option value="credit_card">Credit Card</option>
+              <option value="debit_card">Debit Card</option>
+              <option value="paypal">PayPal</option>
+              <option value="bank_transfer">Bank Transfer</option>
+            </select>
+          </div>
+          <div style={{ marginBottom: "10px" }}>
+            <label>Description: </label>
+            <input
+              type="text"
+              name="description"
+              value={formData.description}
+              onChange={handleInputChange}
+              style={{ marginLeft: "10px", padding: "5px", width: "300px" }}
+            />
+          </div>
+          <button type="submit" style={{ padding: "10px 20px", backgroundColor: "#28a745", color: "white", border: "none", borderRadius: "5px", cursor: "pointer", marginRight: "10px" }}>
+            Create Payment
+          </button>
+          <button type="button" onClick={handleReset} style={{ padding: "10px 20px", backgroundColor: "#6c757d", color: "white", border: "none", borderRadius: "5px", cursor: "pointer" }}>
+>>>>>>> Stashed changes
             Reset
           </button>
         </form>
       </div>
+<<<<<<< Updated upstream
       <div>
         <h3>📒Work with a Single Book📒</h3>
         <label>Select Which Book You'd Like to Work With:</label>
@@ -264,6 +535,43 @@ export default function Dashboard() {
             Reset
           </button>
         </form>
+=======
+
+      <div style={{ padding: "20px", backgroundColor: "#fff3cd", borderRadius: "5px" }}>
+        <h3>Update Payment Status</h3>
+        <div style={{ marginBottom: "10px" }}>
+          <label>Select Payment: </label>
+          <select onChange={handleSelectItem} value={selectedPaymentId} style={{ marginLeft: "10px", padding: "5px" }}>
+            <option value="">-- Select a payment --</option>
+            {payments.map((payment) => (
+              <option key={payment._id} value={payment._id}>
+                {payment.transactionId} - ${payment.amount} ({payment.status})
+              </option>
+            ))}
+          </select>
+        </div>
+        {selectedPaymentId && (
+          <form onSubmit={handleUpdate}>
+            <div style={{ marginBottom: "10px" }}>
+              <label>New Status: </label>
+              <select
+                name="status"
+                value={updateData.status}
+                onChange={handleUpdateInputChange}
+                style={{ marginLeft: "10px", padding: "5px" }}
+              >
+                <option value="pending">Pending</option>
+                <option value="completed">Completed</option>
+                <option value="failed">Failed</option>
+                <option value="refunded">Refunded</option>
+              </select>
+            </div>
+            <button type="submit" style={{ padding: "10px 20px", backgroundColor: "#007bff", color: "white", border: "none", borderRadius: "5px", cursor: "pointer" }}>
+              Update Status
+            </button>
+          </form>
+        )}
+>>>>>>> Stashed changes
       </div>
     </div>
   );

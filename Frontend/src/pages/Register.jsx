@@ -1,6 +1,13 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+<<<<<<< Updated upstream
+=======
+// References:
+// Meta Platforms, Inc. (2025) React - A JavaScript library for building user interfaces. Available at: https://reactjs.org/ (Accessed: 07 January 2025).
+// Remix Software, Inc. (2025) React Router - Declarative routing for React. Available at: https://reactrouter.com/ (Accessed: 07 January 2025).
+
+>>>>>>> Stashed changes
 export default function Register() {
   const navigate = useNavigate();
 
@@ -28,6 +35,10 @@ export default function Register() {
 
     console.log("✅ Registration Success:", formData);
 
+<<<<<<< Updated upstream
+=======
+    // Navigate to login after successful registration
+>>>>>>> Stashed changes
     navigate("/login");
   };
 
