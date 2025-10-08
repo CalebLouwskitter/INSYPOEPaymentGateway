@@ -1,9 +1,7 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function Register() {
-  const useNavigate = () => (path) => {
-    console.log(`Navigating to ${path}`);
-  };
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -28,7 +26,8 @@ export default function Register() {
       return;
     }
 
-    console.log("Simulated Registration Success with data:", formData);
+    console.log("✅ Registration Success:", formData);
+
     navigate("/login");
   };
 
@@ -173,14 +172,11 @@ export default function Register() {
 
         <div style={{
           backgroundColor: 'white',
-          backdropFilter: 'none',
-          WebkitBackdropFilter: 'none',
           padding: '40px',
           borderRadius: '20px', 
           width: '100%',
           maxWidth: '520px',
           boxShadow: '0 10px 30px rgba(0, 0, 0, 0.4)', 
-          border: 'none',
           color: DARK_TEXT,
           zIndex: 2, 
           position: 'relative' 
@@ -192,79 +188,43 @@ export default function Register() {
             borderBottom: '1px solid #E5E7EB',
             textAlign: 'center'
           }}>
-            <h1 style={{fontSize: '2.5em', fontWeight: 900, textShadow: 'none'}}>Create Account</h1>
+            <h1 style={{fontSize: '2.5em', fontWeight: 900}}>Create Account</h1>
             <p style={{ color: '#6B7280' }}>Join our secure platform</p>
           </div>
 
-          <div>
-            <div style={{ marginBottom: '20px' }}>
-              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', fontSize: '14px', color: DARK_TEXT }}>
-                Full Name:
-              </label>
-              <input
-                type="text"
-                name="fullName"
-                placeholder="John Doe"
-                value={formData.fullName}
-                onChange={handleInputChange}
-                required
-                style={inputStyle}
-                onFocus={handleInputFocus}
-                onBlur={handleInputBlur}
-              />
-            </div>
+          {/* Form Fields */}
+          <form onSubmit={handleRegister}>
+            {['fullName', 'email', 'password', 'confirmPassword'].map((field) => (
+              <div key={field} style={{ marginBottom: '20px' }}>
+                <label style={{
+                  display: 'block',
+                  marginBottom: '8px',
+                  fontWeight: 'bold',
+                  fontSize: '14px',
+                  color: DARK_TEXT
+                }}>
+                  {field === 'fullName' ? 'Full Name:' :
+                   field === 'email' ? 'Email Address:' :
+                   field === 'password' ? 'Password:' : 'Confirm Password:'}
+                </label>
+                <input
+                  type={field.includes('password') ? 'password' : field === 'email' ? 'email' : 'text'}
+                  name={field}
+                  placeholder={
+                    field === 'fullName' ? 'John Doe' :
+                    field === 'email' ? 'you@example.com' :
+                    field === 'password' ? 'Choose a strong password' : 'Confirm your password'
+                  }
+                  value={formData[field]}
+                  onChange={handleInputChange}
+                  required
+                  style={inputStyle}
+                  onFocus={handleInputFocus}
+                  onBlur={handleInputBlur}
+                />
+              </div>
+            ))}
 
-            <div style={{ marginBottom: '20px' }}>
-              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', fontSize: '14px', color: DARK_TEXT }}>
-                Email Address:
-              </label>
-              <input
-                type="email"
-                name="email"
-                placeholder="you@example.com"
-                value={formData.email}
-                onChange={handleInputChange}
-                required
-                style={inputStyle}
-                onFocus={handleInputFocus}
-                onBlur={handleInputBlur}
-              />
-            </div>
-
-            <div style={{ marginBottom: '20px' }}>
-              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', fontSize: '14px', color: DARK_TEXT }}>
-                Password:
-              </label>
-              <input
-                type="password"
-                name="password"
-                placeholder="Choose a strong password"
-                value={formData.password}
-                onChange={handleInputChange}
-                required
-                style={inputStyle}
-                onFocus={handleInputFocus}
-                onBlur={handleInputBlur}
-              />
-            </div>
-
-            <div style={{ marginBottom: '20px' }}>
-              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', fontSize: '14px', color: DARK_TEXT }}>
-                Confirm Password:
-              </label>
-              <input
-                type="password"
-                name="confirmPassword"
-                placeholder="Confirm your password"
-                value={formData.confirmPassword}
-                onChange={handleInputChange}
-                required
-                style={inputStyle}
-                onFocus={handleInputFocus}
-                onBlur={handleInputBlur}
-              />
-            </div>
-            
             {error && (
               <div style={{ 
                 color: '#EF4444', 
@@ -282,7 +242,7 @@ export default function Register() {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
               <button
-                onClick={handleRegister}
+                type="submit"
                 style={{
                   padding: '14px',
                   backgroundColor: BUTTON_COLOR,
@@ -297,12 +257,11 @@ export default function Register() {
                 }}
                 onMouseOver={(e) => e.target.style.backgroundColor = '#4338CA'}
                 onMouseOut={(e) => e.target.style.backgroundColor = BUTTON_COLOR}
-                onMouseDown={(e) => e.target.style.transform = 'scale(0.99)'}
-                onMouseUp={(e) => e.target.style.transform = 'scale(1)'}
               >
                 Register
               </button>
               <button
+                type="button"
                 onClick={handleReset}
                 style={{
                   padding: '14px',
@@ -312,17 +271,15 @@ export default function Register() {
                   borderRadius: '10px',
                   cursor: 'pointer',
                   fontSize: '18px',
-                  transition: 'background-color 0.3s ease, transform 0.1s'
+                  transition: 'background-color 0.3s ease'
                 }}
                 onMouseOver={(e) => e.target.style.backgroundColor = '#D1D5DB'}
                 onMouseOut={(e) => e.target.style.backgroundColor = '#E5E7EB'}
-                onMouseDown={(e) => e.target.style.transform = 'scale(0.99)'}
-                onMouseUp={(e) => e.target.style.transform = 'scale(1)'}
               >
                 Reset Form
               </button>
             </div>
-          </div>
+          </form>
 
           <div style={{
             marginTop: '30px',
@@ -342,12 +299,10 @@ export default function Register() {
                 cursor: 'pointer',
                 fontSize: '16px',
                 fontWeight: 'bold',
-                transition: 'background-color 0.3s ease, color 0.3s ease, transform 0.1s'
+                transition: 'background-color 0.3s ease, color 0.3s ease'
               }}
               onMouseOver={(e) => { e.target.style.backgroundColor = PRIMARY_COLOR; e.target.style.color = 'white'; }}
               onMouseOut={(e) => { e.target.style.backgroundColor = 'transparent'; e.target.style.color = PRIMARY_COLOR; }}
-              onMouseDown={(e) => e.target.style.transform = 'scale(0.99)'}
-              onMouseUp={(e) => e.target.style.transform = 'scale(1)'}
             >
               Login Here
             </button>
@@ -355,7 +310,7 @@ export default function Register() {
         </div>
 
         <style>
-            {`
+          {`
             @keyframes moveShape1 {
                 0% { transform: translate(0, 0) rotate(-30deg); }
                 100% { transform: translate(80px, -80px) rotate(-40deg); }
@@ -372,7 +327,7 @@ export default function Register() {
                 0% { transform: translate(0, 0) rotate(10deg); }
                 100% { transform: translate(50px, -60px) rotate(0deg); }
             }
-            `}
+          `}
         </style>
       </div>
     </div>
