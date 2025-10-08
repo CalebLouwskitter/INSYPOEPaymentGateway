@@ -1,13 +1,11 @@
 import { useState } from "react";
-import { useAuth } from "../context/AuthContext.jsx";
 import { useNavigate } from "react-router-dom";
 
 export default function Login() {
-  const { login } = useAuth();
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
-    idNumber: '',
+    username: '',
     accountNumber: '',
     password: ''
   });
@@ -18,36 +16,50 @@ export default function Login() {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-
-    try {
-      const userData = {
-        fullName: 'John Doe',
-        idNumber: formData.idNumber,
-        accountNumber: formData.accountNumber,
-        balance: 125450.00
-      };
-
-      login(userData);
-      navigate("/payments");
-    } catch (error) {
-      console.error('Login failed:', error);
-    }
+    console.log("Simulated Login Success with data:", formData);
+    navigate("/payments");
   };
 
   const handleReset = () => {
     setFormData({
-      idNumber: '',
+      username: '',
       accountNumber: '',
       password: ''
     });
   };
 
+  const PRIMARY_COLOR = '#8B5CF6';
+  const BUTTON_COLOR = '#4F46E5';
+  const DARK_TEXT = '#1F2937';
+
+  const inputStyle = {
+    width: '100%',
+    padding: '12px',
+    fontSize: '16px',
+    borderRadius: '10px',
+    boxSizing: 'border-box',
+    backgroundColor: '#F3F4F6',
+    border: '1px solid #D1D5DB',
+    color: DARK_TEXT,
+    transition: 'border-color 0.3s, background-color 0.3s',
+  };
+
+  const handleInputFocus = (e) => {
+    e.target.style.borderColor = PRIMARY_COLOR;
+    e.target.style.backgroundColor = 'white';
+  };
+
+  const handleInputBlur = (e) => {
+    e.target.style.borderColor = '#D1D5DB';
+    e.target.style.backgroundColor = '#F3F4F6';
+  };
+
   return (
     <div style={{
       display: 'flex',
-      minHeight: '100vh',
-      fontFamily: 'Arial, sans-serif',
-      backgroundColor: '#6A0DAD',
+      minHeight: '100vh', 
+      fontFamily: 'Inter, sans-serif',
+      backgroundColor: '#1e1933', 
       color: 'white',
     }}>
       <div style={{
@@ -55,57 +67,85 @@ export default function Login() {
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
-        padding: '20px',
+        padding: '40px',
         minWidth: '350px',
         maxWidth: '650px',
-        backgroundColor: 'rgba(0, 0, 0, 0.4)',
-        boxShadow: '0 0 20px rgba(0,0,0,0.5)'
+        background: 'linear-gradient(315deg, #1a0f3d 0%, #3f2f70 100%)',
+        position: 'relative',
+        overflow: 'hidden',
+        boxShadow: 'inset 0 0 20px rgba(0,0,0,0.3)'
       }}>
         <div style={{
+          position: 'absolute',
+          width: '550px',
+          height: '550px',
+          background: 'linear-gradient(315deg, rgba(173, 216, 230, 0.6), rgba(135, 206, 235, 0.4))',
+          borderRadius: '45% 55% 65% 35% / 55% 45% 55% 45%',
+          top: '65%',
+          left: '70%',
+          transform: 'rotate(150deg)',
+          filter: 'blur(120px) opacity(0.8)',
+          animation: 'moveShape1Left 20s infinite alternate ease-in-out' 
+        }}></div>
+
+        <div style={{
+          position: 'absolute',
+          width: '400px',
+          height: '400px',
+          background: 'linear-gradient(225deg, rgba(255, 105, 180, 0.7), rgba(147, 112, 219, 0.5))',
+          borderRadius: '65% 35% 40% 60% / 65% 35% 55% 45%',
+          bottom: '75%',
+          right: '80%',
+          transform: 'rotate(10deg)',
+          filter: 'blur(110px) opacity(0.9)', 
+          animation: 'moveShape2Left 25s infinite alternate ease-in-out' 
+        }}></div>
+
+        <div style={{
           backgroundColor: 'white',
+          backdropFilter: 'none',
+          WebkitBackdropFilter: 'none',
           padding: '40px',
-          borderRadius: '10px',
+          borderRadius: '20px', 
           width: '100%',
           maxWidth: '520px',
-          boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
-          color: '#333'
+          boxShadow: '0 10px 30px rgba(0, 0, 0, 0.4)', 
+          border: 'none',
+          color: DARK_TEXT,
+          zIndex: 2, 
+          position: 'relative' 
         }}>
           <div style={{
-            color: '#4F46E5',
+            color: PRIMARY_COLOR, 
             paddingBottom: '20px',
             marginBottom: '20px',
-            borderBottom: '1px solid #eee',
+            borderBottom: '1px solid #E5E7EB',
             textAlign: 'center'
           }}>
-            <h1>Welcome Back!</h1>
-            <p style={{ color: '#666' }}>Sign in to continue</p>
+            <h1 style={{fontSize: '2.5em', fontWeight: 900, textShadow: 'none'}}>Welcome Back!</h1>
+            <p style={{ color: '#6B7280' }}>Sign in to continue</p>
           </div>
 
           <form onSubmit={handleLogin}>
             <div style={{ marginBottom: '20px' }}>
-              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', fontSize: '14px' }}>
-                ID Number:
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', fontSize: '14px', color: DARK_TEXT }}>
+                Username:
               </label>
               <input
                 type="text"
-                name="idNumber"
-                placeholder="Enter your ID number"
-                value={formData.idNumber}
+                name="username"
+                placeholder="Enter your username"
+                value={formData.username}
                 onChange={handleInputChange}
                 required
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  fontSize: '16px',
-                  borderRadius: '6px',
-                  border: '1px solid #ccc',
-                  boxSizing: 'border-box'
-                }}
+                style={inputStyle}
+                onFocus={handleInputFocus}
+                onBlur={handleInputBlur}
               />
             </div>
 
             <div style={{ marginBottom: '20px' }}>
-              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', fontSize: '14px' }}>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', fontSize: '14px', color: DARK_TEXT }}>
                 Account Number:
               </label>
               <input
@@ -115,19 +155,14 @@ export default function Login() {
                 value={formData.accountNumber}
                 onChange={handleInputChange}
                 required
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  fontSize: '16px',
-                  borderRadius: '6px',
-                  border: '1px solid #ccc',
-                  boxSizing: 'border-box'
-                }}
+                style={inputStyle}
+                onFocus={handleInputFocus}
+                onBlur={handleInputBlur}
               />
             </div>
 
             <div style={{ marginBottom: '30px' }}>
-              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', fontSize: '14px' }}>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', fontSize: '14px', color: DARK_TEXT }}>
                 Password:
               </label>
               <input
@@ -137,14 +172,9 @@ export default function Login() {
                 value={formData.password}
                 onChange={handleInputChange}
                 required
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  fontSize: '16px',
-                  borderRadius: '6px',
-                  border: '1px solid #ccc',
-                  boxSizing: 'border-box'
-                }}
+                style={inputStyle}
+                onFocus={handleInputFocus}
+                onBlur={handleInputBlur}
               />
             </div>
 
@@ -153,17 +183,20 @@ export default function Login() {
                 type="submit"
                 style={{
                   padding: '14px',
-                  backgroundColor: '#4F46E5',
+                  backgroundColor: BUTTON_COLOR,
                   color: 'white',
                   border: 'none',
-                  borderRadius: '6px',
+                  borderRadius: '10px', 
                   cursor: 'pointer',
                   fontSize: '18px',
                   fontWeight: 'bold',
-                  transition: 'background-color 0.3s ease'
+                  boxShadow: `0 4px 10px rgba(79, 70, 229, 0.5)`,
+                  transition: 'background-color 0.3s ease, transform 0.1s'
                 }}
                 onMouseOver={(e) => e.target.style.backgroundColor = '#4338CA'}
-                onMouseOut={(e) => e.target.style.backgroundColor = '#4F46E5'}
+                onMouseOut={(e) => e.target.style.backgroundColor = BUTTON_COLOR}
+                onMouseDown={(e) => e.target.style.transform = 'scale(0.99)'}
+                onMouseUp={(e) => e.target.style.transform = 'scale(1)'}
               >
                 Login
               </button>
@@ -172,16 +205,18 @@ export default function Login() {
                 onClick={handleReset}
                 style={{
                   padding: '14px',
-                  backgroundColor: '#6B7280',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '6px',
+                  backgroundColor: '#E5E7EB',
+                  color: DARK_TEXT,
+                  border: '1px solid #D1D5DB',
+                  borderRadius: '10px',
                   cursor: 'pointer',
                   fontSize: '18px',
-                  transition: 'background-color 0.3s ease'
+                  transition: 'background-color 0.3s ease, transform 0.1s'
                 }}
-                onMouseOver={(e) => e.target.style.backgroundColor = '#5A606A'}
-                onMouseOut={(e) => e.target.style.backgroundColor = '#6B7280'}
+                onMouseOver={(e) => e.target.style.backgroundColor = '#D1D5DB'}
+                onMouseOut={(e) => e.target.style.backgroundColor = '#E5E7EB'}
+                onMouseDown={(e) => e.target.style.transform = 'scale(0.99)'}
+                onMouseUp={(e) => e.target.style.transform = 'scale(1)'}
               >
                 Reset
               </button>
@@ -192,24 +227,26 @@ export default function Login() {
             marginTop: '30px',
             textAlign: 'center',
             paddingTop: '25px',
-            borderTop: '1px solid #eee'
+            borderTop: '1px solid #E5E7EB'
           }}>
-            <p style={{ color: '#666', marginBottom: '15px' }}>Don't have an account?</p>
+            <p style={{ color: '#6B7280', marginBottom: '15px' }}>Don't have an account?</p>
             <button
               onClick={() => navigate('/register')}
               style={{
                 padding: '12px 25px',
-                backgroundColor: 'white',
-                color: '#4F46E5',
-                border: '2px solid #4F46E5',
-                borderRadius: '6px',
+                backgroundColor: 'transparent', 
+                color: PRIMARY_COLOR,
+                border: `2px solid ${PRIMARY_COLOR}`,
+                borderRadius: '10px',
                 cursor: 'pointer',
                 fontSize: '16px',
                 fontWeight: 'bold',
-                transition: 'background-color 0.3s ease, color 0.3s ease'
+                transition: 'background-color 0.3s ease, color 0.3s ease, transform 0.1s'
               }}
-              onMouseOver={(e) => { e.target.style.backgroundColor = '#4F46E5'; e.target.style.color = 'white'; }}
-              onMouseOut={(e) => { e.target.style.backgroundColor = 'white'; e.target.style.color = '#4F46E5'; }}
+              onMouseOver={(e) => { e.target.style.backgroundColor = PRIMARY_COLOR; e.target.style.color = 'white'; }}
+              onMouseOut={(e) => { e.target.style.backgroundColor = 'transparent'; e.target.style.color = PRIMARY_COLOR; }}
+              onMouseDown={(e) => e.target.style.transform = 'scale(0.99)'}
+              onMouseUp={(e) => e.target.style.transform = 'scale(1)'}
             >
               Register Now
             </button>
@@ -220,37 +257,76 @@ export default function Login() {
       <div style={{
         flex: 1.5,
         display: 'flex',
+        flexDirection: 'column',
         justifyContent: 'center',
         alignItems: 'center',
-        background: 'linear-gradient(135deg, #6A0DAD 0%, #4A007F 100%)',
+        background: 'linear-gradient(135deg, #1a0f3d 0%, #3f2f70 100%)', 
         position: 'relative',
-        overflow: 'hidden'
+        overflow: 'hidden',
+        boxShadow: 'inset 0 0 20px rgba(0,0,0,0.3)'
       }}>
         <div style={{
           position: 'absolute',
-          width: '300px',
-          height: '300px',
-          borderRadius: '50%',
-          backgroundColor: 'rgba(255, 255, 255, 0.1)',
-          top: '10%',
-          left: '15%',
-          transform: 'translate(-50%, -50%)',
-          filter: 'blur(50px)'
+          width: '550px',
+          height: '550px',
+          background: 'linear-gradient(135deg, rgba(173, 216, 230, 0.6), rgba(135, 206, 235, 0.4))',
+          borderRadius: '45% 55% 65% 35% / 55% 45% 55% 45%', 
+          top: '-15%',
+          right: '55%',
+          transform: 'rotate(-30deg)',
+          filter: 'blur(120px) opacity(0.8)', 
+          animation: 'moveShape1 20s infinite alternate ease-in-out' 
         }}></div>
+
         <div style={{
           position: 'absolute',
-          width: '200px',
-          height: '200px',
-          borderRadius: '50%',
-          backgroundColor: 'rgba(255, 255, 255, 0.08)',
-          bottom: '15%',
-          right: '10%',
-          transform: 'translate(50%, 50%)',
-          filter: 'blur(40px)'
+          width: '400px',
+          height: '400px',
+          background: 'linear-gradient(45deg, rgba(255, 105, 180, 0.7), rgba(147, 112, 219, 0.5))',
+          borderRadius: '65% 35% 40% 60% / 65% 35% 55% 45%',
+          bottom: '5%',
+          left: '15%',
+          transform: 'rotate(25deg)',
+          filter: 'blur(110px) opacity(0.9)', 
+          animation: 'moveShape2 25s infinite alternate ease-in-out' 
         }}></div>
-        <h2 style={{ fontSize: '3em', textShadow: '2px 2px 4px rgba(0,0,0,0.3)', zIndex: 1 }}>
-          Secure Banking at Your Fingertips
+        
+        <h2 style={{
+            fontSize: '3.2em',
+            textShadow: '0 0 20px rgba(255, 255, 255, 0.6)', 
+            zIndex: 1,
+            fontWeight: 900
+        }}>
+          Secure Banking
         </h2>
+        <p style={{
+            fontSize: '1.6em',
+            marginTop: '10px',
+            zIndex: 1
+        }}>
+            Access Your Finances Easily
+        </p>
+
+        <style>
+            {`
+            @keyframes moveShape1 {
+                0% { transform: translate(0, 0) rotate(-30deg); }
+                100% { transform: translate(80px, -80px) rotate(-40deg); }
+            }
+            @keyframes moveShape2 {
+                0% { transform: translate(0, 0) rotate(25deg); }
+                100% { transform: translate(-50px, 60px) rotate(35deg); }
+            }
+            @keyframes moveShape1Left {
+                0% { transform: translate(0, 0) rotate(150deg); }
+                100% { transform: translate(-80px, 80px) rotate(160deg); }
+            }
+            @keyframes moveShape2Left {
+                0% { transform: translate(0, 0) rotate(10deg); }
+                100% { transform: translate(50px, -60px) rotate(0deg); }
+            }
+            `}
+        </style>
       </div>
     </div>
   );
