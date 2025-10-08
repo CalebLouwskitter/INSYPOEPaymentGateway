@@ -6,198 +6,251 @@ export default function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  // state to hold login form data
   const [formData, setFormData] = useState({
-    username: '',
+    idNumber: '',
     accountNumber: '',
     password: ''
   });
 
-  // handle input changes
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // handle login submission
   const handleLogin = async (e) => {
     e.preventDefault();
-    
-    // in a real app, you would validate credentials with your API
-    // for now, we'll simulate a successful login
+
     try {
-      // TODO: Replace with actual API call
-      // const response = await loginUser(formData);
-      
-      // simulate user data - in reality this would come from your API
       const userData = {
-        fullName: formData.username,
-        idNumber: '1234567890123', // would come from API
+        fullName: 'John Doe',
+        idNumber: formData.idNumber,
         accountNumber: formData.accountNumber,
-        balance: 125450.00 // would come from API
+        balance: 125450.00
       };
 
       login(userData);
       navigate("/payments");
     } catch (error) {
-      alert('Login failed. Please check your credentials.');
+      console.error('Login failed:', error);
     }
   };
 
   const handleReset = () => {
     setFormData({
-      username: '',
+      idNumber: '',
       accountNumber: '',
       password: ''
     });
   };
 
   return (
-    <div style={{ 
-      padding: '20px', 
-      maxWidth: '500px', 
-      margin: '50px auto',
-      fontFamily: 'Arial, sans-serif'
+    <div style={{
+      display: 'flex',
+      minHeight: '100vh',
+      fontFamily: 'Arial, sans-serif',
+      backgroundColor: '#6A0DAD',
+      color: 'white',
     }}>
       <div style={{
-        backgroundColor: '#4F46E5',
-        color: 'white',
+        flex: 1.5,
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
         padding: '20px',
-        borderRadius: '8px',
-        marginBottom: '20px',
-        textAlign: 'center'
+        minWidth: '350px',
+        maxWidth: '650px',
+        backgroundColor: 'rgba(0, 0, 0, 0.4)',
+        boxShadow: '0 0 20px rgba(0,0,0,0.5)'
       }}>
-        <h1>💳 Customer Login</h1>
+        <div style={{
+          backgroundColor: 'white',
+          padding: '40px',
+          borderRadius: '10px',
+          width: '100%',
+          maxWidth: '520px',
+          boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
+          color: '#333'
+        }}>
+          <div style={{
+            color: '#4F46E5',
+            paddingBottom: '20px',
+            marginBottom: '20px',
+            borderBottom: '1px solid #eee',
+            textAlign: 'center'
+          }}>
+            <h1>Welcome Back!</h1>
+            <p style={{ color: '#666' }}>Sign in to continue</p>
+          </div>
+
+          <form onSubmit={handleLogin}>
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', fontSize: '14px' }}>
+                ID Number:
+              </label>
+              <input
+                type="text"
+                name="idNumber"
+                placeholder="Enter your ID number"
+                value={formData.idNumber}
+                onChange={handleInputChange}
+                required
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  fontSize: '16px',
+                  borderRadius: '6px',
+                  border: '1px solid #ccc',
+                  boxSizing: 'border-box'
+                }}
+              />
+            </div>
+
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', fontSize: '14px' }}>
+                Account Number:
+              </label>
+              <input
+                type="text"
+                name="accountNumber"
+                placeholder="Enter account number"
+                value={formData.accountNumber}
+                onChange={handleInputChange}
+                required
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  fontSize: '16px',
+                  borderRadius: '6px',
+                  border: '1px solid #ccc',
+                  boxSizing: 'border-box'
+                }}
+              />
+            </div>
+
+            <div style={{ marginBottom: '30px' }}>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', fontSize: '14px' }}>
+                Password:
+              </label>
+              <input
+                type="password"
+                name="password"
+                placeholder="Enter your password"
+                value={formData.password}
+                onChange={handleInputChange}
+                required
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  fontSize: '16px',
+                  borderRadius: '6px',
+                  border: '1px solid #ccc',
+                  boxSizing: 'border-box'
+                }}
+              />
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+              <button
+                type="submit"
+                style={{
+                  padding: '14px',
+                  backgroundColor: '#4F46E5',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontSize: '18px',
+                  fontWeight: 'bold',
+                  transition: 'background-color 0.3s ease'
+                }}
+                onMouseOver={(e) => e.target.style.backgroundColor = '#4338CA'}
+                onMouseOut={(e) => e.target.style.backgroundColor = '#4F46E5'}
+              >
+                Login
+              </button>
+              <button
+                type="button"
+                onClick={handleReset}
+                style={{
+                  padding: '14px',
+                  backgroundColor: '#6B7280',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontSize: '18px',
+                  transition: 'background-color 0.3s ease'
+                }}
+                onMouseOver={(e) => e.target.style.backgroundColor = '#5A606A'}
+                onMouseOut={(e) => e.target.style.backgroundColor = '#6B7280'}
+              >
+                Reset
+              </button>
+            </div>
+          </form>
+
+          <div style={{
+            marginTop: '30px',
+            textAlign: 'center',
+            paddingTop: '25px',
+            borderTop: '1px solid #eee'
+          }}>
+            <p style={{ color: '#666', marginBottom: '15px' }}>Don't have an account?</p>
+            <button
+              onClick={() => navigate('/register')}
+              style={{
+                padding: '12px 25px',
+                backgroundColor: 'white',
+                color: '#4F46E5',
+                border: '2px solid #4F46E5',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontSize: '16px',
+                fontWeight: 'bold',
+                transition: 'background-color 0.3s ease, color 0.3s ease'
+              }}
+              onMouseOver={(e) => { e.target.style.backgroundColor = '#4F46E5'; e.target.style.color = 'white'; }}
+              onMouseOut={(e) => { e.target.style.backgroundColor = 'white'; e.target.style.color = '#4F46E5'; }}
+            >
+              Register Now
+            </button>
+          </div>
+        </div>
       </div>
 
       <div style={{
-        backgroundColor: '#f9f9f9',
-        padding: '30px',
-        borderRadius: '8px',
-        border: '1px solid #ddd'
+        flex: 1.5,
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        background: 'linear-gradient(135deg, #6A0DAD 0%, #4A007F 100%)',
+        position: 'relative',
+        overflow: 'hidden'
       }}>
-        <form onSubmit={handleLogin}>
-          <div style={{ marginBottom: '15px' }}>
-            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-              Username:
-            </label>
-            <input
-              type="text"
-              name="username"
-              placeholder="Enter your username"
-              value={formData.username}
-              onChange={handleInputChange}
-              required
-              style={{
-                width: '100%',
-                padding: '10px',
-                fontSize: '16px',
-                borderRadius: '5px',
-                border: '1px solid #ccc'
-              }}
-            />
-          </div>
-
-          <div style={{ marginBottom: '15px' }}>
-            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-              Account Number:
-            </label>
-            <input
-              type="text"
-              name="accountNumber"
-              placeholder="Enter account number"
-              value={formData.accountNumber}
-              onChange={handleInputChange}
-              required
-              style={{
-                width: '100%',
-                padding: '10px',
-                fontSize: '16px',
-                borderRadius: '5px',
-                border: '1px solid #ccc'
-              }}
-            />
-          </div>
-
-          <div style={{ marginBottom: '20px' }}>
-            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-              Password:
-            </label>
-            <input
-              type="password"
-              name="password"
-              placeholder="Enter your password"
-              value={formData.password}
-              onChange={handleInputChange}
-              required
-              style={{
-                width: '100%',
-                padding: '10px',
-                fontSize: '16px',
-                borderRadius: '5px',
-                border: '1px solid #ccc'
-              }}
-            />
-          </div>
-
-          <div style={{ display: 'flex', gap: '10px' }}>
-            <button
-              type="submit"
-              style={{
-                flex: 1,
-                padding: '12px',
-                backgroundColor: '#4F46E5',
-                color: 'white',
-                border: 'none',
-                borderRadius: '5px',
-                cursor: 'pointer',
-                fontSize: '16px',
-                fontWeight: 'bold'
-              }}
-            >
-              Login
-            </button>
-            <button
-              type="button"
-              onClick={handleReset}
-              style={{
-                flex: 1,
-                padding: '12px',
-                backgroundColor: '#6B7280',
-                color: 'white',
-                border: 'none',
-                borderRadius: '5px',
-                cursor: 'pointer',
-                fontSize: '16px'
-              }}
-            >
-              Reset
-            </button>
-          </div>
-        </form>
-
-        <div style={{ 
-          marginTop: '20px', 
-          textAlign: 'center',
-          paddingTop: '20px',
-          borderTop: '1px solid #ddd'
-        }}>
-          <p>Don't have an account?</p>
-          <button
-            onClick={() => navigate('/register')}
-            style={{
-              padding: '10px 20px',
-              backgroundColor: 'white',
-              color: '#4F46E5',
-              border: '2px solid #4F46E5',
-              borderRadius: '5px',
-              cursor: 'pointer',
-              fontSize: '16px',
-              fontWeight: 'bold'
-            }}
-          >
-            Register Now
-          </button>
-        </div>
+        <div style={{
+          position: 'absolute',
+          width: '300px',
+          height: '300px',
+          borderRadius: '50%',
+          backgroundColor: 'rgba(255, 255, 255, 0.1)',
+          top: '10%',
+          left: '15%',
+          transform: 'translate(-50%, -50%)',
+          filter: 'blur(50px)'
+        }}></div>
+        <div style={{
+          position: 'absolute',
+          width: '200px',
+          height: '200px',
+          borderRadius: '50%',
+          backgroundColor: 'rgba(255, 255, 255, 0.08)',
+          bottom: '15%',
+          right: '10%',
+          transform: 'translate(50%, 50%)',
+          filter: 'blur(40px)'
+        }}></div>
+        <h2 style={{ fontSize: '3em', textShadow: '2px 2px 4px rgba(0,0,0,0.3)', zIndex: 1 }}>
+          Secure Banking at Your Fingertips
+        </h2>
       </div>
     </div>
   );
