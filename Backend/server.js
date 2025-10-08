@@ -3,6 +3,10 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
+const https = require('https');
+const http = require('http');
+const fs = require('fs');
+const path = require('path');
 require('dotenv').config();
 
 const app = express();
@@ -44,8 +48,30 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Backend server running on port ${PORT}`);
-});
+const USE_HTTPS = process.env.USE_HTTPS === 'true';
+
+// SSL Certificate paths
+const certPath = path.join(__dirname, '..', 'certs', 'localhost+2.pem');
+const keyPath = path.join(__dirname, '..', 'certs', 'localhost+2-key.pem');
+
+// Create server based on HTTPS configuration
+let server;
+
+if (USE_HTTPS && fs.existsSync(certPath) && fs.existsSync(keyPath)) {
+  const httpsOptions = {
+    cert: fs.readFileSync(certPath),
+    key: fs.readFileSync(keyPath),
+  };
+  
+  server = https.createServer(httpsOptions, app);
+  server.listen(PORT, () => {
+    console.log(`🔒 Backend HTTPS server running on https://localhost:${PORT}`);
+  });
+} else {
+  server = http.createServer(app);
+  server.listen(PORT, () => {
+    console.log(`Backend HTTP server running on http://localhost:${PORT}`);
+  });
+}
 
 module.exports = app;
