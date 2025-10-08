@@ -15,9 +15,9 @@ const connectToMongo = async () => {
         });
         console.log("Connected to the database successfully.")
     } catch (err) {
-        // if unable to connect to the database, log out an error message and kill the app.
-        console.error("Unable to connect to the mongo database.")
-        process.exit(1);
+        // Properly handle the exception or log it
+        console.error('DB Error:', err);
+        throw err;
     }
 }
 

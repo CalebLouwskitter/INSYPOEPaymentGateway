@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -54,8 +53,8 @@ export default function Dashboard() {
   const handleLogout = async () => {
     try {
       await logout();
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
+      globalThis.localStorage.removeItem('token');
+      globalThis.localStorage.removeItem('user');
       navigate('/login');
     } catch (error) {
       console.error("Error logging out:", error);
@@ -90,7 +89,7 @@ export default function Dashboard() {
     try {
       await createPayment({
         ...formData,
-        amount: parseFloat(formData.amount)
+        amount: Number.parseFloat(formData.amount)
       });
       alert("Payment created successfully!");
       setFormData({ amount: "", currency: "USD", paymentMethod: "credit_card", description: "" });
@@ -285,5 +284,6 @@ export default function Dashboard() {
       </div>
     </div>
   );
+}
 }
 }
