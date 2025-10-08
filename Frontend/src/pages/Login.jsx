@@ -195,6 +195,8 @@ export default function Login() {
                 }}
                 onMouseOver={(e) => e.target.style.backgroundColor = '#4338CA'}
                 onMouseOut={(e) => e.target.style.backgroundColor = BUTTON_COLOR}
+                onFocus={(e) => e.target.style.backgroundColor = '#4338CA'}
+                onBlur={(e) => e.target.style.backgroundColor = BUTTON_COLOR}
                 onMouseDown={(e) => e.target.style.transform = 'scale(0.99)'}
                 onMouseUp={(e) => e.target.style.transform = 'scale(1)'}
               >
@@ -215,6 +217,8 @@ export default function Login() {
                 }}
                 onMouseOver={(e) => e.target.style.backgroundColor = '#D1D5DB'}
                 onMouseOut={(e) => e.target.style.backgroundColor = '#E5E7EB'}
+                onFocus={(e) => e.target.style.backgroundColor = '#D1D5DB'}
+                onBlur={(e) => e.target.style.backgroundColor = '#E5E7EB'}
                 onMouseDown={(e) => e.target.style.transform = 'scale(0.99)'}
                 onMouseUp={(e) => e.target.style.transform = 'scale(1)'}
               >
@@ -246,6 +250,8 @@ export default function Login() {
               }}
               onMouseOver={(e) => { e.target.style.backgroundColor = PRIMARY_COLOR; e.target.style.color = 'white'; }}
               onMouseOut={(e) => { e.target.style.backgroundColor = 'transparent'; e.target.style.color = PRIMARY_COLOR; }}
+              onFocus={(e) => { e.target.style.backgroundColor = PRIMARY_COLOR; e.target.style.color = 'white'; }}
+              onBlur={(e) => { e.target.style.backgroundColor = 'transparent'; e.target.style.color = PRIMARY_COLOR; }}
               onMouseDown={(e) => e.target.style.transform = 'scale(0.99)'}
               onMouseUp={(e) => e.target.style.transform = 'scale(1)'}
             >
