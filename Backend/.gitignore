@@ -1,0 +1,81 @@
+# =========================
+# General
+# =========================
+node_modules/
+dist/
+build/
+.env
+.env.local
+.env.*.local
+*.log
+*.tmp
+*.temp
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# =========================
+# Frontend (React)
+# =========================
+Frontend/node_modules/
+Frontend/build/
+Frontend/dist/
+Frontend/.env
+Frontend/.env.local
+Frontend/.pnp
+Frontend/.pnp.js
+Frontend/coverage/
+Frontend/.eslintcache
+
+# Vite / CRA artifacts
+Frontend/.parcel-cache
+Frontend/.vite
+Frontend/.cache
+Frontend/.turbo
+
+# =========================
+# Backend (ASP.NET Core)
+# =========================
+Backend/bin/
+Backend/obj/
+Backend/Logs/
+Backend/wwwroot/
+Backend/appsettings.Development.json
+Backend/.vs/
+Backend/.vscode/
+
+# =========================
+# IDE and tooling
+# =========================
+.vscode/
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# =========================
+# Docker
+# =========================
+*.pid
+docker-compose.override.yml
+docker-data/
+Dockerfile.*
+.dockerignore
+
+# =========================
+# Miscellaneous
+# =========================
+coverage/
+*.tgz
+*.zip
+*.rar
+
+# =========================
+# SSL Certificates
+# =========================
+certs/*.pem
+certs/*.key
+certs/*.crt
+!certs/README.md
