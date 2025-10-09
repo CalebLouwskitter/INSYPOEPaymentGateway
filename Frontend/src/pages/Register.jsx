@@ -8,6 +8,7 @@ import axiosInstance from "../interfaces/axiosInstance";
 
 export default function Register() {
   const navigate = useNavigate();
+  const { register } = useAuth();
 
   const [formData, setFormData] = useState({
     fullName: '',
@@ -141,7 +142,6 @@ export default function Register() {
     setError('');
   };
 
-  // Reusable hover/focus/active effect
   const buttonEffect = {
     onMouseOver: (e) => { e.target.style.backgroundColor = PRIMARY_COLOR; e.target.style.color = 'white'; },
     onMouseOut: (e) => { e.target.style.backgroundColor = 'transparent'; e.target.style.color = PRIMARY_COLOR; },
@@ -276,7 +276,6 @@ export default function Register() {
             <p style={{ color: '#6B7280' }}>Join our secure platform</p>
           </div>
 
-          {/* Form Fields */}
           <form onSubmit={handleRegister}>
             {[
               { name: 'fullName', label: 'Full Name', placeholder: 'Enter your full name' },
@@ -285,13 +284,7 @@ export default function Register() {
               { name: 'confirmPassword', label: 'Confirm Password', placeholder: 'Confirm your password' }
             ].map(({ name, label, placeholder }) => (
               <div key={name} style={{ marginBottom: '20px' }}>
-                <label style={{
-                  display: 'block',
-                  marginBottom: '8px',
-                  fontWeight: 'bold',
-                  fontSize: '14px',
-                  color: DARK_TEXT
-                }}>
+                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', fontSize: '14px', color: DARK_TEXT }}>
                   {label}:
                 </label>
                 <input
@@ -360,7 +353,6 @@ export default function Register() {
             </div>
           </form>
 
-          {/* Login Redirect */}
           <div style={{
             marginTop: '30px',
             textAlign: 'center',
@@ -378,8 +370,7 @@ export default function Register() {
                 borderRadius: '10px',
                 cursor: 'pointer',
                 fontSize: '16px',
-                fontWeight: 'bold',
-                transition: 'background-color 0.3s ease, color 0.3s ease'
+                fontWeight: 'bold'
               }}
               {...buttonEffect}
             >
