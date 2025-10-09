@@ -77,6 +77,8 @@ export default function CoverPage() {
             }}
             onMouseOver={(e) => e.target.style.backgroundColor = '#4338CA'}
             onMouseOut={(e) => e.target.style.backgroundColor = BUTTON_COLOR}
+            onFocus={(e) => e.target.style.backgroundColor = '#4338CA'}
+            onBlur={(e) => e.target.style.backgroundColor = BUTTON_COLOR}
           >
             Login
           </button>
@@ -103,11 +105,21 @@ export default function CoverPage() {
               e.target.style.backgroundColor = 'transparent';
               e.target.style.color = PRIMARY_COLOR;
             }}
+            onFocus={(e) => {
+              e.target.style.backgroundColor = PRIMARY_COLOR;
+              e.target.style.color = 'white';
+            }}
+            onBlur={(e) => {
+              e.target.style.backgroundColor = 'transparent';
+              e.target.style.color = PRIMARY_COLOR;
+            }}
           >
             Register
           </button>
         </div>
       </div>
+
+
 
       {/* Animation Keyframes */}
       <style>
@@ -123,6 +135,7 @@ export default function CoverPage() {
             100% { transform: translate(0,0) rotate(0deg); }
           }
         `}
+        
       </style>
     </div>
   );

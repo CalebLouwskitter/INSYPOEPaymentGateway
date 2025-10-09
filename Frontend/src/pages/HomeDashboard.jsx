@@ -5,7 +5,6 @@ import {
 	createPayment,
 	updatePaymentStatus,
 	deletePayment,
-	getPaymentStats,
 	logout as apiLogout,
 } from "../services/paymentService.js";
 import { useAuth } from "../context/AuthContext.jsx";
@@ -106,7 +105,6 @@ export default function HomeDashboard() {
 	const navigate = useNavigate();
 	const { user, logout: clearAuth } = useAuth();
 	const [payments, setPayments] = useState([]);
-	const [stats, setStats] = useState(null);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState("");
 	const [isSubmitting, setIsSubmitting] = useState(false);
@@ -141,13 +139,9 @@ export default function HomeDashboard() {
 
 	const loadPayments = async () => {
 		try {
-			const [paymentsRes, statsRes] = await Promise.all([
-				getAllPayments(),
-				getPaymentStats(),
-			]);
+			const paymentsRes = await getAllPayments();
 
 			setPayments(paymentsRes?.data?.data || []);
-			setStats(statsRes?.data?.data || null);
 			setError("");
 		} catch (err) {
 			console.error("Error loading dashboard data", err);
