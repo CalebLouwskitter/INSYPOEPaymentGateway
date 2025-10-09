@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext.jsx";
 
 export default function Login() {
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const [formData, setFormData] = useState({
     idNumber: '',
@@ -10,48 +12,7 @@ export default function Login() {
     password: ''
   });
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-    // Clear custom validity message when user types
-    e.target.setCustomValidity('');
-  };
-
-  const handleLogin = async (e) => {
-    e.preventDefault();
-
-    const form = e.target;
-    const idInput = form.elements.idNumber;
-    const accountInput = form.elements.accountNumber;
-
-    // Reset previous messages
-    idInput.setCustomValidity("");
-    accountInput.setCustomValidity("");
-
-    // Custom validity messages for number length
-    if (!/^\d{13}$/.test(formData.idNumber)) {
-      idInput.setCustomValidity("Please enter exactly 13 digits for your ID Number.");
-      form.reportValidity();
-      return;
-    }
-
-    if (!/^\d{10}$/.test(formData.accountNumber)) {
-      accountInput.setCustomValidity("Please enter exactly 10 digits for your Account Number.");
-      form.reportValidity();
-      return;
-    }
-
-    console.log("Simulated Login Success with data:", formData);
-    navigate("/Dashboard");
-  };
-
-  const handleReset = () => {
-    setFormData({
-      idNumber: '',
-      accountNumber: '',
-      password: ''
-    });
-  };
+  const [error, setError] = useState('');
 
   const PRIMARY_COLOR = '#8B5CF6';
   const BUTTON_COLOR = '#4F46E5';
@@ -69,6 +30,13 @@ export default function Login() {
     transition: 'border-color 0.3s, background-color 0.3s',
   };
 
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+    setError('');
+    e.target.setCustomValidity('');
+  };
+
   const handleInputFocus = (e) => {
     e.target.style.borderColor = PRIMARY_COLOR;
     e.target.style.backgroundColor = 'white';
@@ -79,12 +47,61 @@ export default function Login() {
     e.target.style.backgroundColor = '#F3F4F6';
   };
 
+  const handleLogin = (e) => {
+    e.preventDefault();
+    const form = e.target;
+    const idInput = form.elements.idNumber;
+    const accountInput = form.elements.accountNumber;
+
+    // Reset previous messages
+    idInput.setCustomValidity("");
+    accountInput.setCustomValidity("");
+
+    // Check length
+    if (!/^\d{13}$/.test(formData.idNumber)) {
+      idInput.setCustomValidity("Please enter exactly 13 digits for your ID Number.");
+      form.reportValidity();
+      return;
+    }
+    if (!/^\d{10}$/.test(formData.accountNumber)) {
+      accountInput.setCustomValidity("Please enter exactly 10 digits for your Account Number.");
+      form.reportValidity();
+      return;
+    }
+
+    // Check credentials via AuthContext
+    const success = login(formData);
+    if (success) {
+      navigate("/paymentportal"); // go to Payment Portal if login correct
+    } else {
+      setError("Invalid credentials. Please check your ID, account number, and password.");
+    }
+  };
+
+  const handleReset = () => {
+    setFormData({
+      idNumber: '',
+      accountNumber: '',
+      password: ''
+    });
+    setError('');
+  };
+
+  const buttonEffect = {
+    onMouseOver: (e) => { e.target.style.backgroundColor = PRIMARY_COLOR; e.target.style.color = 'white'; },
+    onMouseOut: (e) => { e.target.style.backgroundColor = 'transparent'; e.target.style.color = PRIMARY_COLOR; },
+    onFocus: (e) => { e.target.style.backgroundColor = PRIMARY_COLOR; e.target.style.color = 'white'; },
+    onBlur: (e) => { e.target.style.backgroundColor = 'transparent'; e.target.style.color = PRIMARY_COLOR; },
+    onMouseDown: (e) => e.target.style.transform = 'scale(0.99)',
+    onMouseUp: (e) => e.target.style.transform = 'scale(1)'
+  };
+
   return (
     <div style={{
       display: 'flex',
-      minHeight: '100vh', 
+      minHeight: '100vh',
       fontFamily: 'Inter, sans-serif',
-      backgroundColor: '#1e1933', 
+      backgroundColor: '#1e1933',
       color: 'white',
     }}>
       <div style={{
@@ -110,7 +127,7 @@ export default function Login() {
           left: '70%',
           transform: 'rotate(150deg)',
           filter: 'blur(120px) opacity(0.8)',
-          animation: 'moveShape1Left 20s infinite alternate ease-in-out' 
+          animation: 'moveShape1Left 20s infinite alternate ease-in-out'
         }}></div>
 
         <div style={{
@@ -122,32 +139,29 @@ export default function Login() {
           bottom: '75%',
           right: '80%',
           transform: 'rotate(10deg)',
-          filter: 'blur(110px) opacity(0.9)', 
-          animation: 'moveShape2Left 25s infinite alternate ease-in-out' 
+          filter: 'blur(110px) opacity(0.9)',
+          animation: 'moveShape2Left 25s infinite alternate ease-in-out'
         }}></div>
 
         <div style={{
           backgroundColor: 'white',
-          backdropFilter: 'none',
-          WebkitBackdropFilter: 'none',
           padding: '40px',
-          borderRadius: '20px', 
+          borderRadius: '20px',
           width: '100%',
           maxWidth: '520px',
-          boxShadow: '0 10px 30px rgba(0, 0, 0, 0.4)', 
-          border: 'none',
+          boxShadow: '0 10px 30px rgba(0, 0, 0, 0.4)',
           color: DARK_TEXT,
-          zIndex: 2, 
-          position: 'relative' 
+          zIndex: 2,
+          position: 'relative'
         }}>
           <div style={{
-            color: PRIMARY_COLOR, 
+            color: PRIMARY_COLOR,
             paddingBottom: '20px',
             marginBottom: '20px',
             borderBottom: '1px solid #E5E7EB',
             textAlign: 'center'
           }}>
-            <h1 style={{fontSize: '2.5em', fontWeight: 900, textShadow: 'none'}}>Welcome Back!</h1>
+            <h1 style={{ fontSize: '2.5em', fontWeight: 900 }}>Welcome Back!</h1>
             <p style={{ color: '#6B7280' }}>Sign in to continue</p>
           </div>
 
@@ -203,6 +217,21 @@ export default function Login() {
               />
             </div>
 
+            {error && (
+              <div style={{
+                color: '#EF4444',
+                textAlign: 'center',
+                marginBottom: '15px',
+                fontWeight: 'bold',
+                border: '1px solid #FCA5A5',
+                padding: '10px',
+                borderRadius: '8px',
+                backgroundColor: '#FEF2F2'
+              }}>
+                {error}
+              </div>
+            )}
+
             <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
               <button
                 type="submit"
@@ -211,22 +240,16 @@ export default function Login() {
                   backgroundColor: BUTTON_COLOR,
                   color: 'white',
                   border: 'none',
-                  borderRadius: '10px', 
+                  borderRadius: '10px',
                   cursor: 'pointer',
                   fontSize: '18px',
                   fontWeight: 'bold',
-                  boxShadow: `0 4px 10px rgba(79, 70, 229, 0.5)`,
-                  transition: 'background-color 0.3s ease, transform 0.1s'
+                  boxShadow: `0 4px 10px rgba(79, 70, 229, 0.5)`
                 }}
-                onMouseOver={(e) => e.target.style.backgroundColor = '#4338CA'}
-                onMouseOut={(e) => e.target.style.backgroundColor = BUTTON_COLOR}
-                onFocus={(e) => e.target.style.backgroundColor = '#4338CA'}
-                onBlur={(e) => e.target.style.backgroundColor = BUTTON_COLOR}
-                onMouseDown={(e) => e.target.style.transform = 'scale(0.99)'}
-                onMouseUp={(e) => e.target.style.transform = 'scale(1)'}
               >
                 Login
               </button>
+
               <button
                 type="button"
                 onClick={handleReset}
@@ -237,15 +260,8 @@ export default function Login() {
                   border: '1px solid #D1D5DB',
                   borderRadius: '10px',
                   cursor: 'pointer',
-                  fontSize: '18px',
-                  transition: 'background-color 0.3s ease, transform 0.1s'
+                  fontSize: '18px'
                 }}
-                onMouseOver={(e) => e.target.style.backgroundColor = '#D1D5DB'}
-                onMouseOut={(e) => e.target.style.backgroundColor = '#E5E7EB'}
-                onFocus={(e) => e.target.style.backgroundColor = '#D1D5DB'}
-                onBlur={(e) => e.target.style.backgroundColor = '#E5E7EB'}
-                onMouseDown={(e) => e.target.style.transform = 'scale(0.99)'}
-                onMouseUp={(e) => e.target.style.transform = 'scale(1)'}
               >
                 Reset
               </button>
@@ -263,21 +279,15 @@ export default function Login() {
               onClick={() => navigate('/register')}
               style={{
                 padding: '12px 25px',
-                backgroundColor: 'transparent', 
+                backgroundColor: 'transparent',
                 color: PRIMARY_COLOR,
                 border: `2px solid ${PRIMARY_COLOR}`,
                 borderRadius: '10px',
                 cursor: 'pointer',
                 fontSize: '16px',
-                fontWeight: 'bold',
-                transition: 'background-color 0.3s ease, color 0.3s ease, transform 0.1s'
+                fontWeight: 'bold'
               }}
-              onMouseOver={(e) => { e.target.style.backgroundColor = PRIMARY_COLOR; e.target.style.color = 'white'; }}
-              onMouseOut={(e) => { e.target.style.backgroundColor = 'transparent'; e.target.style.color = PRIMARY_COLOR; }}
-              onFocus={(e) => { e.target.style.backgroundColor = PRIMARY_COLOR; e.target.style.color = 'white'; }}
-              onBlur={(e) => { e.target.style.backgroundColor = 'transparent'; e.target.style.color = PRIMARY_COLOR; }}
-              onMouseDown={(e) => e.target.style.transform = 'scale(0.99)'}
-              onMouseUp={(e) => e.target.style.transform = 'scale(1)'}
+              {...buttonEffect}
             >
               Register Now
             </button>
@@ -285,13 +295,14 @@ export default function Login() {
         </div>
       </div>
 
+      {/* Branding panel (right side) */}
       <div style={{
         flex: 1.5,
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
         alignItems: 'center',
-        background: 'linear-gradient(135deg, #1a0f3d 0%, #3f2f70 100%)', 
+        background: 'linear-gradient(135deg, #1a0f3d 0%, #3f2f70 100%)',
         position: 'relative',
         overflow: 'hidden',
         boxShadow: 'inset 0 0 20px rgba(0,0,0,0.3)'
@@ -301,12 +312,12 @@ export default function Login() {
           width: '550px',
           height: '550px',
           background: 'linear-gradient(135deg, rgba(173, 216, 230, 0.6), rgba(135, 206, 235, 0.4))',
-          borderRadius: '45% 55% 65% 35% / 55% 45% 55% 45%', 
+          borderRadius: '45% 55% 65% 35% / 55% 45% 55% 45%',
           top: '-15%',
           right: '55%',
           transform: 'rotate(-30deg)',
-          filter: 'blur(120px) opacity(0.8)', 
-          animation: 'moveShape1 20s infinite alternate ease-in-out' 
+          filter: 'blur(120px) opacity(0.8)',
+          animation: 'moveShape1 20s infinite alternate ease-in-out'
         }}></div>
 
         <div style={{
@@ -318,46 +329,25 @@ export default function Login() {
           bottom: '5%',
           left: '15%',
           transform: 'rotate(25deg)',
-          filter: 'blur(110px) opacity(0.9)', 
-          animation: 'moveShape2 25s infinite alternate ease-in-out' 
+          filter: 'blur(110px) opacity(0.9)',
+          animation: 'moveShape2 25s infinite alternate ease-in-out'
         }}></div>
-        
+
         <h2 style={{
-            fontSize: '3.2em',
-            textShadow: '0 0 20px rgba(255, 255, 255, 0.6)', 
-            zIndex: 1,
-            fontWeight: 900
+          fontSize: '3.2em',
+          textShadow: '0 0 20px rgba(255, 255, 255, 0.6)',
+          zIndex: 1,
+          fontWeight: 900
         }}>
           Secure Banking
         </h2>
         <p style={{
-            fontSize: '1.6em',
-            marginTop: '10px',
-            zIndex: 1
+          fontSize: '1.6em',
+          marginTop: '10px',
+          zIndex: 1
         }}>
-            Access Your Finances Easily
+          Access Your Finances Easily
         </p>
-
-        <style>
-            {`
-            @keyframes moveShape1 {
-                0% { transform: translate(0, 0) rotate(-30deg); }
-                100% { transform: translate(80px, -80px) rotate(-40deg); }
-            }
-            @keyframes moveShape2 {
-                0% { transform: translate(0, 0) rotate(25deg); }
-                100% { transform: translate(-50px, 60px) rotate(35deg); }
-            }
-            @keyframes moveShape1Left {
-                0% { transform: translate(0, 0) rotate(150deg); }
-                100% { transform: translate(-80px, 80px) rotate(160deg); }
-            }
-            @keyframes moveShape2Left {
-                0% { transform: translate(0, 0) rotate(10deg); }
-                100% { transform: translate(50px, -60px) rotate(0deg); }
-            }
-            `}
-        </style>
       </div>
     </div>
   );

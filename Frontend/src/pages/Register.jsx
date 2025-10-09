@@ -1,12 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-
-// References:
-// Meta Platforms, Inc. (2025) React - A JavaScript library for building user interfaces. Available at: https://reactjs.org/ (Accessed: 07 January 2025).
-// Remix Software, Inc. (2025) React Router - Declarative routing for React. Available at: https://reactrouter.com/ (Accessed: 07 January 2025).
+import { useAuth } from "../context/AuthContext.jsx";
 
 export default function Register() {
   const navigate = useNavigate();
+  const { register } = useAuth();
 
   const [formData, setFormData] = useState({
     idNumber: '',
@@ -76,8 +74,14 @@ export default function Register() {
       return;
     }
 
-    console.log("✅ Registration Success:", formData);
-    navigate("/login");
+    register({
+      idNumber: formData.idNumber,
+      accountNumber: formData.accountNumber,
+      password: formData.password,
+      balance: 10000 // default balance
+    });
+
+    navigate("/login"); // go to login after registration
   };
 
   const handleReset = () => {
@@ -90,7 +94,6 @@ export default function Register() {
     setError('');
   };
 
-  // Reusable hover/focus/active effect
   const buttonEffect = {
     onMouseOver: (e) => { e.target.style.backgroundColor = PRIMARY_COLOR; e.target.style.color = 'white'; },
     onMouseOut: (e) => { e.target.style.backgroundColor = 'transparent'; e.target.style.color = PRIMARY_COLOR; },
@@ -225,7 +228,6 @@ export default function Register() {
             <p style={{ color: '#6B7280' }}>Join our secure platform</p>
           </div>
 
-          {/* Form Fields */}
           <form onSubmit={handleRegister}>
             {[
               { name: 'idNumber', label: 'ID Number', placeholder: '13-digit ID number' },
@@ -234,13 +236,7 @@ export default function Register() {
               { name: 'confirmPassword', label: 'Confirm Password', placeholder: 'Confirm your password' }
             ].map(({ name, label, placeholder }) => (
               <div key={name} style={{ marginBottom: '20px' }}>
-                <label style={{
-                  display: 'block',
-                  marginBottom: '8px',
-                  fontWeight: 'bold',
-                  fontSize: '14px',
-                  color: DARK_TEXT
-                }}>
+                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', fontSize: '14px', color: DARK_TEXT }}>
                   {label}:
                 </label>
                 <input
@@ -308,7 +304,6 @@ export default function Register() {
             </div>
           </form>
 
-          {/* Login Redirect */}
           <div style={{
             marginTop: '30px',
             textAlign: 'center',
@@ -326,8 +321,7 @@ export default function Register() {
                 borderRadius: '10px',
                 cursor: 'pointer',
                 fontSize: '16px',
-                fontWeight: 'bold',
-                transition: 'background-color 0.3s ease, color 0.3s ease'
+                fontWeight: 'bold'
               }}
               {...buttonEffect}
             >

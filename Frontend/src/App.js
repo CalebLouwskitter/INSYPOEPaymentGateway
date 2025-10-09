@@ -1,27 +1,22 @@
-// App.jsx
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-import CoverPage from './pages/CoverPage.jsx'
-import Login from './pages/Login.jsx'
-import Register from './pages/Register.jsx'
-import Dashboard from './pages/Dashboard.jsx'
-import PaymentDashboard from './pages/PaymentDashboard.jsx'
-import ProtectedRoute from './components/ProtectedRoute.jsx'
-import { AuthProvider } from './context/AuthContext.jsx'
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "./context/AuthContext.jsx";
+import Register from "./pages/Register.jsx";
+import Login from "./pages/Login.jsx";
+import PaymentPortal from "./pages/PaymentPortal.jsx";
 
 function App() {
   return (
     <AuthProvider>
       <Router>
         <Routes>
-          <Route path="/coverpage" element={<CoverPage />} />
-          <Route path="/login" element={<Login />} />
+          <Route path="/" element={<Register />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-          <Route path="/payments" element={<ProtectedRoute><PaymentDashboard /></ProtectedRoute>} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/paymentportal" element={<PaymentPortal />} />
         </Routes>
       </Router>
     </AuthProvider>
-  )
+  );
 }
 
-export default App
+export default App;

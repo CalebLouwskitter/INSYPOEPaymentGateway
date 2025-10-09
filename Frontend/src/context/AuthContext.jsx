@@ -1,61 +1,33 @@
-// we need the required imports first
-import { createContext, useContext, useState } from 'react'
+import { createContext, useContext, useState } from "react";
 
-// first we create our little section of memory for remembering if we're logged in
 const AuthContext = createContext();
 
-export function AuthProvider({children}) {
-    // variable to hold whether authenticated, and a corresponding setter method
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
-    
-    // store user information when they log in
-    const [userInfo, setUserInfo] = useState({
-        fullName: '',
-        idNumber: '',
-        accountNumber: '',
-        balance: 0
-    });
+export function AuthProvider({ children }) {
+  const [user, setUser] = useState(null);
 
-    // here we create methods to handle various auth functions
-    // for now, all they do is update our auth state, in the real world they'd handle
-    // actual auth with an API
-    const login = (userData) => {
-        setIsAuthenticated(true);
-        setUserInfo(userData);
-    };
-    
-    const logout = () => {
-        setIsAuthenticated(false);
-        setUserInfo({
-            fullName: '',
-            idNumber: '',
-            accountNumber: '',
-            balance: 0
-        });
-    };
+  const register = (userData) => {
+    setUser(userData); // Save registration details
+  };
 
-    // method to update user balance after a payment
-    const updateBalance = (newBalance) => {
-        setUserInfo({...userInfo, balance: newBalance});
-    };
+  const login = (loginData) => {
+    if (
+      user &&
+      user.idNumber === loginData.idNumber &&
+      user.accountNumber === loginData.accountNumber &&
+      user.password === loginData.password
+    ) {
+      return true; // Login successful
+    }
+    return false; // Login failed
+  };
 
-    return (
-        /* here we are providing information from this context file to the rest of the app
-        so that we can check auth status anywhere, as well as handle the login/logout functions
-        on the corresponding pages */
-        <AuthContext.Provider value={{ 
-            isAuthenticated, 
-            userInfo, 
-            login, 
-            logout, 
-            updateBalance 
-        }}>
-            {/* display any of the children */}
-            {children}
-        </AuthContext.Provider>
-    );
-};
+  return (
+    <AuthContext.Provider value={{ user, register, login }}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
 
-// setting it up so whenever we call useAuth(), it will use our AuthContext file
-// this also allows us to call all these different methods and variables in different files
-export const useAuth = () => useContext(AuthContext);
+export function useAuth() {
+  return useContext(AuthContext);
+}
