@@ -5,24 +5,49 @@ export default function Login() {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
-    username: '',
+    idNumber: '',
     accountNumber: '',
     password: ''
   });
 
   const handleInputChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+    // Clear custom validity message when user types
+    e.target.setCustomValidity('');
   };
 
   const handleLogin = async (e) => {
     e.preventDefault();
+
+    const form = e.target;
+    const idInput = form.elements.idNumber;
+    const accountInput = form.elements.accountNumber;
+
+    // Reset previous messages
+    idInput.setCustomValidity("");
+    accountInput.setCustomValidity("");
+
+    // Custom validity messages for number length
+    if (!/^\d{13}$/.test(formData.idNumber)) {
+      idInput.setCustomValidity("Please enter exactly 13 digits for your ID Number.");
+      form.reportValidity();
+      return;
+    }
+
+    if (!/^\d{10}$/.test(formData.accountNumber)) {
+      accountInput.setCustomValidity("Please enter exactly 10 digits for your Account Number.");
+      form.reportValidity();
+      return;
+    }
+
     console.log("Simulated Login Success with data:", formData);
     navigate("/payments");
   };
 
   const handleReset = () => {
     setFormData({
-      username: '',
+      idNumber: '',
       accountNumber: '',
       password: ''
     });
@@ -129,13 +154,13 @@ export default function Login() {
           <form onSubmit={handleLogin}>
             <div style={{ marginBottom: '20px' }}>
               <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', fontSize: '14px', color: DARK_TEXT }}>
-                Username:
+                ID Number:
               </label>
               <input
                 type="text"
-                name="username"
-                placeholder="Enter your username"
-                value={formData.username}
+                name="idNumber"
+                placeholder="Enter your 13-digit ID number"
+                value={formData.idNumber}
                 onChange={handleInputChange}
                 required
                 style={inputStyle}
@@ -151,7 +176,7 @@ export default function Login() {
               <input
                 type="text"
                 name="accountNumber"
-                placeholder="Enter account number"
+                placeholder="Enter your 10-digit account number"
                 value={formData.accountNumber}
                 onChange={handleInputChange}
                 required
@@ -245,7 +270,6 @@ export default function Login() {
                 cursor: 'pointer',
                 fontSize: '16px',
                 fontWeight: 'bold',
-
                 transition: 'background-color 0.3s ease, color 0.3s ease, transform 0.1s'
               }}
               onMouseOver={(e) => { e.target.style.backgroundColor = PRIMARY_COLOR; e.target.style.color = 'white'; }}
@@ -256,7 +280,6 @@ export default function Login() {
               onMouseUp={(e) => e.target.style.transform = 'scale(1)'}
             >
               Register Now
-
             </button>
           </div>
         </div>
