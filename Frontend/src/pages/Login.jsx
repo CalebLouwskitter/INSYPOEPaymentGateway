@@ -42,7 +42,7 @@ export default function Login() {
     }
 
     console.log("Simulated Login Success with data:", formData);
-    navigate("/payments");
+    navigate("/Dashboard");
   };
 
   const handleReset = () => {

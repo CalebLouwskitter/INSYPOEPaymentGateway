@@ -17,26 +17,48 @@ export default function Register() {
 
   const [error, setError] = useState('');
 
+  const PRIMARY_COLOR = '#8B5CF6';
+  const BUTTON_COLOR = '#4F46E5';
+  const DARK_TEXT = '#1F2937';
+
+  const inputStyle = {
+    width: '100%',
+    padding: '12px',
+    fontSize: '16px',
+    borderRadius: '10px',
+    boxSizing: 'border-box',
+    backgroundColor: '#F3F4F6',
+    border: '1px solid #D1D5DB',
+    color: DARK_TEXT,
+    transition: 'border-color 0.3s, background-color 0.3s',
+  };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
     setError('');
-    // Clear custom validity message when user types
     e.target.setCustomValidity('');
+  };
+
+  const handleInputFocus = (e) => {
+    e.target.style.borderColor = PRIMARY_COLOR;
+    e.target.style.backgroundColor = 'white';
+  };
+
+  const handleInputBlur = (e) => {
+    e.target.style.borderColor = '#D1D5DB';
+    e.target.style.backgroundColor = '#F3F4F6';
   };
 
   const handleRegister = (e) => {
     e.preventDefault();
-
     const form = e.target;
     const idInput = form.elements.idNumber;
     const accountInput = form.elements.accountNumber;
 
-    // Reset previous messages
     idInput.setCustomValidity("");
     accountInput.setCustomValidity("");
 
-    // Custom validity messages for number length
     if (!/^\d{13}$/.test(formData.idNumber)) {
       idInput.setCustomValidity("Please enter exactly 13 digits for your ID Number.");
       form.reportValidity();
@@ -49,7 +71,6 @@ export default function Register() {
       return;
     }
 
-    // Password match check
     if (formData.password !== formData.confirmPassword) {
       setError("Passwords do not match. Please verify.");
       return;
@@ -69,30 +90,14 @@ export default function Register() {
     setError('');
   };
 
-  const PRIMARY_COLOR = '#8B5CF6';
-  const BUTTON_COLOR = '#4F46E5';
-  const DARK_TEXT = '#1F2937';
-
-  const inputStyle = {
-    width: '100%',
-    padding: '12px',
-    fontSize: '16px',
-    borderRadius: '10px',
-    boxSizing: 'border-box',
-    backgroundColor: '#F3F4F6',
-    border: '1px solid #D1D5DB',
-    color: DARK_TEXT,
-    transition: 'border-color 0.3s, background-color 0.3s',
-  };
-
-  const handleInputFocus = (e) => {
-    e.target.style.borderColor = PRIMARY_COLOR;
-    e.target.style.backgroundColor = 'white';
-  };
-
-  const handleInputBlur = (e) => {
-    e.target.style.borderColor = '#D1D5DB';
-    e.target.style.backgroundColor = '#F3F4F6';
+  // Reusable hover/focus/active effect
+  const buttonEffect = {
+    onMouseOver: (e) => { e.target.style.backgroundColor = PRIMARY_COLOR; e.target.style.color = 'white'; },
+    onMouseOut: (e) => { e.target.style.backgroundColor = 'transparent'; e.target.style.color = PRIMARY_COLOR; },
+    onFocus: (e) => { e.target.style.backgroundColor = PRIMARY_COLOR; e.target.style.color = 'white'; },
+    onBlur: (e) => { e.target.style.backgroundColor = 'transparent'; e.target.style.color = PRIMARY_COLOR; },
+    onMouseDown: (e) => e.target.style.transform = 'scale(0.99)',
+    onMouseUp: (e) => e.target.style.transform = 'scale(1)'
   };
 
   return (
@@ -303,6 +308,7 @@ export default function Register() {
             </div>
           </form>
 
+          {/* Login Redirect */}
           <div style={{
             marginTop: '30px',
             textAlign: 'center',
@@ -320,8 +326,10 @@ export default function Register() {
                 borderRadius: '10px',
                 cursor: 'pointer',
                 fontSize: '16px',
-                fontWeight: 'bold'
+                fontWeight: 'bold',
+                transition: 'background-color 0.3s ease, color 0.3s ease'
               }}
+              {...buttonEffect}
             >
               Login Here
             </button>
