@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 export default function Login() {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, isAuthenticated } = useAuth();
 
   // Color constants
   const PRIMARY_COLOR = '#8B5CF6';
@@ -34,11 +34,18 @@ export default function Login() {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    const sanitizedValue = value.replace(/[<>]/g, "");
+    setFormData({ ...formData, [name]: sanitizedValue });
     // Clear custom validity message and error when user types
     e.target.setCustomValidity('');
     setError('');
   };
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleInputFocus = (e) => {
     e.target.style.borderColor = PRIMARY_COLOR;
@@ -87,8 +94,7 @@ export default function Login() {
 
       console.log('✅ Login Success:', response?.data);
 
-      // Navigate to Dashboard
-  navigate('/dashboard');
+    navigate('/dashboard', { replace: true });
     } catch (err) {
       console.error("❌ Login error:", err);
       
