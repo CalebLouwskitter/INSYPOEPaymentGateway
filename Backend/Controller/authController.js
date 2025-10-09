@@ -20,7 +20,7 @@ const generateJwt = (fullName, userId) => {
 const register = async (req, res) => {
     try {
         // pull the required information from the incoming request
-        const { fullName, accountNumber, password, email } = req.body;
+    const { fullName, accountNumber, password } = req.body;
 
         console.log('[AUTH] Registration attempt:', { fullName, accountNumber, hasPassword: !!password });
 
@@ -62,7 +62,7 @@ const register = async (req, res) => {
             fullName: sanitizedFullName,
             accountNumber: sanitizedAccountNumber,
             password: hashedPassword,
-            email: email ? String(email).trim() : undefined
+            // email removed from model; no email stored
         });
         await newUser.save();
 

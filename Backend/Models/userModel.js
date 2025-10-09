@@ -21,12 +21,6 @@ const userSchema = new mongoose.Schema({
         required: true,
         minlength: 6
     },
-    email: {
-        type: String,
-        required: false,
-        trim: true,
-        lowercase: true
-    },
     createdAt: {
         type: Date,
         default: Date.now

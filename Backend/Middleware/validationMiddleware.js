@@ -37,12 +37,6 @@ const validateRegister = [
     body('password')
         .isLength({ min: 6 })
         .withMessage('Password must be at least 6 characters long'),
-    body('email')
-        .optional()
-        .trim()
-        .isEmail()
-        .withMessage('Must be a valid email address')
-        .normalizeEmail(),
     handleValidationErrors
 ];
 
