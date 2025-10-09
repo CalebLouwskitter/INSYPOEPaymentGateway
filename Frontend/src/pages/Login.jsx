@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "../interfaces/axiosInstance";
+import { useAuth } from "../context/AuthContext";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -61,28 +62,17 @@ export default function Login() {
     setError('');
 
     try {
-      console.log("📤 Sending login request:", { 
-        fullName: formData.fullName, 
-        accountNumber: formData.accountNumber 
-      });
-
-      // Make API call to login endpoint
-      const response = await axiosInstance.post('/auth/login', {
+      // Use context login which handles API call and state
+      const response = await login({
         fullName: formData.fullName,
         accountNumber: formData.accountNumber,
-        password: formData.password
+        password: formData.password,
       });
 
-      console.log("✅ Login Success:", response.data);
-
-      // Store token and user info in localStorage
-      if (response.data.token) {
-        localStorage.setItem('token', response.data.token);
-        localStorage.setItem('user', JSON.stringify(response.data.user));
-      }
+      console.log('✅ Login Success:', response?.data);
 
       // Navigate to Dashboard
-      navigate("/Dashboard");
+      navigate('/Dashboard');
     } catch (err) {
       console.error("❌ Login error:", err);
       
