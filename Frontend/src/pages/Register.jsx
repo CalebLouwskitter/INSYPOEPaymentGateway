@@ -1,47 +1,68 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-
 // References:
 // Meta Platforms, Inc. (2025) React - A JavaScript library for building user interfaces. Available at: https://reactjs.org/ (Accessed: 07 January 2025).
 // Remix Software, Inc. (2025) React Router - Declarative routing for React. Available at: https://reactrouter.com/ (Accessed: 07 January 2025).
-
 
 export default function Register() {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
-    fullName: '',
-    email: '',
+    idNumber: '',
+    accountNumber: '',
     password: '',
     confirmPassword: ''
   });
-  
+
   const [error, setError] = useState('');
 
   const handleInputChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
     setError('');
+    // Clear custom validity message when user types
+    e.target.setCustomValidity('');
   };
 
   const handleRegister = (e) => {
     e.preventDefault();
 
+    const form = e.target;
+    const idInput = form.elements.idNumber;
+    const accountInput = form.elements.accountNumber;
+
+    // Reset previous messages
+    idInput.setCustomValidity("");
+    accountInput.setCustomValidity("");
+
+    // Custom validity messages for number length
+    if (!/^\d{13}$/.test(formData.idNumber)) {
+      idInput.setCustomValidity("Please enter exactly 13 digits for your ID Number.");
+      form.reportValidity();
+      return;
+    }
+
+    if (!/^\d{10}$/.test(formData.accountNumber)) {
+      accountInput.setCustomValidity("Please enter exactly 10 digits for your Account Number.");
+      form.reportValidity();
+      return;
+    }
+
+    // Password match check
     if (formData.password !== formData.confirmPassword) {
       setError("Passwords do not match. Please verify.");
       return;
     }
 
     console.log("✅ Registration Success:", formData);
-
-
     navigate("/login");
   };
 
   const handleReset = () => {
     setFormData({
-      fullName: '',
-      email: '',
+      idNumber: '',
+      accountNumber: '',
       password: '',
       confirmPassword: ''
     });
@@ -77,7 +98,7 @@ export default function Register() {
   return (
     <div style={{
       display: 'flex',
-      minHeight: '100vh', 
+      minHeight: '100vh',
       fontFamily: 'Inter, sans-serif',
       backgroundColor: '#1e1933',
       color: 'white',
@@ -89,7 +110,7 @@ export default function Register() {
         flexDirection: 'column',
         justifyContent: 'center',
         alignItems: 'center',
-        background: 'linear-gradient(135deg, #1a0f3d 0%, #3f2f70 100%)', 
+        background: 'linear-gradient(135deg, #1a0f3d 0%, #3f2f70 100%)',
         position: 'relative',
         overflow: 'hidden',
         boxShadow: 'inset 0 0 20px rgba(0,0,0,0.3)'
@@ -99,12 +120,12 @@ export default function Register() {
           width: '550px',
           height: '550px',
           background: 'linear-gradient(135deg, rgba(173, 216, 230, 0.6), rgba(135, 206, 235, 0.4))',
-          borderRadius: '45% 55% 65% 35% / 55% 45% 55% 45%', 
+          borderRadius: '45% 55% 65% 35% / 55% 45% 55% 45%',
           top: '-15%',
           right: '55%',
           transform: 'rotate(-30deg)',
-          filter: 'blur(120px) opacity(0.8)', 
-          animation: 'moveShape1 20s infinite alternate ease-in-out' 
+          filter: 'blur(120px) opacity(0.8)',
+          animation: 'moveShape1 20s infinite alternate ease-in-out'
         }}></div>
 
         <div style={{
@@ -116,24 +137,24 @@ export default function Register() {
           bottom: '5%',
           left: '15%',
           transform: 'rotate(25deg)',
-          filter: 'blur(110px) opacity(0.9)', 
-          animation: 'moveShape2 25s infinite alternate ease-in-out' 
+          filter: 'blur(110px) opacity(0.9)',
+          animation: 'moveShape2 25s infinite alternate ease-in-out'
         }}></div>
-        
+
         <h2 style={{
-            fontSize: '3.2em',
-            textShadow: '0 0 20px rgba(255, 255, 255, 0.6)', 
-            zIndex: 1,
-            fontWeight: 900
+          fontSize: '3.2em',
+          textShadow: '0 0 20px rgba(255, 255, 255, 0.6)',
+          zIndex: 1,
+          fontWeight: 900
         }}>
           Start Your Journey
         </h2>
         <p style={{
-            fontSize: '1.6em',
-            marginTop: '10px',
-            zIndex: 1
+          fontSize: '1.6em',
+          marginTop: '10px',
+          zIndex: 1
         }}>
-            Open Your Secure Account Today
+          Open Your Secure Account Today
         </p>
       </div>
 
@@ -161,7 +182,7 @@ export default function Register() {
           left: '70%',
           transform: 'rotate(150deg)',
           filter: 'blur(120px) opacity(0.8)',
-          animation: 'moveShape1Left 20s infinite alternate ease-in-out' 
+          animation: 'moveShape1Left 20s infinite alternate ease-in-out'
         }}></div>
 
         <div style={{
@@ -173,36 +194,41 @@ export default function Register() {
           bottom: '75%',
           right: '80%',
           transform: 'rotate(10deg)',
-          filter: 'blur(110px) opacity(0.9)', 
-          animation: 'moveShape2Left 25s infinite alternate ease-in-out' 
+          filter: 'blur(110px) opacity(0.9)',
+          animation: 'moveShape2Left 25s infinite alternate ease-in-out'
         }}></div>
 
         <div style={{
           backgroundColor: 'white',
           padding: '40px',
-          borderRadius: '20px', 
+          borderRadius: '20px',
           width: '100%',
           maxWidth: '520px',
-          boxShadow: '0 10px 30px rgba(0, 0, 0, 0.4)', 
+          boxShadow: '0 10px 30px rgba(0, 0, 0, 0.4)',
           color: DARK_TEXT,
-          zIndex: 2, 
-          position: 'relative' 
+          zIndex: 2,
+          position: 'relative'
         }}>
           <div style={{
-            color: PRIMARY_COLOR, 
+            color: PRIMARY_COLOR,
             paddingBottom: '20px',
             marginBottom: '20px',
             borderBottom: '1px solid #E5E7EB',
             textAlign: 'center'
           }}>
-            <h1 style={{fontSize: '2.5em', fontWeight: 900}}>Create Account</h1>
+            <h1 style={{ fontSize: '2.5em', fontWeight: 900 }}>Create Account</h1>
             <p style={{ color: '#6B7280' }}>Join our secure platform</p>
           </div>
 
           {/* Form Fields */}
           <form onSubmit={handleRegister}>
-            {['fullName', 'email', 'password', 'confirmPassword'].map((field) => (
-              <div key={field} style={{ marginBottom: '20px' }}>
+            {[
+              { name: 'idNumber', label: 'ID Number', placeholder: '13-digit ID number' },
+              { name: 'accountNumber', label: 'Account Number', placeholder: '10-digit Account number' },
+              { name: 'password', label: 'Password', placeholder: 'Choose a strong password' },
+              { name: 'confirmPassword', label: 'Confirm Password', placeholder: 'Confirm your password' }
+            ].map(({ name, label, placeholder }) => (
+              <div key={name} style={{ marginBottom: '20px' }}>
                 <label style={{
                   display: 'block',
                   marginBottom: '8px',
@@ -210,19 +236,13 @@ export default function Register() {
                   fontSize: '14px',
                   color: DARK_TEXT
                 }}>
-                  {field === 'fullName' ? 'Full Name:' :
-                   field === 'email' ? 'Email Address:' :
-                   field === 'password' ? 'Password:' : 'Confirm Password:'}
+                  {label}:
                 </label>
                 <input
-                  type={field.includes('password') ? 'password' : field === 'email' ? 'email' : 'text'}
-                  name={field}
-                  placeholder={
-                    field === 'fullName' ? 'John Doe' :
-                    field === 'email' ? 'you@example.com' :
-                    field === 'password' ? 'Choose a strong password' : 'Confirm your password'
-                  }
-                  value={formData[field]}
+                  type={name.includes('password') ? 'password' : 'text'}
+                  name={name}
+                  placeholder={placeholder}
+                  value={formData[name]}
                   onChange={handleInputChange}
                   required
                   style={inputStyle}
@@ -233,15 +253,15 @@ export default function Register() {
             ))}
 
             {error && (
-              <div style={{ 
-                color: '#EF4444', 
-                textAlign: 'center', 
-                marginBottom: '15px', 
-                fontWeight: 'bold', 
-                border: '1px solid #FCA5A5', 
-                padding: '10px', 
-                borderRadius: '8px', 
-                backgroundColor: '#FEF2F2' 
+              <div style={{
+                color: '#EF4444',
+                textAlign: 'center',
+                marginBottom: '15px',
+                fontWeight: 'bold',
+                border: '1px solid #FCA5A5',
+                padding: '10px',
+                borderRadius: '8px',
+                backgroundColor: '#FEF2F2'
               }}>
                 {error}
               </div>
@@ -255,20 +275,16 @@ export default function Register() {
                   backgroundColor: BUTTON_COLOR,
                   color: 'white',
                   border: 'none',
-                  borderRadius: '10px', 
+                  borderRadius: '10px',
                   cursor: 'pointer',
                   fontSize: '18px',
                   fontWeight: 'bold',
-                  boxShadow: `0 4px 10px rgba(79, 70, 229, 0.5)`,
-                  transition: 'background-color 0.3s ease, transform 0.1s'
+                  boxShadow: `0 4px 10px rgba(79, 70, 229, 0.5)`
                 }}
-                onMouseOver={(e) => e.target.style.backgroundColor = '#4338CA'}
-                onMouseOut={(e) => e.target.style.backgroundColor = BUTTON_COLOR}
-                onFocus={(e) => e.target.style.backgroundColor = '#4338CA'}
-                onBlur={(e) => e.target.style.backgroundColor = BUTTON_COLOR}
               >
                 Register
               </button>
+
               <button
                 type="button"
                 onClick={handleReset}
@@ -279,13 +295,8 @@ export default function Register() {
                   border: '1px solid #D1D5DB',
                   borderRadius: '10px',
                   cursor: 'pointer',
-                  fontSize: '18px',
-                  transition: 'background-color 0.3s ease'
+                  fontSize: '18px'
                 }}
-                onMouseOver={(e) => e.target.style.backgroundColor = '#D1D5DB'}
-                onMouseOut={(e) => e.target.style.backgroundColor = '#E5E7EB'}
-                onFocus={(e) => e.target.style.backgroundColor = '#D1D5DB'}
-                onBlur={(e) => e.target.style.backgroundColor = '#E5E7EB'}
               >
                 Reset Form
               </button>
@@ -303,19 +314,14 @@ export default function Register() {
               onClick={() => navigate('/login')}
               style={{
                 padding: '12px 25px',
-                backgroundColor: 'transparent', 
+                backgroundColor: 'transparent',
                 color: PRIMARY_COLOR,
                 border: `2px solid ${PRIMARY_COLOR}`,
                 borderRadius: '10px',
                 cursor: 'pointer',
                 fontSize: '16px',
-                fontWeight: 'bold',
-                transition: 'background-color 0.3s ease, color 0.3s ease'
+                fontWeight: 'bold'
               }}
-              onMouseOver={(e) => { e.target.style.backgroundColor = PRIMARY_COLOR; e.target.style.color = 'white'; }}
-              onMouseOut={(e) => { e.target.style.backgroundColor = 'transparent'; e.target.style.color = PRIMARY_COLOR; }}
-              onFocus={(e) => { e.target.style.backgroundColor = PRIMARY_COLOR; e.target.style.color = 'white'; }}
-              onBlur={(e) => { e.target.style.backgroundColor = 'transparent'; e.target.style.color = PRIMARY_COLOR; }}
             >
               Login Here
             </button>
@@ -325,20 +331,20 @@ export default function Register() {
         <style>
           {`
             @keyframes moveShape1 {
-                0% { transform: translate(0, 0) rotate(-30deg); }
-                100% { transform: translate(80px, -80px) rotate(-40deg); }
+              0% { transform: translate(0, 0) rotate(-30deg); }
+              100% { transform: translate(80px, -80px) rotate(-40deg); }
             }
             @keyframes moveShape2 {
-                0% { transform: translate(0, 0) rotate(25deg); }
-                100% { transform: translate(-50px, 60px) rotate(35deg); }
+              0% { transform: translate(0, 0) rotate(25deg); }
+              100% { transform: translate(-50px, 60px) rotate(35deg); }
             }
             @keyframes moveShape1Left {
-                0% { transform: translate(0, 0) rotate(150deg); }
-                100% { transform: translate(-80px, 80px) rotate(160deg); }
+              0% { transform: translate(0, 0) rotate(150deg); }
+              100% { transform: translate(-80px, 80px) rotate(160deg); }
             }
             @keyframes moveShape2Left {
-                0% { transform: translate(0, 0) rotate(10deg); }
-                100% { transform: translate(50px, -60px) rotate(0deg); }
+              0% { transform: translate(0, 0) rotate(10deg); }
+              100% { transform: translate(50px, -60px) rotate(0deg); }
             }
           `}
         </style>
