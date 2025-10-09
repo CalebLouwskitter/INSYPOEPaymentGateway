@@ -32,7 +32,10 @@ app.use((req, res, next) => {
   const xfProto = req.headers['x-forwarded-proto'];
   if (req.secure || xfProto === 'https') return next();
   if (req.method === 'GET' || req.method === 'HEAD') {
-    return res.redirect(301, 'https://' + req.headers.host + req.originalUrl);
+    return res.status(426).json({
+      error: 'HTTPS required',
+      message: 'Please repeat the request over HTTPS.',
+    });
   }
   return res.status(400).json({ error: 'Please use HTTPS' });
 });
