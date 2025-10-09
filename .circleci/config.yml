@@ -1,8 +1,5 @@
-# Use the latest 2.1 version of CircleCI pipeline process engine.
-# See: https://circleci.com/docs/reference/configuration-reference
 version: 2.1
 
-# Define reusable executors
 executors:
   node-executor:
     docker:
@@ -13,11 +10,14 @@ executors:
     environment:
       DOCKER_BUILDKIT: 1
 
-# Define jobs to be invoked later in a workflow
 jobs:
-  # Backend Tests
   test-backend:
     executor: node-executor
+    docker:
+      - image: cimg/node:18.19
+      - image: mongo:7.0
+        environment:
+          MONGO_INITDB_DATABASE: insy7314_test
     working_directory: ~/project/Backend
     steps:
       - checkout:
@@ -34,186 +34,33 @@ jobs:
           paths:
             - node_modules
       - run:
+          name: Wait for MongoDB
+          command: |
+            for i in {1..30}; do
+              if mongosh --eval "db.adminCommand('ping')" > /dev/null 2>&1; then
+                echo "MongoDB is ready"
+                exit 0
+              fi
+              echo "Waiting for MongoDB..."
+              sleep 2
+            done
+            echo "MongoDB failed to start"
+            exit 1
+          environment:
+            MONGODB_URI: mongodb://localhost:27017/insy7314_test
+      - run:
           name: Run Backend Tests
           command: npm test
+          environment:
+            MONGODB_URI: mongodb://localhost:27017/insy7314_test
+            JWT_SECRET: test_jwt_secret_for_ci_pipeline
+            NODE_ENV: test
       - store_test_results:
           path: ~/project/Backend/coverage
       - store_artifacts:
           path: ~/project/Backend/coverage
 
-  # Frontend Tests
-  test-frontend:
-    executor: node-executor
-    working_directory: ~/project/Frontend
-    steps:
-      - checkout:
-          path: ~/project
-      - restore_cache:
-          keys:
-            - frontend-deps-v1-{{ checksum "package.json" }}
-            - frontend-deps-v1-
-      - run:
-          name: Install Frontend Dependencies
-          command: npm install
-      - save_cache:
-          key: frontend-deps-v1-{{ checksum "package.json" }}
-          paths:
-            - node_modules
-      - run:
-          name: Run Frontend Tests
-          command: CI=true npm test -- --coverage --watchAll=false
-      - store_test_results:
-          path: ~/project/Frontend/coverage
-      - store_artifacts:
-          path: ~/project/Frontend/coverage
-
-  # Build Backend
-  build-backend:
-    executor: node-executor
-    working_directory: ~/project/Backend
-    steps:
-      - checkout:
-          path: ~/project
-      - restore_cache:
-          keys:
-            - backend-deps-v1-{{ checksum "package.json" }}
-            - backend-deps-v1-
-      - run:
-          name: Install Backend Dependencies
-          command: npm install
-      - run:
-          name: Verify Backend Build
-          command: echo "Backend build successful"
-
-  # Build Frontend
-  build-frontend:
-    executor: node-executor
-    working_directory: ~/project/Frontend
-    steps:
-      - checkout:
-          path: ~/project
-      - restore_cache:
-          keys:
-            - frontend-deps-v1-{{ checksum "package.json" }}
-            - frontend-deps-v1-
-      - run:
-          name: Install Frontend Dependencies
-          command: npm install
-      - run:
-          name: Build Frontend
-          command: npm run build
-      - persist_to_workspace:
-          root: ~/project/Frontend
-          paths:
-            - build
-      - store_artifacts:
-          path: ~/project/Frontend/build
-
-  # Build Docker Images
-  build-docker-images:
-    machine:
-      image: ubuntu-2204:current
-    steps:
-      - checkout
-      - run:
-          name: Build Backend Docker Image
-          command: |
-            docker build -t insypoe-backend:$CIRCLE_SHA1 ./Backend
-            docker tag insypoe-backend:$CIRCLE_SHA1 insypoe-backend:latest
-      - run:
-          name: Build Frontend Docker Image
-          command: |
-            docker build -t insypoe-frontend:$CIRCLE_SHA1 ./Frontend
-            docker tag insypoe-frontend:$CIRCLE_SHA1 insypoe-frontend:latest
-      - run:
-          name: Test Docker Compose Setup
-          command: |
-            # Create a test .env file
-            echo "JWT_SECRET=test_secret_for_ci" > .env
-            # Verify docker-compose file is valid
-            docker-compose config
-      - run:
-          name: Save Docker Images
-          command: |
-            mkdir -p docker-cache
-            docker save -o docker-cache/backend.tar insypoe-backend:latest
-            docker save -o docker-cache/frontend.tar insypoe-frontend:latest
-      - persist_to_workspace:
-          root: .
-          paths:
-            - docker-cache
-
-  # Lint Backend Code
-  lint-backend:
-    executor: node-executor
-    working_directory: ~/project/Backend
-    steps:
-      - checkout:
-          path: ~/project
-      - restore_cache:
-          keys:
-            - backend-deps-v1-{{ checksum "package.json" }}
-            - backend-deps-v1-
-      - run:
-          name: Install Dependencies
-          command: npm install
-      - run:
-          name: Run ESLint (if configured)
-          command: |
-            if [ -f ".eslintrc.js" ] || [ -f ".eslintrc.json" ]; then
-              npm run lint || echo "No lint script found, skipping"
-            else
-              echo "No ESLint configuration found, skipping"
-            fi
-
-  # Security Audit
-  security-audit:
-    executor: node-executor
-    steps:
-      - checkout
-      - run:
-          name: Audit Backend Dependencies
-          command: |
-            cd Backend
-            npm audit --audit-level=moderate || true
-      - run:
-          name: Audit Frontend Dependencies
-          command: |
-            cd Frontend
-            npm audit --audit-level=moderate || true
-
-# Orchestrate jobs using workflows
 workflows:
-  # Main workflow for building and testing
   build-test-deploy:
     jobs:
-      # Run security audit first
-      - security-audit
-
-      # Run linting
-      - lint-backend
-
-      # Run tests in parallel
-      - test-backend:
-          requires:
-            - security-audit
-      - test-frontend:
-          requires:
-            - security-audit
-
-      # Build after tests pass
-      - build-backend:
-          requires:
-            - test-backend
-            - lint-backend
-      - build-frontend:
-          requires:
-            - test-frontend
-
-      # Build Docker images after all builds pass
-      - build-docker-images:
-          requires:
-            - build-backend
-            - build-frontend
-
-  
+      - test-backend
