@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "../interfaces/axiosInstance";
+import { useAuth } from "../context/AuthContext.jsx";
 
 // References:
 // Meta Platforms, Inc. (2025) React - A JavaScript library for building user interfaces. Available at: https://reactjs.org/ (Accessed: 07 January 2025).
@@ -8,6 +9,7 @@ import axiosInstance from "../interfaces/axiosInstance";
 
 export default function Register() {
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
 
   const [formData, setFormData] = useState({
     fullName: '',
@@ -37,10 +39,17 @@ export default function Register() {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    const sanitizedValue = value.replace(/[<>]/g, "");
+    setFormData({ ...formData, [name]: sanitizedValue });
     setError('');
     e.target.setCustomValidity('');
   };
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleInputFocus = (e) => {
     e.target.style.borderColor = PRIMARY_COLOR;
@@ -109,8 +118,8 @@ export default function Register() {
       }
 
       // Show success message and redirect to login
-      alert('Registration successful! Please login with your credentials.');
-      navigate("/login");
+  alert('Registration successful! Please login with your credentials.');
+  navigate("/login", { replace: true });
     } catch (err) {
       console.error("❌ Registration error:", err);
       
