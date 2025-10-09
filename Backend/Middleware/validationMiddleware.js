@@ -22,33 +22,39 @@ const handleValidationErrors = (req, res, next) => {
 // Validation rules for user registration
 // Express Validator Team. (2025)
 const validateRegister = [
-    body('username')
+    body('fullName')
         .trim()
-        .isLength({ min: 3, max: 30 })
-        .withMessage('Username must be between 3 and 30 characters')
-        .matches(/^[a-zA-Z0-9_-]+$/)
-        .withMessage('Username can only contain letters, numbers, underscores, and hyphens'),
+        .isLength({ min: 3, max: 100 })
+        .withMessage('Full name must be between 3 and 100 characters')
+        .matches(/^[a-zA-Z\s]+$/)
+        .withMessage('Full name can only contain letters and spaces'),
+    body('accountNumber')
+        .trim()
+        .isLength({ min: 10, max: 10 })
+        .withMessage('Account number must be exactly 10 digits')
+        .isNumeric()
+        .withMessage('Account number must contain only numbers'),
     body('password')
         .isLength({ min: 6 })
-        .withMessage('Password must be at least 6 characters long')
-        .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
-        .withMessage('Password must contain at least one uppercase letter, one lowercase letter, and one number'),
-    body('email')
-        .optional()
-        .trim()
-        .isEmail()
-        .withMessage('Must be a valid email address')
-        .normalizeEmail(),
+        .withMessage('Password must be at least 6 characters long'),
     handleValidationErrors
 ];
 
 // Validation rules for user login
 // Express Validator Team. (2025)
 const validateLogin = [
-    body('username')
+    body('fullName')
         .trim()
         .notEmpty()
-        .withMessage('Username is required'),
+        .withMessage('Full name is required'),
+    body('accountNumber')
+        .trim()
+        .notEmpty()
+        .withMessage('Account number is required')
+        .isLength({ min: 10, max: 10 })
+        .withMessage('Account number must be exactly 10 digits')
+        .isNumeric()
+        .withMessage('Account number must contain only numbers'),
     body('password')
         .notEmpty()
         .withMessage('Password is required'),

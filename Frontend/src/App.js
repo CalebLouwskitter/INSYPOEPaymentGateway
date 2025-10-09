@@ -1,9 +1,12 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext.jsx";
 import CoverPage from './pages/CoverPage.jsx'
-import Register from "./pages/Register.jsx";
-import Login from "./pages/Login.jsx";
-import PaymentPortal from "./pages/PaymentPortal.jsx";
+import Login from './pages/Login.jsx'
+import Register from './pages/Register.jsx'
+import Dashboard from './pages/HomeDashboard.jsx'
+import PaymentDashboard from './pages/PaymentDashboard.jsx'
+import ProtectedRoute from './components/ProtectedRoute.jsx'
+import { AuthProvider } from './context/AuthContext.jsx'
 
 function App() {
   return (

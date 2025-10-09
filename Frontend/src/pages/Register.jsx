@@ -1,19 +1,24 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext.jsx";
+import axiosInstance from "../interfaces/axiosInstance";
+
+// References:
+// Meta Platforms, Inc. (2025) React - A JavaScript library for building user interfaces. Available at: https://reactjs.org/ (Accessed: 07 January 2025).
+// Remix Software, Inc. (2025) React Router - Declarative routing for React. Available at: https://reactrouter.com/ (Accessed: 07 January 2025).
 
 export default function Register() {
   const navigate = useNavigate();
   const { register } = useAuth();
 
   const [formData, setFormData] = useState({
-    idNumber: '',
+    fullName: '',
     accountNumber: '',
     password: '',
     confirmPassword: ''
   });
 
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const PRIMARY_COLOR = '#8B5CF6';
   const BUTTON_COLOR = '#4F46E5';
@@ -48,17 +53,18 @@ export default function Register() {
     e.target.style.backgroundColor = '#F3F4F6';
   };
 
-  const handleRegister = (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
     const form = e.target;
-    const idInput = form.elements.idNumber;
+    const fullNameInput = form.elements.fullName;
     const accountInput = form.elements.accountNumber;
 
-    idInput.setCustomValidity("");
+    fullNameInput.setCustomValidity("");
     accountInput.setCustomValidity("");
 
-    if (!/^\d{13}$/.test(formData.idNumber)) {
-      idInput.setCustomValidity("Please enter exactly 13 digits for your ID Number.");
+    // Validate full name (at least 3 characters, letters and spaces only)
+    if (!/^[a-zA-Z\s]{3,}$/.test(formData.fullName)) {
+      fullNameInput.setCustomValidity("Please enter a valid full name (at least 3 characters, letters only).");
       form.reportValidity();
       return;
     }
@@ -69,24 +75,66 @@ export default function Register() {
       return;
     }
 
+    if (formData.password.length < 6) {
+      setError("Password must be at least 6 characters long.");
+      return;
+    }
+
     if (formData.password !== formData.confirmPassword) {
       setError("Passwords do not match. Please verify.");
       return;
     }
 
-    register({
-      idNumber: formData.idNumber,
-      accountNumber: formData.accountNumber,
-      password: formData.password,
-      balance: 10000 // default balance
-    });
+    setLoading(true);
+    setError('');
 
-    navigate("/login"); // go to login after registration
+    try {
+      console.log("📤 Sending registration request:", { 
+        fullName: formData.fullName, 
+        accountNumber: formData.accountNumber 
+      });
+
+      // Make API call to register endpoint
+      const response = await axiosInstance.post('/auth/register', {
+        fullName: formData.fullName,
+        accountNumber: formData.accountNumber,
+        password: formData.password
+      });
+
+      console.log("✅ Registration Success:", response.data);
+
+      // Store token and user info in localStorage
+      if (response.data.token) {
+        localStorage.setItem('token', response.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+      }
+
+      // Show success message and redirect to login
+      alert('Registration successful! Please login with your credentials.');
+      navigate("/login");
+    } catch (err) {
+      console.error("❌ Registration error:", err);
+      
+      // Handle error response
+      if (err.response?.data?.message) {
+        setError(err.response.data.message);
+      } else if (err.response?.data?.errors) {
+        // Handle validation errors
+        const validationErrors = err.response.data.errors.map(e => e.msg).join(', ');
+        setError(validationErrors);
+      } else if (err.message) {
+        setError(err.message);
+      } else {
+        setError("Registration failed. Please try again.");
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleReset = () => {
     setFormData({
-      idNumber: '',
+      fullName: '',
       accountNumber: '',
       password: '',
       confirmPassword: ''
@@ -230,7 +278,7 @@ export default function Register() {
 
           <form onSubmit={handleRegister}>
             {[
-              { name: 'idNumber', label: 'ID Number', placeholder: '13-digit ID number' },
+              { name: 'fullName', label: 'Full Name', placeholder: 'Enter your full name' },
               { name: 'accountNumber', label: 'Account Number', placeholder: '10-digit Account number' },
               { name: 'password', label: 'Password', placeholder: 'Choose a strong password' },
               { name: 'confirmPassword', label: 'Confirm Password', placeholder: 'Confirm your password' }
@@ -271,19 +319,20 @@ export default function Register() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
               <button
                 type="submit"
+                disabled={loading}
                 style={{
                   padding: '14px',
-                  backgroundColor: BUTTON_COLOR,
+                  backgroundColor: loading ? '#9CA3AF' : BUTTON_COLOR,
                   color: 'white',
                   border: 'none',
                   borderRadius: '10px',
-                  cursor: 'pointer',
+                  cursor: loading ? 'not-allowed' : 'pointer',
                   fontSize: '18px',
                   fontWeight: 'bold',
                   boxShadow: `0 4px 10px rgba(79, 70, 229, 0.5)`
                 }}
               >
-                Register
+                {loading ? 'Registering...' : 'Register'}
               </button>
 
               <button
