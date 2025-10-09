@@ -1,56 +1,105 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import axiosInstance from "../interfaces/axiosInstance";
 
 export default function Login() {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
-    idNumber: '',
+    fullName: '',
     accountNumber: '',
     password: ''
   });
 
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
-    // Clear custom validity message when user types
+    // Clear custom validity message and error when user types
     e.target.setCustomValidity('');
+    setError('');
   };
 
   const handleLogin = async (e) => {
     e.preventDefault();
 
     const form = e.target;
-    const idInput = form.elements.idNumber;
+    const fullNameInput = form.elements.fullName;
     const accountInput = form.elements.accountNumber;
 
     // Reset previous messages
-    idInput.setCustomValidity("");
+    fullNameInput.setCustomValidity("");
     accountInput.setCustomValidity("");
 
-    // Custom validity messages for number length
-    if (!/^\d{13}$/.test(formData.idNumber)) {
-      idInput.setCustomValidity("Please enter exactly 13 digits for your ID Number.");
+    // Validate full name
+    if (!/^[a-zA-Z\s]{3,}$/.test(formData.fullName)) {
+      fullNameInput.setCustomValidity("Please enter a valid full name.");
       form.reportValidity();
       return;
     }
 
+    // Custom validity messages for account number
     if (!/^\d{10}$/.test(formData.accountNumber)) {
       accountInput.setCustomValidity("Please enter exactly 10 digits for your Account Number.");
       form.reportValidity();
       return;
     }
 
-    console.log("Simulated Login Success with data:", formData);
-    navigate("/Dashboard");
+    setLoading(true);
+    setError('');
+
+    try {
+      console.log("📤 Sending login request:", { 
+        fullName: formData.fullName, 
+        accountNumber: formData.accountNumber 
+      });
+
+      // Make API call to login endpoint
+      const response = await axiosInstance.post('/auth/login', {
+        fullName: formData.fullName,
+        accountNumber: formData.accountNumber,
+        password: formData.password
+      });
+
+      console.log("✅ Login Success:", response.data);
+
+      // Store token and user info in localStorage
+      if (response.data.token) {
+        localStorage.setItem('token', response.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+      }
+
+      // Navigate to Dashboard
+      navigate("/Dashboard");
+    } catch (err) {
+      console.error("❌ Login error:", err);
+      
+      // Handle error response
+      if (err.response?.data?.message) {
+        setError(err.response.data.message);
+      } else if (err.response?.data?.errors) {
+        // Handle validation errors
+        const validationErrors = err.response.data.errors.map(e => e.msg).join(', ');
+        setError(validationErrors);
+      } else if (err.message) {
+        setError(err.message);
+      } else {
+        setError("Login failed. Please try again.");
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleReset = () => {
     setFormData({
-      idNumber: '',
+      fullName: '',
       accountNumber: '',
       password: ''
     });
+    setError('');
   };
 
   const PRIMARY_COLOR = '#8B5CF6';
@@ -154,13 +203,13 @@ export default function Login() {
           <form onSubmit={handleLogin}>
             <div style={{ marginBottom: '20px' }}>
               <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', fontSize: '14px', color: DARK_TEXT }}>
-                ID Number:
+                Full Name:
               </label>
               <input
                 type="text"
-                name="idNumber"
-                placeholder="Enter your 13-digit ID number"
-                value={formData.idNumber}
+                name="fullName"
+                placeholder="Enter your full name"
+                value={formData.fullName}
                 onChange={handleInputChange}
                 required
                 style={inputStyle}
@@ -203,29 +252,45 @@ export default function Login() {
               />
             </div>
 
+            {error && (
+              <div style={{
+                color: '#EF4444',
+                textAlign: 'center',
+                marginBottom: '15px',
+                fontWeight: 'bold',
+                border: '1px solid #FCA5A5',
+                padding: '10px',
+                borderRadius: '8px',
+                backgroundColor: '#FEF2F2'
+              }}>
+                {error}
+              </div>
+            )}
+
             <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
               <button
                 type="submit"
+                disabled={loading}
                 style={{
                   padding: '14px',
-                  backgroundColor: BUTTON_COLOR,
+                  backgroundColor: loading ? '#9CA3AF' : BUTTON_COLOR,
                   color: 'white',
                   border: 'none',
                   borderRadius: '10px', 
-                  cursor: 'pointer',
+                  cursor: loading ? 'not-allowed' : 'pointer',
                   fontSize: '18px',
                   fontWeight: 'bold',
                   boxShadow: `0 4px 10px rgba(79, 70, 229, 0.5)`,
                   transition: 'background-color 0.3s ease, transform 0.1s'
                 }}
-                onMouseOver={(e) => e.target.style.backgroundColor = '#4338CA'}
-                onMouseOut={(e) => e.target.style.backgroundColor = BUTTON_COLOR}
-                onFocus={(e) => e.target.style.backgroundColor = '#4338CA'}
-                onBlur={(e) => e.target.style.backgroundColor = BUTTON_COLOR}
-                onMouseDown={(e) => e.target.style.transform = 'scale(0.99)'}
-                onMouseUp={(e) => e.target.style.transform = 'scale(1)'}
+                onMouseOver={(e) => !loading && (e.target.style.backgroundColor = '#4338CA')}
+                onMouseOut={(e) => !loading && (e.target.style.backgroundColor = BUTTON_COLOR)}
+                onFocus={(e) => !loading && (e.target.style.backgroundColor = '#4338CA')}
+                onBlur={(e) => !loading && (e.target.style.backgroundColor = BUTTON_COLOR)}
+                onMouseDown={(e) => !loading && (e.target.style.transform = 'scale(0.99)')}
+                onMouseUp={(e) => !loading && (e.target.style.transform = 'scale(1)')}
               >
-                Login
+                {loading ? 'Logging in...' : 'Login'}
               </button>
               <button
                 type="button"

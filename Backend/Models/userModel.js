@@ -2,12 +2,19 @@ const mongoose = require('mongoose');
 
 // define the blueprint of a user
 const userSchema = new mongoose.Schema({
-    username: {
+    fullName: {
         type: String, 
+        required: true,
+        trim: true,
+        minlength: 3
+    },
+    accountNumber: {
+        type: String,
         required: true,
         unique: true,
         trim: true,
-        minlength: 3
+        minlength: 10,
+        maxlength: 10
     },
     password: {
         type: String, 
