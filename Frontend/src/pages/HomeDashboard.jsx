@@ -23,6 +23,7 @@ const paymentMethods = [
 	{ value: "debit_card", label: "Debit Card" },
 	{ value: "paypal", label: "PayPal" },
 	{ value: "bank_transfer", label: "Bank Transfer" },
+	{ value: "mobile_wallet", label: "Mobile Wallet" },
 ];
 
 const allowedStatuses = [
@@ -37,6 +38,44 @@ const allowedCurrencies = [
 	{ value: "EUR", label: "EUR" },
 	{ value: "ZAR", label: "ZAR" },
 	{ value: "GBP", label: "GBP" },
+];
+
+const quickPaymentOptions = [
+	{
+		id: "utilities",
+		icon: "⚡",
+		title: "Utility Bill",
+		description: "Securely settle electricity, water, or gas charges.",
+		preset: { amount: 125.4, currency: "USD", paymentMethod: "debit_card", description: "Utility bill payment" },
+	},
+	{
+		id: "housing",
+		icon: "🏠",
+		title: "Monthly Rent",
+		description: "Send your housing payment with bank-level encryption.",
+		preset: { amount: 1250.0, currency: "USD", paymentMethod: "bank_transfer", description: "Monthly rent" },
+	},
+	{
+		id: "subscription",
+		icon: "💻",
+		title: "Software Subscription",
+		description: "Renew your SaaS or streaming services in one click.",
+		preset: { amount: 69.99, currency: "USD", paymentMethod: "credit_card", description: "Subscription renewal" },
+	},
+	{
+		id: "donation",
+		icon: "🤝",
+		title: "Charity Donation",
+		description: "Support your favourite causes via trusted payment rails.",
+		preset: { amount: 100.0, currency: "USD", paymentMethod: "paypal", description: "Charity donation" },
+	},
+	{
+		id: "travel",
+		icon: "✈️",
+		title: "Travel Booking",
+		description: "Lock in flights or hotels with tokenised wallets.",
+		preset: { amount: 450.0, currency: "USD", paymentMethod: "mobile_wallet", description: "Travel booking" },
+	},
 ];
 
 const formatCurrency = (amount, currency = "USD") => {
@@ -84,6 +123,21 @@ export default function HomeDashboard() {
 	const [updateData, setUpdateData] = useState({
 		status: "pending",
 	});
+
+	const startQuickPayment = (option) => {
+		if (!option?.preset) return;
+		navigate("/paymentportal", {
+			state: {
+				source: "dashboard",
+				presetPayment: {
+					amount: option.preset.amount,
+					currency: option.preset.currency,
+					paymentMethod: option.preset.paymentMethod,
+					description: option.preset.description,
+				},
+			},
+		});
+	};
 
 	const loadPayments = async () => {
 		try {
@@ -259,6 +313,43 @@ export default function HomeDashboard() {
 							<p className="summary-grid__value">{info.count} payments</p>
 							<p className="summary-grid__amount">{formatCurrency(info.amount)}</p>
 						</div>
+					))}
+				</div>
+			</section>
+
+			<section className="dashboard__quick">
+				<div className="dashboard__quick-header">
+					<div>
+						<h2>Quick Secure Payments</h2>
+						<p>Use pre-vetted flows hardened with validation, rate limiting, and attack surface checks.</p>
+					</div>
+					<button
+						type="button"
+						className="btn btn--ghost"
+						onClick={() => navigate("/paymentportal")}
+					>
+						Open Payment Portal
+					</button>
+				</div>
+				<div className="quick-grid" role="list">
+					{quickPaymentOptions.map((option) => (
+						<button
+							key={option.id}
+							type="button"
+							className="quick-card"
+							onClick={() => startQuickPayment(option)}
+							role="listitem"
+						>
+							<span className="quick-card__icon" aria-hidden>{option.icon}</span>
+							<div className="quick-card__content">
+								<p className="quick-card__title">{option.title}</p>
+								<p className="quick-card__desc">{option.description}</p>
+								<div className="quick-card__meta">
+									<span>{option.preset.currency} {option.preset.amount.toFixed(2)}</span>
+									<span>{paymentMethods.find((m) => m.value === option.preset.paymentMethod)?.label || ""}</span>
+								</div>
+							</div>
+						</button>
 					))}
 				</div>
 			</section>
