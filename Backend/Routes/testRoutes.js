@@ -14,9 +14,4 @@ router.post('/greet', testController.greeter);
 // exporting our router (map), so that we can call it in the main program (app.js)
 module.exports = router;
 
-router.get('/healthCheck', testController.healthCheck)
-router.post('/greet', testController.greeter)
-
-// exporting our router (map), so that we can call it in the main program (app.js)
-module.exports = router
 

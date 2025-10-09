@@ -13,6 +13,8 @@ const app = express();
 
 // Import security middleware
 const { securityMiddlewares } = require('./Middleware/securityMiddleware.js');
+// Import logger middleware
+const { loggerMiddleware } = require('./Middleware/loggerMiddleware.js');
 
 // Import routes
 const authRoutes = require('./Routes/Authrouting.js');
@@ -25,7 +27,15 @@ securityMiddlewares(app);
 // Additional Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(morgan('dev'));
+
+// Body Logging, SET TO FALSE IN PRODUCTION
+const LOG_BODIES = process.env.LOG_REQUEST_BODY === 'false' ? false : true;
+app.use(loggerMiddleware({ logBodies: LOG_BODIES }));
+
+// Add a morgan token for request id & concise combined log line
+morgan.token('id', (req) => req.id || '-');
+const morganFormat = ':id :method :url :status :response-time ms - :res[content-length]';
+app.use(morgan(morganFormat));
 
 // MongoDB Connection
 mongoose.connect(process.env.MONGODB_URI)
@@ -54,8 +64,12 @@ app.use((req, res) => {
 
 // Error handler
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ error: 'Something went wrong!' });
+  // Structured error log including correlation id
+  console.error(`[ERR] id=${req.id || '-'} message="${err.message}" stack="${err.stack}"`);
+  if (res.headersSent) {
+    return next(err);
+  }
+  res.status(500).json({ error: 'Something went wrong', requestId: req.id });
 });
 
 const PORT = process.env.PORT || 5000;
@@ -77,20 +91,15 @@ if (USE_HTTPS && fs.existsSync(certPath) && fs.existsSync(keyPath)) {
   server = https.createServer(httpsOptions, app);
   server.listen(PORT, () => {
     console.log(`🔒 Backend HTTPS server running on https://localhost:${PORT}`);
-<<<<<<< Updated upstream
-=======
+
     console.log(`📡 API Base URL: https://localhost:${PORT}/api/v1`);
->>>>>>> Stashed changes
+
   });
 } else {
   server = http.createServer(app);
   server.listen(PORT, () => {
     console.log(`Backend HTTP server running on http://localhost:${PORT}`);
-<<<<<<< Updated upstream
-=======
     console.log(`📡 API Base URL: http://localhost:${PORT}/api/v1`);
->>>>>>> Stashed changes
   });
 }
-
 module.exports = app;
