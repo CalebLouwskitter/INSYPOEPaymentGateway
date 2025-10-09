@@ -122,6 +122,32 @@ export default function HomeDashboard() {
 		status: "pending",
 	});
 
+	const totalDue = useMemo(() => {
+		return payments
+			.filter((p) => p.status === "pending" || p.status === "failed")
+			.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+	}, [payments]);
+
+	const statusTotals = useMemo(() => {
+		const base = {
+			pending: { count: 0, amount: 0 },
+			completed: { count: 0, amount: 0 },
+			failed: { count: 0, amount: 0 },
+			refunded: { count: 0, amount: 0 },
+		};
+
+		payments.forEach((payment) => {
+			const status = payment.status || "pending";
+			if (!base[status]) {
+				base[status] = { count: 0, amount: 0 };
+			}
+			base[status].count += 1;
+			base[status].amount += Number(payment.amount) || 0;
+		});
+
+		return base;
+	}, [payments]);
+
 	const startQuickPayment = (option) => {
 		if (!option?.preset) return;
 		navigate("/paymentportal", {
@@ -247,32 +273,6 @@ export default function HomeDashboard() {
 			navigate("/login");
 		}
 	};
-
-	const totalDue = useMemo(() => {
-		return payments
-			.filter((p) => p.status === "pending" || p.status === "failed")
-			.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
-	}, [payments]);
-
-	const statusTotals = useMemo(() => {
-		const base = {
-			pending: { count: 0, amount: 0 },
-			completed: { count: 0, amount: 0 },
-			failed: { count: 0, amount: 0 },
-			refunded: { count: 0, amount: 0 },
-		};
-
-		payments.forEach((payment) => {
-			const status = payment.status || "pending";
-			if (!base[status]) {
-				base[status] = { count: 0, amount: 0 };
-			}
-			base[status].count += 1;
-			base[status].amount += Number(payment.amount) || 0;
-		});
-
-		return base;
-	}, [payments]);
 
 	const scrollToCreateForm = () => {
 		createFormRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
