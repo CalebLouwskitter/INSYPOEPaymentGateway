@@ -5,6 +5,9 @@
 
 const helmet = require('helmet');
 const cors = require('cors');
+const hpp = require('hpp');
+const mongoSanitize = require('express-mongo-sanitize');
+const xss = require('xss-clean');
 
 // References:
 // Helmetjs Team. (2025) helmet - npm. Available at: https://www.npmjs.com/package/helmet (Accessed: 07 January 2025).
@@ -12,12 +15,22 @@ const cors = require('cors');
 // Express.js Team. (2025) cors - npm. Available at: https://www.npmjs.com/package/cors (Accessed: 07 January 2025).
 // Mozilla Developer Network. (2025) Cross-Origin Resource Sharing (CORS) - HTTP | MDN. Available at: https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS (Accessed: 07 January 2025).
 
+const parseOrigins = (raw) => (raw || '')
+  .split(',')
+  .map((s) => s.trim())
+  .filter(Boolean);
+
 const corsOptions = {
     // origin allows us to set where we will permit requests from
     // In development, allow localhost with different ports
-    origin: process.env.NODE_ENV === 'production' 
-        ? process.env.FRONTEND_URL || 'https://localhost:3000'
-        : ['http://localhost:3000', 'https://localhost:3000', 'http://localhost:12345', 'https://localhost:5000'],
+    origin: (origin, cb) => {
+        const allowList = process.env.NODE_ENV === 'production'
+            ? parseOrigins(process.env.CORS_ORIGINS || process.env.FRONTEND_URL || 'https://localhost:3000')
+            : ['http://localhost:3000', 'https://localhost:3000', 'http://localhost:12345', 'https://localhost:5000'];
+        if (!origin) return cb(null, true); // allow same-origin/non-browser tools
+        if (allowList.includes(origin)) return cb(null, true);
+        cb(new Error('CORS origin not allowed'));
+    },
     // controlling what types of HTTP requests we will permit
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     // allow the flow of credentials between our backend API and our frontend web portal
@@ -32,41 +45,44 @@ const corsOptions = {
 
 // Helmetjs Team. (2025)
 const securityMiddlewares = (app) => {
+    // Trust reverse proxy for TLS info (e.g., x-forwarded-proto)
+    app.set('trust proxy', 1);
+
     app.use(helmet({
         contentSecurityPolicy: {
             useDefaults: true,
             directives: {
                 // allow scripts from the website itself
                 'default-src': ["'self'"],
-                // allow scripts from self and inline scripts (needed for React)
+                // keep inline minimal (React dev may need it)
                 'script-src': ["'self'", "'unsafe-inline'"],
-                // allow styles from self and inline styles (needed for React)
                 'style-src': ["'self'", "'unsafe-inline'"],
-                // allow images from self and data URIs
                 'img-src': ["'self'", "data:", "https:"],
-                // prevent our website from being embedded on another website
                 'frame-ancestors': ["'none'"],
+                'connect-src': ["'self'"],
             }
         },
-        // stop our API from telling people that it is an Express API
+        referrerPolicy: { policy: 'no-referrer' },
+        crossOriginOpenerPolicy: { policy: 'same-origin' },
+        crossOriginResourcePolicy: { policy: 'same-origin' },
+        frameguard: { action: 'deny' },
         hidePoweredBy: true,
-        // prevent our website from being put into an iframe
-        frameguard: {
-            action: 'deny'
-        },
-        // prevent IE from executing downloads in site's context
         ieNoOpen: true,
-        // don't allow browsers to sniff MIME type
         noSniff: true,
-        // enable XSS filter
-        xssFilter: true
+        // HSTS enabled by default in helmet; ensure TLS termination in front
     }));
-    
-    // Mozilla Developer Network. (2025)
+
+    // Apply sanitizers and request hardening
+    app.use(hpp());
+    app.use(mongoSanitize());
+    app.use(xss());
+
+    // Limit body size
+    app.use(require('express').json({ limit: '200kb' }));
+    app.use(require('express').urlencoded({ extended: true, limit: '200kb' }));
+
     // Apply CORS with the configured options
     app.use(cors(corsOptions));
-    
-    // Handle preflight requests
     app.options('*', cors(corsOptions));
 };
 

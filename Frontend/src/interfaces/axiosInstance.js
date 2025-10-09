@@ -15,8 +15,8 @@ const axiosInstance = axios.create({
 
 
 
-    // allow credentials (cookies, authorization headers, etc.)
-    withCredentials: true,
+    // Do not send cookies by default; we use Bearer tokens instead
+    withCredentials: false,
     // timeout after 10 seconds
     timeout: 10000,
 });

@@ -16,7 +16,22 @@ function App() {
           <Route path="/coverpage" element={<CoverPage />} />
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/paymentportal" element={<PaymentPortal />} />
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/paymentportal"
+            element={
+              <ProtectedRoute>
+                <PaymentPortal />
+              </ProtectedRoute>
+            }
+          />
         </Routes>
       </Router>
     </AuthProvider>

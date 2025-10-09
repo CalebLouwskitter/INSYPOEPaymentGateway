@@ -42,47 +42,24 @@ jobs:
       - run:
           name: Wait for MongoDB
           command: |
-            # Create a simple Node.js script to check MongoDB connection
-            cat > check_mongo.js << 'EOF'
-            const { MongoClient } = require('mongodb');
-            
-            const uri = process.env.MONGODB_URI || 'mongodb://localhost:27017/insy7314_test';
-            const client = new MongoClient(uri);
-            
-            async function checkConnection() {
-              try {
-                await client.connect();
-                await client.db().admin().ping();
-                console.log('MongoDB is ready');
-                process.exit(0);
-              } catch (error) {
-                console.error('MongoDB not ready:', error.message);
-                process.exit(1);
-              } finally {
-                await client.close();
-              }
-            }
-            
-            checkConnection();
-            EOF
-            
-            # Wait for MongoDB to be ready using the Node.js script
-            echo "Waiting for MongoDB to be ready..."
-            for i in {1..30}; do
-              if node check_mongo.js 2>/dev/null; then
-                echo "MongoDB is ready and accepting connections"
+            echo "Waiting for MongoDB on localhost:27017 ..."
+            ATTEMPTS=60
+            for i in $(seq 1 $ATTEMPTS); do
+              # Bash TCP check; returns 0 when port is open
+              if (echo > /dev/tcp/127.0.0.1/27017) >/dev/null 2>&1; then
+                echo "MongoDB is accepting TCP connections"
                 exit 0
               fi
-              echo "Waiting for MongoDB... (attempt $i/30)"
+              echo "[${i}/${ATTEMPTS}] MongoDB not ready yet; retrying in 2s"
               sleep 2
             done
-            echo "MongoDB failed to start or accept connections"
+            echo "MongoDB failed to become ready in time"
             exit 1
       - run:
           name: Run Backend Tests
           command: npm test
           environment:
-            MONGODB_URI: mongodb://localhost:27017/insy7314_test
+            MONGODB_URI: mongodb://127.0.0.1:27017/insy7314_test
             JWT_SECRET: test_jwt_secret_for_ci_pipeline
             NODE_ENV: test
       - store_test_results:
@@ -231,6 +208,24 @@ jobs:
             cd Frontend
             npm audit --audit-level=moderate || true
 
+  gitleaks-scan:
+    docker:
+      - image: zricethezav/gitleaks:latest
+    steps:
+      - checkout
+      - run:
+          name: Scan for Secrets with Gitleaks
+          command: gitleaks detect --no-git -v || true
+
+  trivy-fs-scan:
+    docker:
+      - image: aquasec/trivy:0.55.1
+    steps:
+      - checkout
+      - run:
+          name: Trivy FS scan (HIGH/CRITICAL)
+          command: trivy fs --exit-code 0 --severity HIGH,CRITICAL --no-progress . || true
+
 # Orchestrate jobs using workflows
 workflows:
   # Main workflow for building and testing
@@ -238,6 +233,8 @@ workflows:
     jobs:
       # Run security audit first
       - security-audit
+      - gitleaks-scan
+      - trivy-fs-scan
 
       # Run linting
       - lint-backend
@@ -246,9 +243,13 @@ workflows:
       - test-backend:
           requires:
             - security-audit
+            - gitleaks-scan
+            - trivy-fs-scan
       - test-frontend:
           requires:
             - security-audit
+            - gitleaks-scan
+            - trivy-fs-scan
 
       # Build after tests pass
       - build-backend:

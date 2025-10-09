@@ -1,4 +1,3 @@
-const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { invalidateToken } = require('../Middleware/authMiddleware.js');
 const User = require('../Models/userModel.js');
@@ -54,14 +53,11 @@ const register = async (req, res) => {
             return res.status(400).json({ message: "Account number already exists" });
         }
 
-        // if not, lets hash their password (by providing their password, and the number of random iterations to salt)
-        const hashedPassword = await bcrypt.hash(password, 10);
-        
-        // create the new user with sanitized data
+        // create the new user with sanitized data (model will hash password)
         const newUser = new User({
             fullName: sanitizedFullName,
             accountNumber: sanitizedAccountNumber,
-            password: hashedPassword,
+            password: password,
             // email removed from model; no email stored
         });
         await newUser.save();
@@ -121,7 +117,7 @@ const login = async (req, res) => {
         }
 
         // next, if the user DOES exist, we compare their entered password to what we have on file
-        const matching = await bcrypt.compare(password, user.password);
+    const matching = await user.comparePassword(password);
         
         // if they don't match, say no
         if (!matching) {

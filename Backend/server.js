@@ -24,9 +24,20 @@ const testRoutes = require('./Routes/testRoutes.js');
 // Apply security middlewares
 securityMiddlewares(app);
 
-// Additional Middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// Enforce HTTPS when behind a proxy (e.g., Nginx) only in production
+// or when explicitly enabled via FORCE_HTTPS=true
+const FORCE_HTTPS = process.env.FORCE_HTTPS === 'true' || process.env.NODE_ENV === 'production';
+app.use((req, res, next) => {
+  if (!FORCE_HTTPS) return next();
+  const xfProto = req.headers['x-forwarded-proto'];
+  if (req.secure || xfProto === 'https') return next();
+  if (req.method === 'GET' || req.method === 'HEAD') {
+    return res.redirect(301, 'https://' + req.headers.host + req.originalUrl);
+  }
+  return res.status(400).json({ error: 'Please use HTTPS' });
+});
+
+// Additional Middleware (limits are set in security middleware)
 
 // Body Logging, SET TO FALSE IN PRODUCTION
 const LOG_BODIES = process.env.LOG_REQUEST_BODY === 'false' ? false : true;

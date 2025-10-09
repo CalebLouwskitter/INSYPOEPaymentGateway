@@ -1,3 +1,18 @@
+# General
+node_modules/
+coverage/
+dist/
+build/
+*.log
+
+# Env files
+.env
+Backend/.env
+Frontend/.env
+
+# OS
+.DS_Store
+Thumbs.db
 # =========================
 # General
 # =========================

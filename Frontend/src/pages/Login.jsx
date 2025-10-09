@@ -7,6 +7,23 @@ export default function Login() {
   const navigate = useNavigate();
   const { login } = useAuth();
 
+  // Color constants
+  const PRIMARY_COLOR = '#8B5CF6';
+  const BUTTON_COLOR = '#4F46E5';
+  const DARK_TEXT = '#1F2937';
+
+  const inputStyle = {
+    width: '100%',
+    padding: '12px',
+    fontSize: '16px',
+    borderRadius: '10px',
+    boxSizing: 'border-box',
+    backgroundColor: '#F3F4F6',
+    border: '1px solid #D1D5DB',
+    color: DARK_TEXT,
+    transition: 'border-color 0.3s, background-color 0.3s',
+  };
+
   const [formData, setFormData] = useState({
     fullName: '',
     accountNumber: '',
@@ -72,7 +89,7 @@ export default function Login() {
       console.log('✅ Login Success:', response?.data);
 
       // Navigate to Dashboard
-      navigate('/Dashboard');
+  navigate('/dashboard');
     } catch (err) {
       console.error("❌ Login error:", err);
       
