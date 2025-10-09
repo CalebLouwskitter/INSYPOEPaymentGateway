@@ -33,7 +33,7 @@ export default function Login() {
     e.target.style.backgroundColor = '#F3F4F6';
   };
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     const form = e.target;
     const fullNameInput = form.elements.fullName;
