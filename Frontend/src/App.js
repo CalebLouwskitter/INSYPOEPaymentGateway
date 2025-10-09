@@ -4,7 +4,6 @@ import CoverPage from './pages/CoverPage.jsx'
 import Login from './pages/Login.jsx'
 import Register from './pages/Register.jsx'
 import Dashboard from './pages/HomeDashboard.jsx'
-import PaymentDashboard from './pages/PaymentDashboard.jsx'
 import PaymentPortal from './pages/PaymentPortal.jsx'
 import ProtectedRoute from './components/ProtectedRoute.jsx'
 
