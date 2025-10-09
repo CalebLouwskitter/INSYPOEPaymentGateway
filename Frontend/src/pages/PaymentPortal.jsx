@@ -1,200 +1,379 @@
-import { useAuth } from "../context/AuthContext.jsx";
-import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext.jsx";
+import { createPayment, updatePaymentStatus } from "../services/paymentService.js";
 
-export default function PaymentPortal() {
+export default function CreatePayment() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
-  const [paymentData, setPaymentData] = useState({
-    amount: '',
-    currency: 'ZAR',
-    provider: 'SWIFT',
-    recipientAccount: '',
-    recipientSWIFT: ''
+  const [formData, setFormData] = useState({
+    amount: "",
+    currency: "ZAR",
+    paymentMethod: "bank_transfer",
+    description: "",
   });
 
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState(""); // success message
+  const [error, setError] = useState(""); // error message
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const PRIMARY_COLOR = '#8B5CF6';
-  const BUTTON_COLOR = '#4F46E5';
-  const DARK_TEXT = '#1F2937';
+  const allowedCurrencies = [
+    { value: "USD", label: "USD" },
+    { value: "EUR", label: "EUR" },
+    { value: "ZAR", label: "ZAR" },
+    { value: "GBP", label: "GBP" },
+  ];
+
+  const paymentMethods = [
+    { value: "credit_card", label: "Credit Card" },
+    { value: "debit_card", label: "Debit Card" },
+    { value: "paypal", label: "PayPal" },
+    { value: "bank_transfer", label: "Bank Transfer" },
+    { value: "mobile_wallet", label: "Mobile Wallet" },
+  ];
 
   useEffect(() => {
     if (!user) navigate("/login");
-  }, [user]);
+  }, [user, navigate]);
+
+  useEffect(() => {
+    const preset = location.state?.presetPayment;
+    if (!preset) return;
+
+    setFormData((current) => ({
+      amount: preset.amount != null ? String(preset.amount) : current.amount,
+      currency: preset.currency || current.currency,
+      paymentMethod: preset.paymentMethod || current.paymentMethod,
+      description: preset.description || current.description,
+    }));
+  }, [location.state]);
 
   if (!user) return null;
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setPaymentData({ ...paymentData, [name]: value });
-    setMessage('');
+    setFormData((s) => ({ ...s, [name]: value }));
+    setMessage("");
+    setError("");
   };
 
-  const handlePayment = (e) => {
+  const handleCancel = () => {
+    // Back to previous or dashboard
+    navigate(-1);
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setMessage("");
+    setError("");
 
-    if (!paymentData.amount || Number(paymentData.amount) <= 0) {
-      setMessage('Please enter a valid amount.');
+    const amountNum = Number.parseFloat(formData.amount);
+
+    if (!Number.isFinite(amountNum) || amountNum <= 0) {
+      setError("Amount must be a number greater than zero.");
       return;
     }
 
-    if (!paymentData.recipientAccount || !paymentData.recipientSWIFT) {
-      setMessage('Recipient account and SWIFT code are required.');
-      return;
+    setIsSubmitting(true);
+    try {
+      const response = await createPayment({
+        amount: amountNum,
+        currency: formData.currency,
+        paymentMethod: formData.paymentMethod,
+        description: formData.description,
+      });
+
+      const paymentId = response?.data?.data?._id;
+      const transactionId = response?.data?.data?.transactionId;
+
+      if (paymentId) {
+        try {
+          await updatePaymentStatus(paymentId, "completed");
+        } catch (statusErr) {
+          console.warn("Unable to auto-complete payment status", statusErr);
+        }
+      }
+
+      const amountDisplay = `${formData.currency} ${amountNum.toFixed(2)}`;
+      const referenceDisplay = transactionId ? ` Reference: ${transactionId}` : "";
+      setMessage(`✅ Payment completed. ${amountDisplay} processed securely.${referenceDisplay}`);
+      setFormData({ amount: "", currency: "ZAR", paymentMethod: "bank_transfer", description: "" });
+    } catch (err) {
+      console.error("Create payment error", err);
+      const msg = err?.response?.data?.message || err.message || "Failed to create payment";
+      setError(msg);
+    } finally {
+      setIsSubmitting(false);
     }
-
-    // Simulate transaction storage
-    console.log('Payment submitted:', {
-      userId: user.idNumber,
-      ...paymentData
-    });
-
-    setMessage(`Payment of ${paymentData.currency} ${paymentData.amount} submitted successfully!`);
-
-    // Reset payment form
-    setPaymentData({
-      amount: '',
-      currency: 'ZAR',
-      provider: 'SWIFT',
-      recipientAccount: '',
-      recipientSWIFT: ''
-    });
-  };
-
-  const inputStyle = {
-    width: '100%',
-    padding: '12px',
-    fontSize: '16px',
-    borderRadius: '10px',
-    boxSizing: 'border-box',
-    backgroundColor: '#F3F4F6',
-    border: '1px solid #D1D5DB',
-    color: DARK_TEXT,
-    marginBottom: '15px',
   };
 
   return (
-    <div style={{
-      display: 'flex',
-      minHeight: '100vh',
-      fontFamily: 'Inter, sans-serif',
-      background: 'linear-gradient(135deg, #1a0f3d 0%, #3f2f70 100%)',
-      color: 'white',
-      justifyContent: 'center',
-      alignItems: 'center',
-      padding: '40px'
-    }}>
-      <div style={{
-        backgroundColor: 'white',
-        color: DARK_TEXT,
-        padding: '40px',
-        borderRadius: '20px',
-        width: '100%',
-        maxWidth: '600px',
-        boxShadow: '0 10px 30px rgba(0,0,0,0.4)'
-      }}>
-        <h1 style={{ fontSize: '2.5em', fontWeight: '900', color: PRIMARY_COLOR, marginBottom: '10px' }}>
-          Payment Portal
-        </h1>
-        <p style={{ marginBottom: '30px' }}>Welcome, {user.fullName || 'Customer'}!</p>
+    <div className="payment-portal">
+      <style>{`
+        :root {
+          --color-bg: #f6f5ff;
+          --color-surface: #ffffff;
+          --color-primary: #6c4ee6;
+          --color-secondary: #f3f0ff;
+          --color-danger: #ef4444;
+          --color-success: #10b981;
+          --color-muted: #6b7280;
+          --color-border: #e5e7eb;
+          --radius-lg: 20px;
+          --radius-md: 12px;
+          --shadow-soft: 0 20px 45px rgba(79, 70, 229, 0.18);
+          --shadow-card: 0 12px 32px rgba(15, 23, 42, 0.08);
+        }
 
-        <div style={{
-          marginBottom: '30px',
-          padding: '20px',
-          borderRadius: '15px',
-          backgroundColor: '#F3F4F6',
-          color: DARK_TEXT,
-          boxShadow: '0 4px 10px rgba(0,0,0,0.1)'
-        }}>
-          <h2 style={{ fontSize: '1.5em', marginBottom: '15px' }}>Account Details</h2>
-          <p><strong>ID Number:</strong> {user.idNumber}</p>
-          <p><strong>Account Number:</strong> {user.accountNumber}</p>
-          <p><strong>Balance:</strong> ${user.balance}</p>
+        .payment-portal {
+          min-height: 100vh;
+          background: var(--color-bg);
+          padding: 48px 64px 72px;
+          font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+          color: #0f172a;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+        }
+
+        .payment-portal__header {
+          text-align: center;
+          margin-bottom: 28px;
+          max-width: 660px;
+        }
+
+        .payment-portal__header h1 {
+          font-size: 2.4rem;
+          font-weight: 800;
+          margin-bottom: 6px;
+          color: #0f172a;
+        }
+
+        .payment-portal__header p {
+          color: var(--color-muted);
+        }
+
+        .payment-portal__card {
+          width: 100%;
+          max-width: 720px;
+          background: linear-gradient(145deg, #ffffff 0%, #f1efff 100%);
+          border-radius: var(--radius-lg);
+          box-shadow: var(--shadow-soft);
+          padding: 36px;
+          animation: fadeInUp 0.5s ease;
+        }
+
+        .summary-row {
+          display: flex;
+          gap: 18px;
+          margin-bottom: 18px;
+          align-items: center;
+          justify-content: space-between;
+        }
+
+        .account-details {
+          background: #fbfbff;
+          padding: 14px 16px;
+          border-radius: 12px;
+          border: 1px solid var(--color-border);
+          color: var(--color-muted);
+          display: flex;
+          gap: 18px;
+          align-items: center;
+        }
+
+        .form {
+          display: grid;
+          gap: 18px;
+        }
+
+        .form__field {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+          font-size: 0.95rem;
+        }
+
+        .form__field label {
+          color: #0f172a;
+          font-weight: 600;
+        }
+
+        .form__field input,
+        .form__field select,
+        .form__field textarea {
+          padding: 12px 14px;
+          border-radius: 12px;
+          border: 1px solid rgba(148, 163, 184, 0.5);
+          font-size: 0.95rem;
+          background: #fbfbff;
+          transition: border 0.18s ease, box-shadow 0.18s ease;
+        }
+
+        .form__field textarea {
+          resize: vertical;
+          min-height: 84px;
+        }
+
+        .form__field input:focus,
+        .form__field select:focus,
+        .form__field textarea:focus {
+          border-color: var(--color-primary);
+          box-shadow: 0 0 0 4px rgba(108, 78, 230, 0.18);
+          outline: none;
+        }
+
+        .form__actions {
+          display: flex;
+          justify-content: flex-end;
+          gap: 12px;
+          margin-top: 6px;
+        }
+
+        .btn {
+          border: none;
+          border-radius: 999px;
+          padding: 12px 24px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+          font-size: 0.95rem;
+        }
+
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        .btn--primary {
+          background: linear-gradient(135deg, var(--color-primary) 0%, #7c6bff 100%);
+          color: var(--color-surface);
+          box-shadow: 0 12px 24px rgba(79, 70, 229, 0.3);
+        }
+
+        .btn--primary:hover:not(:disabled) {
+          transform: translateY(-1px);
+          box-shadow: 0 16px 28px rgba(79, 70, 229, 0.32);
+        }
+
+        .btn--ghost {
+          background: transparent;
+          color: var(--color-primary);
+          border: 1px solid rgba(108, 78, 230, 0.35);
+        }
+
+        .banner--success {
+          background: rgba(16, 185, 129, 0.14);
+          color: var(--color-success);
+          border: 1px solid rgba(16, 185, 129, 0.3);
+          border-radius: var(--radius-md);
+          padding: 12px 16px;
+          margin-bottom: 16px;
+          font-weight: 700;
+          text-align: center;
+        }
+
+        .banner--error {
+          background: rgba(239, 68, 68, 0.12);
+          color: var(--color-danger);
+          border: 1px solid rgba(239, 68, 68, 0.25);
+          border-radius: var(--radius-md);
+          padding: 12px 16px;
+          margin-bottom: 16px;
+          font-weight: 700;
+          text-align: center;
+        }
+
+        @keyframes fadeInUp {
+          from { opacity: 0; transform: translateY(12px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 900px) {
+          .payment-portal { padding: 36px 28px; }
+          .payment-portal__card { padding: 28px; max-width: 640px; }
+        }
+
+        @media (max-width: 600px) {
+          .payment-portal { padding: 24px 16px; }
+          .payment-portal__card { padding: 20px; }
+        }
+      `}</style>
+
+      <div className="payment-portal__header">
+        <h1>Create Payment</h1>
+        <p>Logged in as <strong>{user.fullName || user.accountNumber || "Customer"}</strong>. Use the form below to create a payment.</p>
+      </div>
+
+      {message && <div className="banner--success">{message}</div>}
+      {error && <div className="banner--error">{error}</div>}
+
+      <div className="payment-portal__card">
+        <div className="summary-row" style={{ marginBottom: 14 }}>
+          <div className="account-details">
+            <div>
+              <div style={{ fontWeight: 700 }}>{user.accountNumber || "—"}</div>
+              <div style={{ fontSize: 13, color: "var(--color-muted)" }}>Account Number</div>
+            </div>
+            <div style={{ marginLeft: 8 }}>
+              <div style={{ fontWeight: 700 }}>{user.idNumber || "—"}</div>
+              <div style={{ fontSize: 13, color: "var(--color-muted)" }}>User ID</div>
+            </div>
+          </div>
         </div>
 
-        <form onSubmit={handlePayment}>
-          <h2 style={{ fontSize: '1.5em', marginBottom: '15px' }}>Make a Payment</h2>
+        <form className="form" onSubmit={handleSubmit}>
+          <div className="form__field">
+            <label htmlFor="amount">Amount</label>
+            <input
+              id="amount"
+              name="amount"
+              type="number"
+              step="0.01"
+              min="0"
+              value={formData.amount}
+              onChange={handleChange}
+              placeholder="0.00"
+              required
+            />
+          </div>
 
-          <input
-            type="number"
-            name="amount"
-            placeholder="Amount"
-            value={paymentData.amount}
-            onChange={handleChange}
-            style={inputStyle}
-            required
-          />
-          <select
-            name="currency"
-            value={paymentData.currency}
-            onChange={handleChange}
-            style={inputStyle}
-          >
-            <option value="ZAR">ZAR</option>
-            <option value="USD">USD</option>
-            <option value="EUR">EUR</option>
-          </select>
-          <select
-            name="provider"
-            value={paymentData.provider}
-            onChange={handleChange}
-            style={inputStyle}
-          >
-            <option value="SWIFT">SWIFT</option>
-            {/* Add more providers here */}
-          </select>
-          <input
-            type="text"
-            name="recipientAccount"
-            placeholder="Recipient Account Number"
-            value={paymentData.recipientAccount}
-            onChange={handleChange}
-            style={inputStyle}
-            required
-          />
-          <input
-            type="text"
-            name="recipientSWIFT"
-            placeholder="Recipient SWIFT Code"
-            value={paymentData.recipientSWIFT}
-            onChange={handleChange}
-            style={inputStyle}
-            required
-          />
+          <div className="form__field">
+            <label htmlFor="currency">Currency</label>
+            <select id="currency" name="currency" value={formData.currency} onChange={handleChange}>
+              {allowedCurrencies.map((c) => (
+                <option key={c.value} value={c.value}>{c.label}</option>
+              ))}
+            </select>
+          </div>
 
-          {message && (
-            <div style={{
-              marginBottom: '15px',
-              padding: '10px',
-              borderRadius: '8px',
-              backgroundColor: '#FEF2F2',
-              color: '#EF4444',
-              fontWeight: 'bold'
-            }}>
-              {message}
-            </div>
-          )}
+          <div className="form__field">
+            <label htmlFor="paymentMethod">Payment Method</label>
+            <select id="paymentMethod" name="paymentMethod" value={formData.paymentMethod} onChange={handleChange}>
+              {paymentMethods.map((m) => (
+                <option key={m.value} value={m.value}>{m.label}</option>
+              ))}
+            </select>
+          </div>
 
-          <button
-            type="submit"
-            style={{
-              width: '100%',
-              padding: '14px',
-              backgroundColor: BUTTON_COLOR,
-              color: 'white',
-              border: 'none',
-              borderRadius: '10px',
-              cursor: 'pointer',
-              fontSize: '18px',
-              fontWeight: 'bold',
-              boxShadow: `0 4px 10px rgba(79, 70, 229, 0.5)`,
-              marginTop: '10px'
-            }}
-          >
-            Pay Now
-          </button>
+          <div className="form__field">
+            <label htmlFor="description">Description (optional)</label>
+            <textarea
+              id="description"
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              placeholder="Add an optional note..."
+            />
+          </div>
+
+          <div className="form__actions">
+            <button type="button" className="btn btn--ghost" onClick={handleCancel} disabled={isSubmitting}>
+              Cancel
+            </button>
+            <button type="submit" className="btn btn--primary" disabled={isSubmitting}>
+              {isSubmitting ? "Creating..." : "Create Payment"}
+            </button>
+          </div>
         </form>
       </div>
     </div>
