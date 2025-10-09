@@ -4,7 +4,7 @@ import { useAuth } from "../context/AuthContext.jsx";
 import { createPayment, updatePaymentStatus } from "../services/paymentService.js";
 
 export default function CreatePayment() {
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -35,8 +35,10 @@ export default function CreatePayment() {
   ];
 
   useEffect(() => {
-    if (!user) navigate("/login");
-  }, [user, navigate]);
+    if (!isAuthenticated) {
+      navigate("/login", { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
 
   useEffect(() => {
     const preset = location.state?.presetPayment;
@@ -50,11 +52,12 @@ export default function CreatePayment() {
     }));
   }, [location.state]);
 
-  if (!user) return null;
+  if (!isAuthenticated || !user) return null;
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((s) => ({ ...s, [name]: value }));
+    const sanitizedValue = name === "description" ? value.replace(/[<>]/g, "") : value;
+    setFormData((s) => ({ ...s, [name]: sanitizedValue }));
     setMessage("");
     setError("");
   };
