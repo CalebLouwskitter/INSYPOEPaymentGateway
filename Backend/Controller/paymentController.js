@@ -6,10 +6,88 @@ const generateTransactionId = () => {
     return `TXN-${Date.now()}-${crypto.randomBytes(8).toString('hex').toUpperCase()}`;
 };
 
+const resolveDemoSeedEnabled = () => {
+    const explicit = process.env.DEMO_PAYMENTS_ENABLED;
+    if (explicit === 'true') return true;
+    if (explicit === 'false') return false;
+    return process.env.NODE_ENV !== 'production';
+};
+
+const DEMO_PAYMENTS_ENABLED = resolveDemoSeedEnabled();
+const DEMO_MIN_PAYMENTS = Number.parseInt(process.env.DEMO_MIN_PAYMENTS || '15', 10);
+
+const demoPaymentBlueprints = Object.freeze([
+    { description: 'Monthly Rent', amount: 1250.0, currency: 'USD', paymentMethod: 'bank_transfer', status: 'completed', metadata: { category: 'Housing', merchant: 'Sunset Apartments', reference: 'RENT-2025-04' } },
+    { description: 'Electricity Bill', amount: 142.67, currency: 'USD', paymentMethod: 'debit_card', status: 'pending', metadata: { category: 'Utilities', merchant: 'GridPower Co.', reference: 'ELEC-8831' } },
+    { description: 'Fiber Internet', amount: 89.99, currency: 'USD', paymentMethod: 'credit_card', status: 'completed', metadata: { category: 'Utilities', merchant: 'Velocity Fiber', reference: 'NET-5512' } },
+    { description: 'Life Insurance Premium', amount: 215.45, currency: 'USD', paymentMethod: 'bank_transfer', status: 'completed', metadata: { category: 'Insurance', merchant: 'Harbor Insurance', reference: 'LIFE-0021' } },
+    { description: 'Gym Membership', amount: 59.95, currency: 'USD', paymentMethod: 'credit_card', status: 'pending', metadata: { category: 'Health', merchant: 'Pulse Fitness', reference: 'GYM-APR' } },
+    { description: 'Tuition Installment', amount: 624.0, currency: 'USD', paymentMethod: 'bank_transfer', status: 'completed', metadata: { category: 'Education', merchant: 'Northbridge University', reference: 'TUITION-3' } },
+    { description: 'Car Lease Payment', amount: 412.5, currency: 'USD', paymentMethod: 'debit_card', status: 'completed', metadata: { category: 'Transport', merchant: 'FlexLease Motors', reference: 'LEASE-942' } },
+    { description: 'Grocery Delivery', amount: 136.22, currency: 'USD', paymentMethod: 'paypal', status: 'completed', metadata: { category: 'Groceries', merchant: 'UrbanFresh', reference: 'GROC-1099' } },
+    { description: 'Streaming Services Bundle', amount: 39.98, currency: 'USD', paymentMethod: 'credit_card', status: 'pending', metadata: { category: 'Entertainment', merchant: 'StreamSphere', reference: 'STREAM-APR' } },
+    { description: 'Medical Specialist Visit', amount: 287.45, currency: 'USD', paymentMethod: 'credit_card', status: 'failed', metadata: { category: 'Health', merchant: 'Wellness Medical', reference: 'MED-7783' } },
+    { description: 'Flight Reservation', amount: 842.15, currency: 'USD', paymentMethod: 'paypal', status: 'completed', metadata: { category: 'Travel', merchant: 'Jetway Airlines', reference: 'FLIGHT-BA239' } },
+    { description: 'Quarterly Tax Payment', amount: 1498.0, currency: 'USD', paymentMethod: 'bank_transfer', status: 'completed', metadata: { category: 'Government', merchant: 'City Revenue Office', reference: 'TAX-Q2-2025' } },
+    { description: 'Security Monitoring', amount: 45.0, currency: 'USD', paymentMethod: 'credit_card', status: 'pending', metadata: { category: 'Home', merchant: 'Sentinel Security', reference: 'SEC-4401' } },
+    { description: 'Charity Donation', amount: 120.0, currency: 'USD', paymentMethod: 'paypal', status: 'completed', metadata: { category: 'Charity', merchant: 'Global Aid Trust', reference: 'DON-2025-04' } },
+    { description: 'Cloud Software Subscription', amount: 68.5, currency: 'USD', paymentMethod: 'mobile_wallet', status: 'refunded', metadata: { category: 'Software', merchant: 'NimbusCloud', reference: 'SAAS-PLAN-PRO' } }
+]);
+
+const buildDemoPayments = (userId, existingCount, targetCount) => {
+    const docs = [];
+    const toCreate = Math.max(targetCount - existingCount, 0);
+
+    for (let i = 0; i < toCreate; i += 1) {
+        const template = demoPaymentBlueprints[i % demoPaymentBlueprints.length];
+        const ageHours = (existingCount + i + 1) * 6;
+        const createdAt = new Date(Date.now() - ageHours * 60 * 60 * 1000);
+
+        docs.push({
+            userId,
+            amount: Number(template.amount),
+            currency: String(template.currency).toUpperCase(),
+            paymentMethod: template.paymentMethod,
+            status: template.status,
+            transactionId: generateTransactionId(),
+            description: template.description,
+            metadata: { ...template.metadata },
+            createdAt,
+            updatedAt: createdAt
+        });
+    }
+
+    return docs;
+};
+
+const ensureDemoPaymentsForUser = async (userId) => {
+    if (!DEMO_PAYMENTS_ENABLED) return;
+
+    const existingCount = await Payment.countDocuments({ userId });
+    if (existingCount >= DEMO_MIN_PAYMENTS) {
+        return;
+    }
+
+    const demoDocs = buildDemoPayments(userId, existingCount, DEMO_MIN_PAYMENTS);
+    if (!demoDocs.length) {
+        return;
+    }
+
+    try {
+        await Payment.insertMany(demoDocs, { ordered: false });
+    } catch (err) {
+        // Ignore duplicate key errors and continue; log others for visibility.
+        if (err.code !== 11000) {
+            console.error('Demo payment seeding error:', err);
+        }
+    }
+};
+
 // GET all payments for the authenticated user
 const getAllPayments = async (req, res) => {
     try {
         const userId = req.user.userId;
+        await ensureDemoPaymentsForUser(userId);
         const payments = await Payment.find({ userId: userId }).sort({ createdAt: -1 });
         
         res.status(200).json({
