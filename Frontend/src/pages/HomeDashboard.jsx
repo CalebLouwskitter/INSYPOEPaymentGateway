@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
 	getAllPayments,
@@ -103,7 +103,7 @@ const formatDate = (value) => {
 
 export default function HomeDashboard() {
 	const navigate = useNavigate();
-	const { user, logout: clearAuth } = useAuth();
+	const { user, isAuthenticated, logout: clearAuth } = useAuth();
 	const [payments, setPayments] = useState([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState("");
@@ -137,7 +137,8 @@ export default function HomeDashboard() {
 		});
 	};
 
-	const loadPayments = async () => {
+	const loadPayments = useCallback(async () => {
+		setLoading(true);
 		try {
 			const paymentsRes = await getAllPayments();
 
@@ -150,11 +151,19 @@ export default function HomeDashboard() {
 		} finally {
 			setLoading(false);
 		}
-	};
+	}, []);
 
 	useEffect(() => {
+		if (!isAuthenticated) {
+			navigate("/login", { replace: true });
+			return;
+		}
 		loadPayments();
-	}, []);
+	}, [isAuthenticated, loadPayments, navigate]);
+
+	if (!isAuthenticated) {
+		return null;
+	}
 
 	const handleCreatePayment = async (e) => {
 		e.preventDefault();
