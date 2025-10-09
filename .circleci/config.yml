@@ -62,8 +62,6 @@ jobs:
             MONGODB_URI: mongodb://127.0.0.1:27017/insy7314_test
             JWT_SECRET: test_jwt_secret_for_ci_pipeline
             NODE_ENV: test
-      - store_test_results:
-          path: ~/project/Backend/coverage
       - store_artifacts:
           path: ~/project/Backend/coverage
 
@@ -88,8 +86,6 @@ jobs:
       - run:
           name: Run Frontend Tests
           command: CI=true npm test -- --coverage --watchAll=false
-      - store_test_results:
-          path: ~/project/Frontend/coverage
       - store_artifacts:
           path: ~/project/Frontend/coverage
 
