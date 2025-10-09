@@ -240,19 +240,6 @@ workflows:
             - build-frontend
             - security-audit
 
-      # Build after tests pass
-      - build-backend:
-          requires:
-            - test-backend
-            - lint-backend
-      - build-frontend:
-          requires:
-            - test-frontend
-
-      # Build Docker images after all builds pass
-      - build-docker-images:
-          requires:
-            - build-backend
-            - build-frontend
+     
 
 
