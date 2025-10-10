@@ -8,15 +8,24 @@ export default function CreatePayment() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [formData, setFormData] = useState({
+  const createInitialFormState = () => ({
     amount: "",
     currency: "ZAR",
     paymentMethod: "bank_transfer",
     description: "",
+    bankAccountNumber: "",
+    bankReference: "",
+    cardHolder: "",
+    cardNumber: "",
+    cardExpiry: "",
+    cardCvv: "",
   });
+
+  const [formData, setFormData] = useState(createInitialFormState);
 
   const [message, setMessage] = useState(""); // success message
   const [error, setError] = useState(""); // error message
+  const [fieldErrors, setFieldErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const allowedCurrencies = [
@@ -45,6 +54,7 @@ export default function CreatePayment() {
     if (!preset) return;
 
     setFormData((current) => ({
+      ...current,
       amount: preset.amount != null ? String(preset.amount) : current.amount,
       currency: preset.currency || current.currency,
       paymentMethod: preset.paymentMethod || current.paymentMethod,
@@ -59,6 +69,9 @@ export default function CreatePayment() {
     return user.nationalId.replace(/\d(?=\d{4})/g, "*");
   }, [user?.nationalId]);
 
+  const isCardPayment = formData.paymentMethod === "credit_card" || formData.paymentMethod === "debit_card";
+  const isBankTransfer = formData.paymentMethod === "bank_transfer";
+
   if (!isAuthenticated || !user) return null;
 
   const handleChange = (e) => {
@@ -70,12 +83,66 @@ export default function CreatePayment() {
     }
 
     if (name === "amount") {
-      sanitizedValue = value.replace(/[^0-9.]/g, "");
+      const normalized = value.replace(/[^0-9.]/g, "");
+      const parts = normalized.split(".");
+      const cleaned = parts.length > 1 ? `${parts[0]}.${parts.slice(1).join("")}` : normalized;
+      sanitizedValue = cleaned;
+    }
+
+    if (name === "paymentMethod") {
+      const allowedValues = paymentMethods.map((m) => m.value);
+      if (!allowedValues.includes(value)) {
+        return;
+      }
+
+      setFormData((current) => ({
+        ...current,
+        paymentMethod: value,
+        ...(value === "bank_transfer"
+          ? { cardHolder: "", cardNumber: "", cardExpiry: "", cardCvv: "" }
+          : {}),
+        ...(value === "credit_card" || value === "debit_card"
+          ? { bankAccountNumber: "", bankReference: "" }
+          : {}),
+      }));
+      setMessage("");
+      setError("");
+      setFieldErrors({});
+      return;
+    }
+
+    if (name === "cardNumber") {
+      const digitsOnly = value.replace(/\D/g, "").slice(0, 16);
+      sanitizedValue = digitsOnly.replace(/(\d{4})(?=\d)/g, "$1 ");
+    }
+
+    if (name === "cardExpiry") {
+      const digitsOnly = value.replace(/\D/g, "").slice(0, 4);
+      sanitizedValue = digitsOnly.length > 2
+        ? `${digitsOnly.slice(0, 2)}/${digitsOnly.slice(2)}`
+        : digitsOnly;
+    }
+
+    if (name === "cardCvv") {
+      sanitizedValue = value.replace(/\D/g, "").slice(0, 4);
+    }
+
+    if (name === "cardHolder") {
+      sanitizedValue = value.replace(/[^a-zA-Z\s'-]/g, "").slice(0, 60);
+    }
+
+    if (name === "bankAccountNumber") {
+      sanitizedValue = value.replace(/\D/g, "").slice(0, 20);
+    }
+
+    if (name === "bankReference") {
+      sanitizedValue = value.replace(/[<>]/g, "").slice(0, 35);
     }
 
     setFormData((s) => ({ ...s, [name]: sanitizedValue }));
     setMessage("");
     setError("");
+    setFieldErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
   const handleCancel = () => {
@@ -87,34 +154,94 @@ export default function CreatePayment() {
     e.preventDefault();
     setMessage("");
     setError("");
+    setFieldErrors({});
 
     const amountNum = Number.parseFloat(formData.amount);
 
     if (!Number.isFinite(amountNum) || amountNum <= 0) {
-      setError("Amount must be a number greater than zero.");
+      setFieldErrors((prev) => ({ ...prev, amount: "Amount must be a number greater than zero." }));
+      setError("Please correct the highlighted fields.");
       return;
     }
 
     // Ensure currency and payment method are from allowed lists to prevent tampering
     const isCurrencyAllowed = allowedCurrencies.some((c) => c.value === formData.currency);
     if (!isCurrencyAllowed) {
-      setError("Invalid currency selection. Please choose a valid option.");
+      setFieldErrors((prev) => ({ ...prev, currency: "Invalid currency selection." }));
+      setError("Please correct the highlighted fields.");
       return;
     }
 
     const isMethodAllowed = paymentMethods.some((m) => m.value === formData.paymentMethod);
     if (!isMethodAllowed) {
-      setError("Invalid payment method selection.");
+      setFieldErrors((prev) => ({ ...prev, paymentMethod: "Invalid payment method selection." }));
+      setError("Please correct the highlighted fields.");
+      return;
+    }
+
+    const validationErrors = {};
+
+    if (formData.paymentMethod === "credit_card" || formData.paymentMethod === "debit_card") {
+      const digits = formData.cardNumber.replace(/\s/g, "");
+      if (digits.length < 13 || digits.length > 16) {
+        validationErrors.cardNumber = "Card number must be 13-16 digits.";
+      }
+
+      if (!/^[a-zA-Z\s'-]{3,}$/.test(formData.cardHolder)) {
+        validationErrors.cardHolder = "Enter a valid cardholder name.";
+      }
+
+      if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(formData.cardExpiry)) {
+        validationErrors.cardExpiry = "Use MM/YY format.";
+      }
+
+      if (!/^\d{3,4}$/.test(formData.cardCvv)) {
+        validationErrors.cardCvv = "CVV must be 3 or 4 digits.";
+      }
+    }
+
+    if (formData.paymentMethod === "bank_transfer") {
+      const bankDigits = formData.bankAccountNumber.replace(/\D/g, "");
+      if (bankDigits.length < 8 || bankDigits.length > 20) {
+        validationErrors.bankAccountNumber = "Account number must be 8-20 digits.";
+      }
+      if (!formData.bankReference.trim()) {
+        validationErrors.bankReference = "Reference is required for bank transfers.";
+      }
+    }
+
+    if (Object.keys(validationErrors).length) {
+      setFieldErrors(validationErrors);
+      setError("Please correct the highlighted fields.");
       return;
     }
 
     setIsSubmitting(true);
     try {
+      const sanitizedDescription = formData.description.trim();
+
+      const metadata = {};
+
+      if (formData.paymentMethod === "credit_card" || formData.paymentMethod === "debit_card") {
+        const digits = formData.cardNumber.replace(/\s/g, "");
+        metadata.cardHolder = formData.cardHolder.trim();
+        metadata.cardLast4 = digits.slice(-4);
+        metadata.cardBrand = formData.paymentMethod;
+        metadata.cardExpiry = formData.cardExpiry;
+      }
+
+      if (formData.paymentMethod === "bank_transfer") {
+        const bankDigits = formData.bankAccountNumber.replace(/\D/g, "");
+        metadata.bankAccountMasked = bankDigits.replace(/\d(?=\d{4})/g, "*");
+        metadata.bankReference = formData.bankReference.trim();
+      }
+
       const response = await createPayment({
         amount: amountNum,
         currency: formData.currency,
         paymentMethod: formData.paymentMethod,
-        description: formData.description.trim(),
+        description: sanitizedDescription,
+        metadata,
       });
 
       const paymentId = response?.data?.data?._id;
@@ -131,11 +258,24 @@ export default function CreatePayment() {
       const amountDisplay = `${formData.currency} ${amountNum.toFixed(2)}`;
       const referenceDisplay = transactionId ? ` Reference: ${transactionId}` : "";
       setMessage(`✅ Payment completed. ${amountDisplay} processed securely.${referenceDisplay}`);
-      setFormData({ amount: "", currency: "ZAR", paymentMethod: "bank_transfer", description: "" });
+      setFormData(createInitialFormState());
+      setFieldErrors({});
+      setError("");
     } catch (err) {
       console.error("Create payment error", err);
       const msg = err?.response?.data?.message || err.message || "Failed to create payment";
-      setError(msg);
+      if (err?.response?.data?.errors) {
+        const apiErrors = err.response.data.errors.reduce((acc, current) => {
+          if (current.param) {
+            acc[current.param] = current.msg;
+          }
+          return acc;
+        }, {});
+        setFieldErrors(apiErrors);
+        setError(err.response.data.message || "Please correct the highlighted fields.");
+      } else {
+        setError(msg);
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -366,26 +506,203 @@ export default function CreatePayment() {
               onChange={handleChange}
               placeholder="0.00"
               required
+              disabled={isSubmitting}
+              aria-invalid={Boolean(fieldErrors.amount)}
+              aria-describedby={fieldErrors.amount ? "amount-error" : undefined}
             />
+            {fieldErrors.amount && (
+              <div id="amount-error" style={{ color: "#EF4444", fontSize: "13px", fontWeight: 600 }}>
+                {fieldErrors.amount}
+              </div>
+            )}
           </div>
 
           <div className="form__field">
             <label htmlFor="currency">Currency</label>
-            <select id="currency" name="currency" value={formData.currency} onChange={handleChange}>
+            <select
+              id="currency"
+              name="currency"
+              value={formData.currency}
+              onChange={handleChange}
+              disabled={isSubmitting}
+              aria-invalid={Boolean(fieldErrors.currency)}
+              aria-describedby={fieldErrors.currency ? "currency-error" : undefined}
+            >
               {allowedCurrencies.map((c) => (
                 <option key={c.value} value={c.value}>{c.label}</option>
               ))}
             </select>
+            {fieldErrors.currency && (
+              <div id="currency-error" style={{ color: "#EF4444", fontSize: "13px", fontWeight: 600 }}>
+                {fieldErrors.currency}
+              </div>
+            )}
           </div>
 
           <div className="form__field">
             <label htmlFor="paymentMethod">Payment Method</label>
-            <select id="paymentMethod" name="paymentMethod" value={formData.paymentMethod} onChange={handleChange}>
+            <select
+              id="paymentMethod"
+              name="paymentMethod"
+              value={formData.paymentMethod}
+              onChange={handleChange}
+              disabled={isSubmitting}
+              aria-invalid={Boolean(fieldErrors.paymentMethod)}
+              aria-describedby={fieldErrors.paymentMethod ? "paymentMethod-error" : undefined}
+            >
               {paymentMethods.map((m) => (
                 <option key={m.value} value={m.value}>{m.label}</option>
               ))}
             </select>
+            {fieldErrors.paymentMethod && (
+              <div id="paymentMethod-error" style={{ color: "#EF4444", fontSize: "13px", fontWeight: 600 }}>
+                {fieldErrors.paymentMethod}
+              </div>
+            )}
           </div>
+
+          {isBankTransfer && (
+            <>
+              <div className="form__field">
+                <label htmlFor="bankAccountNumber">Bank Account Number</label>
+                <input
+                  id="bankAccountNumber"
+                  name="bankAccountNumber"
+                  type="text"
+                  value={formData.bankAccountNumber}
+                  onChange={handleChange}
+                  placeholder="Enter beneficiary account number"
+                  required
+                  disabled={isSubmitting}
+                  aria-invalid={Boolean(fieldErrors.bankAccountNumber)}
+                  aria-describedby={fieldErrors.bankAccountNumber ? "bankAccountNumber-error" : undefined}
+                />
+                {fieldErrors.bankAccountNumber && (
+                  <div id="bankAccountNumber-error" style={{ color: "#EF4444", fontSize: "13px", fontWeight: 600 }}>
+                    {fieldErrors.bankAccountNumber}
+                  </div>
+                )}
+              </div>
+
+              <div className="form__field">
+                <label htmlFor="bankReference">Payment Reference</label>
+                <input
+                  id="bankReference"
+                  name="bankReference"
+                  type="text"
+                  value={formData.bankReference}
+                  onChange={handleChange}
+                  placeholder="Add reference for the transfer"
+                  required
+                  disabled={isSubmitting}
+                  aria-invalid={Boolean(fieldErrors.bankReference)}
+                  aria-describedby={fieldErrors.bankReference ? "bankReference-error" : undefined}
+                />
+                {fieldErrors.bankReference && (
+                  <div id="bankReference-error" style={{ color: "#EF4444", fontSize: "13px", fontWeight: 600 }}>
+                    {fieldErrors.bankReference}
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+
+          {isCardPayment && (
+            <>
+              <div className="form__field">
+                <label htmlFor="cardHolder">Cardholder Name</label>
+                <input
+                  id="cardHolder"
+                  name="cardHolder"
+                  type="text"
+                  value={formData.cardHolder}
+                  onChange={handleChange}
+                  placeholder="Name on card"
+                  required
+                  disabled={isSubmitting}
+                  autoComplete="cc-name"
+                  aria-invalid={Boolean(fieldErrors.cardHolder)}
+                  aria-describedby={fieldErrors.cardHolder ? "cardHolder-error" : undefined}
+                />
+                {fieldErrors.cardHolder && (
+                  <div id="cardHolder-error" style={{ color: "#EF4444", fontSize: "13px", fontWeight: 600 }}>
+                    {fieldErrors.cardHolder}
+                  </div>
+                )}
+              </div>
+
+              <div className="form__field">
+                <label htmlFor="cardNumber">Card Number</label>
+                <input
+                  id="cardNumber"
+                  name="cardNumber"
+                  type="text"
+                  value={formData.cardNumber}
+                  onChange={handleChange}
+                  placeholder="1234 5678 9012 3456"
+                  required
+                  disabled={isSubmitting}
+                  inputMode="numeric"
+                  autoComplete="cc-number"
+                  aria-invalid={Boolean(fieldErrors.cardNumber)}
+                  aria-describedby={fieldErrors.cardNumber ? "cardNumber-error" : undefined}
+                />
+                {fieldErrors.cardNumber && (
+                  <div id="cardNumber-error" style={{ color: "#EF4444", fontSize: "13px", fontWeight: 600 }}>
+                    {fieldErrors.cardNumber}
+                  </div>
+                )}
+              </div>
+
+              <div className="form__field" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                  <label htmlFor="cardExpiry">Expiry (MM/YY)</label>
+                  <input
+                    id="cardExpiry"
+                    name="cardExpiry"
+                    type="text"
+                    value={formData.cardExpiry}
+                    onChange={handleChange}
+                    placeholder="MM/YY"
+                    required
+                    disabled={isSubmitting}
+                    inputMode="numeric"
+                    autoComplete="cc-exp"
+                    aria-invalid={Boolean(fieldErrors.cardExpiry)}
+                    aria-describedby={fieldErrors.cardExpiry ? "cardExpiry-error" : undefined}
+                  />
+                  {fieldErrors.cardExpiry && (
+                    <div id="cardExpiry-error" style={{ color: "#EF4444", fontSize: "13px", fontWeight: 600 }}>
+                      {fieldErrors.cardExpiry}
+                    </div>
+                  )}
+                </div>
+
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                  <label htmlFor="cardCvv">CVV</label>
+                  <input
+                    id="cardCvv"
+                    name="cardCvv"
+                    type="password"
+                    value={formData.cardCvv}
+                    onChange={handleChange}
+                    placeholder="***"
+                    required
+                    disabled={isSubmitting}
+                    inputMode="numeric"
+                    autoComplete="cc-csc"
+                    aria-invalid={Boolean(fieldErrors.cardCvv)}
+                    aria-describedby={fieldErrors.cardCvv ? "cardCvv-error" : undefined}
+                  />
+                  {fieldErrors.cardCvv && (
+                    <div id="cardCvv-error" style={{ color: "#EF4444", fontSize: "13px", fontWeight: 600 }}>
+                      {fieldErrors.cardCvv}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
 
           <div className="form__field">
             <label htmlFor="description">Description (optional)</label>
@@ -396,7 +713,15 @@ export default function CreatePayment() {
               onChange={handleChange}
               placeholder="Add an optional note..."
               maxLength={250}
+              disabled={isSubmitting}
+              aria-invalid={Boolean(fieldErrors.description)}
+              aria-describedby={fieldErrors.description ? "description-error" : undefined}
             />
+            {fieldErrors.description && (
+              <div id="description-error" style={{ color: "#EF4444", fontSize: "13px", fontWeight: 600 }}>
+                {fieldErrors.description}
+              </div>
+            )}
           </div>
 
           <div className="form__actions">

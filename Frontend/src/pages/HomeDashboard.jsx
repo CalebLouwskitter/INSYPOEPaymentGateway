@@ -1,8 +1,7 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
 	getAllPayments,
-	createPayment,
 	updatePaymentStatus,
 	deletePayment,
 	logout as apiLogout,
@@ -30,13 +29,6 @@ const allowedStatuses = [
 	{ value: "completed", label: "Completed" },
 	{ value: "failed", label: "Failed" },
 	{ value: "refunded", label: "Refunded" },
-];
-
-const allowedCurrencies = [
-	{ value: "USD", label: "USD" },
-	{ value: "EUR", label: "EUR" },
-	{ value: "ZAR", label: "ZAR" },
-	{ value: "GBP", label: "GBP" },
 ];
 
 const quickPaymentOptions = [
@@ -77,7 +69,7 @@ const quickPaymentOptions = [
 	},
 ];
 
-const formatCurrency = (amount, currency = "USD") => {
+const formatCurrency = (amount, currency = "ZAR") => {
 	try {
 		return new Intl.NumberFormat("en-US", {
 			style: "currency",
@@ -109,14 +101,6 @@ export default function HomeDashboard() {
 	const [error, setError] = useState("");
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [selectedPaymentId, setSelectedPaymentId] = useState("");
-	const createFormRef = useRef(null);
-
-	const [formData, setFormData] = useState({
-		amount: "",
-		currency: "USD",
-		paymentMethod: "credit_card",
-		description: "",
-	});
 
 	const [updateData, setUpdateData] = useState({
 		status: "pending",
@@ -191,33 +175,6 @@ export default function HomeDashboard() {
 		return null;
 	}
 
-	const handleCreatePayment = async (e) => {
-		e.preventDefault();
-		setIsSubmitting(true);
-		setError("");
-
-		try {
-			const payload = {
-				...formData,
-				amount: Number.parseFloat(formData.amount),
-			};
-
-			if (!Number.isFinite(payload.amount) || payload.amount <= 0) {
-				throw new Error("Amount must be greater than zero");
-			}
-
-			await createPayment(payload);
-			await loadPayments();
-			setFormData({ amount: "", currency: "USD", paymentMethod: "credit_card", description: "" });
-		} catch (err) {
-			console.error("Error creating payment", err);
-			const message = err?.response?.data?.message || err.message || "Unable to create payment";
-			setError(message);
-		} finally {
-			setIsSubmitting(false);
-		}
-	};
-
 	const handleSelectPayment = (e) => {
 		const paymentId = e.target.value;
 		setSelectedPaymentId(paymentId);
@@ -274,10 +231,6 @@ export default function HomeDashboard() {
 		}
 	};
 
-	const scrollToCreateForm = () => {
-		createFormRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-	};
-
 	return (
 		<div className="dashboard">
 			<header className="dashboard__header">
@@ -289,8 +242,8 @@ export default function HomeDashboard() {
 					{user?.accountNumber && (
 						<span className="dashboard__user">User ID: {user.accountNumber}</span>
 					)}
-					<button className="btn btn--primary" onClick={scrollToCreateForm}>
-						+ Add New Payment
+					<button className="btn btn--primary" onClick={() => navigate("/paymentportal")}>
+						+ Create Payment
 					</button>
 					<button className="btn btn--ghost" onClick={handleLogout}>
 						Logout
@@ -399,7 +352,6 @@ export default function HomeDashboard() {
 													onClick={() => {
 														setSelectedPaymentId(payment._id);
 														setUpdateData({ status: payment.status });
-														scrollToCreateForm();
 													}}
 												>
 													{meta.actionLabel}
@@ -420,70 +372,7 @@ export default function HomeDashboard() {
 					)}
 				</div>
 
-				<div className="card card--forms" ref={createFormRef}>
-					<div className="card__section">
-						<h3>Create Payment</h3>
-						<form className="form" onSubmit={handleCreatePayment}>
-							<label className="form__field">
-								<span>Amount</span>
-								<input
-									type="number"
-									name="amount"
-									step="0.01"
-									min="0"
-									value={formData.amount}
-									onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-									required
-								/>
-							</label>
-
-							<label className="form__field">
-								<span>Currency</span>
-								<select
-									name="currency"
-									value={formData.currency}
-									onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
-								>
-									{allowedCurrencies.map((curr) => (
-										<option key={curr.value} value={curr.value}>
-											{curr.label}
-										</option>
-									))}
-								</select>
-							</label>
-
-							<label className="form__field">
-								<span>Payment Method</span>
-								<select
-									name="paymentMethod"
-									value={formData.paymentMethod}
-									onChange={(e) => setFormData({ ...formData, paymentMethod: e.target.value })}
-								>
-									{paymentMethods.map((method) => (
-										<option key={method.value} value={method.value}>
-											{method.label}
-										</option>
-									))}
-								</select>
-							</label>
-
-							<label className="form__field">
-								<span>Description</span>
-								<textarea
-									name="description"
-									rows="3"
-									placeholder="Add an optional note"
-									value={formData.description}
-									onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-								/>
-							</label>
-
-							<button type="submit" className="btn btn--primary" disabled={isSubmitting}>
-								{isSubmitting ? "Saving..." : "Create Payment"}
-							</button>
-						</form>
-					</div>
-
+				<div className="card card--forms">
 					<div className="card__section card__section--border">
 						<h3>Update Payment Status</h3>
 						<form className="form" onSubmit={handleUpdateStatus}>
