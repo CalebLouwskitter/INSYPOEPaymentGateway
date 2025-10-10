@@ -20,7 +20,7 @@ const handleValidationErrors = (req, res, next) => {
 };
 
 // Validation rules for user registration
-// Express Validator Team. (2025)
+// (Express Validator Team, 2025)
 const validateRegister = [
     body('fullName')
         .trim()
@@ -47,7 +47,7 @@ const validateRegister = [
 ];
 
 // Validation rules for user login
-// Express Validator Team. (2025)
+// (Express Validator Team, 2025)
 const validateLogin = [
     body('fullName')
         .trim()
@@ -76,7 +76,7 @@ const validateLogin = [
 ];
 
 // Validation rules for creating a payment
-// Express Validator Team. (2025)
+// (Express Validator Team, 2025)
 const validateCreatePayment = [
     body('amount')
         .isFloat({ min: 0.01 })
@@ -100,7 +100,7 @@ const validateCreatePayment = [
 ];
 
 // Validation rules for updating payment status
-// Express Validator Team. (2025)
+// (Express Validator Team, 2025)
 const validateUpdatePaymentStatus = [
     param('id')
         .isMongoId()
@@ -112,6 +112,7 @@ const validateUpdatePaymentStatus = [
 ];
 
 // Validation rules for payment ID parameter
+// (Express Validator Team, 2025)
 const validatePaymentId = [
     param('id')
         .isMongoId()
@@ -119,6 +120,8 @@ const validatePaymentId = [
     handleValidationErrors
 ];
 
+// export the validation middlewares
+// (Express Validator Team, 2025)
 module.exports = {
     validateRegister,
     validateLogin,

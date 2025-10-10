@@ -2,11 +2,15 @@
 // Provides per-request ID, start/end logs, optional (sanitized) body logging.
 // Controlled by environment flags so you can turn verbosity on/off without code changes.
 
+ // (Node.js, 2025)
 const { randomUUID } = require('crypto');
 
 // Fields that should be masked if present in request bodies
+ // (Node.js, 2025)
 const SENSITIVE_KEYS = ['password', 'token', 'authorization', 'auth', 'secret'];
 
+// Recursively sanitize an object/array/value by masking sensitive fields
+ // (Node.js, 2025)
 function sanitize(value) {
   if (value == null) return value;
   if (Array.isArray(value)) return value.map(sanitize);
@@ -40,6 +44,7 @@ function loggerMiddleware(options = {}) {
     const startHr = process.hrtime.bigint();
 
     // Determine if body should be logged (after JSON parsing middleware)
+    // (Node.js, 2025)
     let bodyForLog;
     if (logBodies && req.body && req.is && req.is('application/json')) {
       // Only log up to 2KB of body to avoid noise
@@ -47,10 +52,10 @@ function loggerMiddleware(options = {}) {
       const json = JSON.stringify(sanitized);
       bodyForLog = json.length > 2048 ? json.slice(0, 2048) + '…(truncated)' : json;
     }
-
+    // Log the incoming request
     const userTag = req.user ? (req.user.id || req.user._id || req.user.username || 'user') : 'anon';
     console.log(`[REQ] id=${req.id} method=${req.method} url=${req.originalUrl} user=${userTag} ip=${req.ip}${bodyForLog ? ' body=' + bodyForLog : ''}`);
-
+    // Log when the response is finished
     res.on('finish', () => {
       const durationMs = Number(process.hrtime.bigint() - startHr) / 1e6;
       const status = res.statusCode;

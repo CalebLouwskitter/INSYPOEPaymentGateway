@@ -3,10 +3,9 @@ require('dotenv').config();
 
 
 // References:
-
-// References:
 // Auth0. (2025) jsonwebtoken - npm. Available at: https://www.npmjs.com/package/jsonwebtoken (Accessed: 07 October 2025).
-// Express.js. (2025) Express.js - Fast, unopinionated, minimalist web framework for Node.js. Available at: https://expressjs.com/ (Accessed: 07 October 2025).
+
+
 // create a blacklist of tokens we have invalidated
 const tokenBlacklist = new Set();
 

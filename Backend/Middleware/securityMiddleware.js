@@ -14,12 +14,15 @@ const xss = require('xss-clean');
 // Helmetjs Team. (2025) Helmet.js Documentation. Available at: https://helmetjs.github.io/ (Accessed: 07 January 2025).
 // Express.js Team. (2025) cors - npm. Available at: https://www.npmjs.com/package/cors (Accessed: 07 January 2025).
 // Mozilla Developer Network. (2025) Cross-Origin Resource Sharing (CORS) - HTTP | MDN. Available at: https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS (Accessed: 07 January 2025).
+// Express.js. (2025) Express.js - Fast, unopinionated, minimalist web framework for Node.js. Available at: https://expressjs.com/ (Accessed: 07 October 2025).
 
+// Helper to parse comma-separated origins from environment variable
 const parseOrigins = (raw) => (raw || '')
   .split(',')
   .map((s) => s.trim())
   .filter(Boolean);
 
+  // CORS configuration options
 const corsOptions = {
     // origin allows us to set where we will permit requests from
     // In development, allow localhost with different ports
@@ -43,11 +46,14 @@ const corsOptions = {
     maxAge: 86400
 };
 
-// Helmetjs Team. (2025)
+
+// this is a function to apply security-related middlewares to an express app
+// (Helmetjs Team. 2025)
 const securityMiddlewares = (app) => {
     // Trust reverse proxy for TLS info (e.g., x-forwarded-proto)
     app.set('trust proxy', 1);
-
+    // Apply Helmet for various header protections
+    // (Helmetjs Team. 2025)
     app.use(helmet({
         contentSecurityPolicy: {
             useDefaults: true,
