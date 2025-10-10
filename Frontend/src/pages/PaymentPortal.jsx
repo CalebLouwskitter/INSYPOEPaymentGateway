@@ -4,10 +4,12 @@ import { useAuth } from "../context/AuthContext.jsx";
 import { createPayment, updatePaymentStatus } from "../services/paymentService.js";
 
 export default function CreatePayment() {
+  // Auth context provides user info and authentication status
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Initial state for the form
   const createInitialFormState = () => ({
     amount: "",
     currency: "ZAR",
@@ -22,12 +24,12 @@ export default function CreatePayment() {
   });
 
   const [formData, setFormData] = useState(createInitialFormState);
+  const [message, setMessage] = useState(""); // Success message
+  const [error, setError] = useState(""); // General error message
+  const [fieldErrors, setFieldErrors] = useState({}); // Validation errors per field
+  const [isSubmitting, setIsSubmitting] = useState(false); // Loading state
 
-  const [message, setMessage] = useState(""); // success message
-  const [error, setError] = useState(""); // error message
-  const [fieldErrors, setFieldErrors] = useState({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
+  // Allowed currencies and payment methods
   const allowedCurrencies = [
     { value: "USD", label: "USD" },
     { value: "EUR", label: "EUR" },
@@ -43,12 +45,14 @@ export default function CreatePayment() {
     { value: "mobile_wallet", label: "Mobile Wallet" },
   ];
 
+  // Redirect unauthenticated users to login
   useEffect(() => {
     if (!isAuthenticated) {
       navigate("/login", { replace: true });
     }
   }, [isAuthenticated, navigate]);
 
+  // Pre-fill form if a preset payment was passed via location.state
   useEffect(() => {
     const preset = location.state?.presetPayment;
     if (!preset) return;
@@ -62,6 +66,7 @@ export default function CreatePayment() {
     }));
   }, [location.state]);
 
+  // Mask the national ID for privacy
   const maskedNationalId = useMemo(() => {
     if (!user?.nationalId) {
       return "—";
@@ -69,19 +74,24 @@ export default function CreatePayment() {
     return user.nationalId.replace(/\d(?=\d{4})/g, "*");
   }, [user?.nationalId]);
 
+  // Determine which input fields to show based on payment method
   const isCardPayment = formData.paymentMethod === "credit_card" || formData.paymentMethod === "debit_card";
   const isBankTransfer = formData.paymentMethod === "bank_transfer";
 
+  // If user is not authenticated or data is not loaded, do not render form
   if (!isAuthenticated || !user) return null;
 
+  // Handle form input changes with sanitization and validation
   const handleChange = (e) => {
     const { name, value } = e.target;
     let sanitizedValue = value;
 
+    // Sanitize description
     if (name === "description") {
       sanitizedValue = value.replace(/[<>]/g, "").slice(0, 250);
     }
 
+    // Sanitize amount input
     if (name === "amount") {
       const normalized = value.replace(/[^0-9.]/g, "");
       const parts = normalized.split(".");
@@ -89,6 +99,7 @@ export default function CreatePayment() {
       sanitizedValue = cleaned;
     }
 
+    // Handle payment method change (reset irrelevant fields)
     if (name === "paymentMethod") {
       const allowedValues = paymentMethods.map((m) => m.value);
       if (!allowedValues.includes(value)) {
@@ -111,6 +122,7 @@ export default function CreatePayment() {
       return;
     }
 
+    // Sanitize card inputs
     if (name === "cardNumber") {
       const digitsOnly = value.replace(/\D/g, "").slice(0, 16);
       sanitizedValue = digitsOnly.replace(/(\d{4})(?=\d)/g, "$1 ");
@@ -131,6 +143,7 @@ export default function CreatePayment() {
       sanitizedValue = value.replace(/[^a-zA-Z\s'-]/g, "").slice(0, 60);
     }
 
+    // Sanitize bank inputs
     if (name === "bankAccountNumber") {
       sanitizedValue = value.replace(/\D/g, "").slice(0, 20);
     }
@@ -139,6 +152,7 @@ export default function CreatePayment() {
       sanitizedValue = value.replace(/[<>]/g, "").slice(0, 35);
     }
 
+    // Update state
     setFormData((s) => ({ ...s, [name]: sanitizedValue }));
     setMessage("");
     setError("");
@@ -216,6 +230,7 @@ export default function CreatePayment() {
       return;
     }
 
+     // Submit payment
     setIsSubmitting(true);
     try {
       const sanitizedDescription = formData.description.trim();
@@ -236,6 +251,7 @@ export default function CreatePayment() {
         metadata.bankReference = formData.bankReference.trim();
       }
 
+      // Create payment via API
       const response = await createPayment({
         amount: amountNum,
         currency: formData.currency,
@@ -247,6 +263,7 @@ export default function CreatePayment() {
       const paymentId = response?.data?.data?._id;
       const transactionId = response?.data?.data?.transactionId;
 
+      // Attempt to mark payment as completed
       if (paymentId) {
         try {
           await updatePaymentStatus(paymentId, "completed");
@@ -255,9 +272,10 @@ export default function CreatePayment() {
         }
       }
 
+      // Show success message
       const amountDisplay = `${formData.currency} ${amountNum.toFixed(2)}`;
       const referenceDisplay = transactionId ? ` Reference: ${transactionId}` : "";
-      setMessage(`✅ Payment completed. ${amountDisplay} processed securely.${referenceDisplay}`);
+      setMessage(`Payment completed. ${amountDisplay} processed securely.${referenceDisplay}`);
       setFormData(createInitialFormState());
       setFieldErrors({});
       setError("");
@@ -281,6 +299,7 @@ export default function CreatePayment() {
     }
   };
 
+  // (W3Schools, 2025)
   return (
     <div className="payment-portal">
       <style>{`
@@ -476,9 +495,12 @@ export default function CreatePayment() {
         <p>Logged in as <strong>{user.fullName || user.accountNumber || "Customer"}</strong>. Use the form below to create a payment.</p>
       </div>
 
+      {/* Success message banner */}
       {message && <div className="banner--success">{message}</div>}
+      {/* Error message banner */}
       {error && <div className="banner--error">{error}</div>}
 
+      {/* Card wrapper for the form and account summary */}
       <div className="payment-portal__card">
         <div className="summary-row" style={{ marginBottom: 14 }}>
           <div className="account-details">
@@ -494,6 +516,7 @@ export default function CreatePayment() {
         </div>
 
         <form className="form" onSubmit={handleSubmit}>
+          {/* Amount input */}
           <div className="form__field">
             <label htmlFor="amount">Amount</label>
             <input
@@ -517,6 +540,7 @@ export default function CreatePayment() {
             )}
           </div>
 
+          {/* Currency selection */}
           <div className="form__field">
             <label htmlFor="currency">Currency</label>
             <select
@@ -539,6 +563,7 @@ export default function CreatePayment() {
             )}
           </div>
 
+          {/* Payment method selection */}
           <div className="form__field">
             <label htmlFor="paymentMethod">Payment Method</label>
             <select
@@ -561,6 +586,7 @@ export default function CreatePayment() {
             )}
           </div>
 
+          {/* Bank transfer fields: rendered only if payment method is bank transfer */}
           {isBankTransfer && (
             <>
               <div className="form__field">
@@ -607,6 +633,7 @@ export default function CreatePayment() {
             </>
           )}
 
+          {/* Card payment fields: rendered only if payment method is card */}
           {isCardPayment && (
             <>
               <div className="form__field">
@@ -631,6 +658,7 @@ export default function CreatePayment() {
                 )}
               </div>
 
+              {/* Card Number */}
               <div className="form__field">
                 <label htmlFor="cardNumber">Card Number</label>
                 <input
@@ -654,7 +682,9 @@ export default function CreatePayment() {
                 )}
               </div>
 
+              {/* Card Expiry & CVV */}
               <div className="form__field" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                {/* Expiry Date */}
                 <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                   <label htmlFor="cardExpiry">Expiry (MM/YY)</label>
                   <input
@@ -678,6 +708,7 @@ export default function CreatePayment() {
                   )}
                 </div>
 
+                {/* CVV */}
                 <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                   <label htmlFor="cardCvv">CVV</label>
                   <input
@@ -704,6 +735,7 @@ export default function CreatePayment() {
             </>
           )}
 
+          {/* Description textarea */}
           <div className="form__field">
             <label htmlFor="description">Description (optional)</label>
             <textarea
@@ -737,3 +769,4 @@ export default function CreatePayment() {
     </div>
   );
 }
+// W3Schools, 2025. Styling React Using CSS. Available at: https://www.w3schools.com/react/react_css.asp [Accessed 10 October 2025].

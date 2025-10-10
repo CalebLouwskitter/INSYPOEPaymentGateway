@@ -10,12 +10,13 @@ import ProtectedRoute from './components/ProtectedRoute.jsx'
 function App() {
   return (
     <AuthProvider>
+      {/* Navigation for applicarion*/}
       <Router>
         <Routes>
-          <Route path="/" element={<CoverPage />} />
-          <Route path="/coverpage" element={<CoverPage />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/login" element={<Login />} />
+          <Route path="/" element={<CoverPage />} /> {/* (React Navigation, 2025) */}
+          <Route path="/coverpage" element={<CoverPage />} /> {/* (React Navigation, 2025) */}
+          <Route path="/register" element={<Register />} /> {/* (React Navigation, 2025) */}
+          <Route path="/login" element={<Login />} /> {/* (React Navigation, 2025) */}
           <Route
             path="/dashboard"
             element={
@@ -39,3 +40,4 @@ function App() {
 }
 
 export default App;
+// React Navigation, 2025. Moving between screens. Available at: https://reactnavigation.org/docs/navigating/ [Accessed 10 October 2025].

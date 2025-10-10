@@ -5,14 +5,11 @@ import { useAuth } from "../context/AuthContext.jsx";
 import cityscapeImage from "../assets/pexels-anete-lusina-4792381.webp";
 import abstractImage from "../assets/pexels-disha-sheta-596631-3521353.webp";
 
-// References:
-// Meta Platforms, Inc. (2025) React - A JavaScript library for building user interfaces. Available at: https://reactjs.org/ (Accessed: 07 January 2025).
-// Remix Software, Inc. (2025) React Router - Declarative routing for React. Available at: https://reactrouter.com/ (Accessed: 07 January 2025).
-
 export default function Register() {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
 
+  // Form state to store user inputs
   const [formData, setFormData] = useState({
     fullName: '',
     accountNumber: '',
@@ -21,14 +18,19 @@ export default function Register() {
     confirmPassword: ''
   });
 
+  // General error message
   const [error, setError] = useState('');
+  // Loading state while submitting the form
   const [loading, setLoading] = useState(false);
+  // Field-specific errors for validation feedback
   const [fieldErrors, setFieldErrors] = useState({});
 
+  // Colors for consistent styling
   const PRIMARY_COLOR = '#8B5CF6';
   const BUTTON_COLOR = '#4F46E5';
   const DARK_TEXT = '#1F2937';
 
+  // Default style for input fields
   const inputStyle = {
     width: '100%',
     padding: '12px',
@@ -41,44 +43,53 @@ export default function Register() {
     transition: 'border-color 0.3s, background-color 0.3s',
   };
 
+  // Handle input changes and sanitize data
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    let sanitizedValue = value.replace(/[<>]/g, "");
+    let sanitizedValue = value.replace(/[<>]/g, ""); // remove potentially unsafe characters
 
+    // Only allow digits and limit length for account number
     if (name === 'accountNumber') {
       sanitizedValue = sanitizedValue.replace(/\D/g, "").slice(0, 10);
     }
 
+    // Only allow digits and limit length for national ID
     if (name === 'nationalId') {
       sanitizedValue = sanitizedValue.replace(/\D/g, "").slice(0, 13);
     }
 
+    // Only allow letters, spaces, hyphens, apostrophes for full name
     if (name === 'fullName') {
       sanitizedValue = sanitizedValue.replace(/[^a-zA-Z\s'-]/g, "");
     }
 
+    // Update state and reset any previous errors
     setFormData({ ...formData, [name]: sanitizedValue });
     setError('');
     setFieldErrors((prev) => ({ ...prev, [name]: '' }));
     e.target.setCustomValidity('');
   };
 
+  // Redirect authenticated users to dashboard
   useEffect(() => {
     if (isAuthenticated) {
       navigate('/dashboard', { replace: true });
     }
   }, [isAuthenticated, navigate]);
 
+  // Focus styling for inputs
   const handleInputFocus = (e) => {
     e.target.style.borderColor = PRIMARY_COLOR;
     e.target.style.backgroundColor = 'white';
   };
 
+  // Blur styling to reset inputs
   const handleInputBlur = (e) => {
     e.target.style.borderColor = '#D1D5DB';
     e.target.style.backgroundColor = '#F3F4F6';
   };
 
+  // Handle form submission
   const handleRegister = async (e) => {
     e.preventDefault();
     const form = e.target;
@@ -103,30 +114,35 @@ export default function Register() {
       validationErrors.fullName = message;
     }
 
+    // Validate account number (exactly 10 digits)
     if (!/^\d{10}$/.test(formData.accountNumber)) {
       const message = "Please enter exactly 10 digits for your Account Number.";
       accountInput.setCustomValidity(message);
       validationErrors.accountNumber = message;
     }
 
+    // Validate national ID (exactly 13 digits)
     if (!/^\d{13}$/.test(formData.nationalId)) {
       const message = "Please enter exactly 13 digits for your National ID.";
       nationalIdInput.setCustomValidity(message);
       validationErrors.nationalId = message;
     }
 
+    // Validate password (min 6 chars)
     if (formData.password.length < 6) {
       const message = "Password must be at least 6 characters long.";
       passwordInput.setCustomValidity(message);
       validationErrors.password = message;
     }
 
+    // Confirm password matches
     if (formData.password !== formData.confirmPassword) {
       const message = "Passwords do not match. Please verify.";
       confirmPasswordInput.setCustomValidity(message);
       validationErrors.confirmPassword = message;
     }
 
+    // If any validation errors exist, show them
     if (Object.keys(validationErrors).length) {
       setFieldErrors(validationErrors);
       setError('Please correct the highlighted fields.');
@@ -139,7 +155,7 @@ export default function Register() {
     setFieldErrors({});
 
     try {
-      console.log("📤 Sending registration request:", { 
+      console.log("Sending registration request:", { 
         fullName: formData.fullName, 
         accountNumber: formData.accountNumber,
         nationalId: formData.nationalId
@@ -153,7 +169,7 @@ export default function Register() {
         password: formData.password
       });
 
-      console.log("✅ Registration Success:", response.data);
+      console.log("Registration Success:", response.data);
 
       // Store token and user info in localStorage
       if (response.data.token) {
@@ -165,7 +181,7 @@ export default function Register() {
       alert('Registration successful! Please login with your credentials.');
       navigate("/login", { replace: true });
     } catch (err) {
-      console.error("❌ Registration error:", err);
+      console.error("Registration error:", err);
       
       // Handle error response
       if (err.response?.data?.errors?.length) {
@@ -215,6 +231,7 @@ export default function Register() {
     onMouseUp: (e) => e.target.style.transform = 'scale(1)'
   };
 
+  // (W3Schools, 2025)
   return (
     <div style={{
       display: 'flex',
@@ -492,6 +509,7 @@ export default function Register() {
           </div>
         </div>
 
+        {/* Animations keyframes */}
         <style>
           {`
             @keyframes fadeIn {
@@ -532,3 +550,7 @@ export default function Register() {
     </div>
   );
 }
+
+// Meta Platforms, Inc. (2025) React - A JavaScript library for building user interfaces. Available at: https://reactjs.org/ (Accessed: 07 January 2025).
+// Remix Software, Inc. (2025) React Router - Declarative routing for React. Available at: https://reactrouter.com/ (Accessed: 07 January 2025).
+// W3Schools, 2025. Styling React Using CSS. Available at: https://www.w3schools.com/react/react_css.asp [Accessed 10 October 2025].
