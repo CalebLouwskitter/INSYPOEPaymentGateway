@@ -52,6 +52,13 @@ export default function CreatePayment() {
     }));
   }, [location.state]);
 
+  const maskedNationalId = useMemo(() => {
+    if (!user?.nationalId) {
+      return "—";
+    }
+    return user.nationalId.replace(/\d(?=\d{4})/g, "*");
+  }, [user?.nationalId]);
+
   if (!isAuthenticated || !user) return null;
 
   const handleChange = (e) => {
@@ -133,13 +140,6 @@ export default function CreatePayment() {
       setIsSubmitting(false);
     }
   };
-
-  const maskedNationalId = useMemo(() => {
-    if (!user?.nationalId) {
-      return "—";
-    }
-    return user.nationalId.replace(/\d(?=\d{4})/g, "*");
-  }, [user?.nationalId]);
 
   return (
     <div className="payment-portal">
