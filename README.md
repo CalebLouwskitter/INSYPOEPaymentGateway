@@ -156,7 +156,7 @@ Lusina, A., 2025. Person picking fake Monopoly money [Photograph]. Pexels. Avail
  (Accessed: 10 October 2025).
 
 Meta Platforms, Inc., 2025. React - A JavaScript library for building user interfaces. Available at: https://reactjs.org/
- (Accessed: 07 January 2025).
+ (Accessed: 07 October 2025).
 
 MongoDB, 2025. The World’s Leading Modern Database. Available at: https://www.mongodb.com/
  (Accessed: 10 October 2025).
@@ -171,7 +171,7 @@ React Navigation, 2025. Moving between screens. Available at: https://reactnavig
  (Accessed: 10 October 2025).
 
 Remix Software, Inc., 2025. React Router - Declarative routing for React. Available at: https://reactrouter.com/
- (Accessed: 07 January 2025).
+ (Accessed: 07 October 2025).
 
 Sheta, D., 2025. Seven Indian rupee banknotes hanging from clothesline on clothes pegs [Photograph]. Pexels. Available at: https://www.pexels.com/photo/seven-indian-rupee-banknotes-hanging-from-clothesline-on-clothes-pegs-3521353/
  (Accessed: 10 October 2025).
