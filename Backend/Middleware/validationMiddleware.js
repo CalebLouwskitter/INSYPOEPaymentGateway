@@ -34,6 +34,12 @@ const validateRegister = [
         .withMessage('Account number must be exactly 10 digits')
         .isNumeric()
         .withMessage('Account number must contain only numbers'),
+    body('nationalId')
+        .trim()
+        .isLength({ min: 13, max: 13 })
+        .withMessage('National ID must be exactly 13 digits')
+        .isNumeric()
+        .withMessage('National ID must contain only numbers'),
     body('password')
         .isLength({ min: 6 })
         .withMessage('Password must be at least 6 characters long'),
@@ -55,6 +61,14 @@ const validateLogin = [
         .withMessage('Account number must be exactly 10 digits')
         .isNumeric()
         .withMessage('Account number must contain only numbers'),
+    body('nationalId')
+        .trim()
+        .notEmpty()
+        .withMessage('National ID is required')
+        .isLength({ min: 13, max: 13 })
+        .withMessage('National ID must be exactly 13 digits')
+        .isNumeric()
+        .withMessage('National ID must contain only numbers'),
     body('password')
         .notEmpty()
         .withMessage('Password is required'),

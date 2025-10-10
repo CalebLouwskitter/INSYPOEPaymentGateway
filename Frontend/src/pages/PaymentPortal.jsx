@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 import { createPayment, updatePaymentStatus } from "../services/paymentService.js";
@@ -56,7 +56,16 @@ export default function CreatePayment() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    const sanitizedValue = name === "description" ? value.replace(/[<>]/g, "") : value;
+    let sanitizedValue = value;
+
+    if (name === "description") {
+      sanitizedValue = value.replace(/[<>]/g, "").slice(0, 250);
+    }
+
+    if (name === "amount") {
+      sanitizedValue = value.replace(/[^0-9.]/g, "");
+    }
+
     setFormData((s) => ({ ...s, [name]: sanitizedValue }));
     setMessage("");
     setError("");
@@ -79,13 +88,26 @@ export default function CreatePayment() {
       return;
     }
 
+    // Ensure currency and payment method are from allowed lists to prevent tampering
+    const isCurrencyAllowed = allowedCurrencies.some((c) => c.value === formData.currency);
+    if (!isCurrencyAllowed) {
+      setError("Invalid currency selection. Please choose a valid option.");
+      return;
+    }
+
+    const isMethodAllowed = paymentMethods.some((m) => m.value === formData.paymentMethod);
+    if (!isMethodAllowed) {
+      setError("Invalid payment method selection.");
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const response = await createPayment({
         amount: amountNum,
         currency: formData.currency,
         paymentMethod: formData.paymentMethod,
-        description: formData.description,
+        description: formData.description.trim(),
       });
 
       const paymentId = response?.data?.data?._id;
@@ -111,6 +133,13 @@ export default function CreatePayment() {
       setIsSubmitting(false);
     }
   };
+
+  const maskedNationalId = useMemo(() => {
+    if (!user?.nationalId) {
+      return "—";
+    }
+    return user.nationalId.replace(/\d(?=\d{4})/g, "*");
+  }, [user?.nationalId]);
 
   return (
     <div className="payment-portal">
@@ -318,8 +347,8 @@ export default function CreatePayment() {
               <div style={{ fontSize: 13, color: "var(--color-muted)" }}>Account Number</div>
             </div>
             <div style={{ marginLeft: 8 }}>
-              <div style={{ fontWeight: 700 }}>{user.idNumber || "—"}</div>
-              <div style={{ fontSize: 13, color: "var(--color-muted)" }}>User ID</div>
+              <div style={{ fontWeight: 700 }}>{maskedNationalId}</div>
+              <div style={{ fontSize: 13, color: "var(--color-muted)" }}>National ID</div>
             </div>
           </div>
         </div>
@@ -366,6 +395,7 @@ export default function CreatePayment() {
               value={formData.description}
               onChange={handleChange}
               placeholder="Add an optional note..."
+              maxLength={250}
             />
           </div>
 

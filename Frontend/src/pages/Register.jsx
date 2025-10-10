@@ -14,12 +14,14 @@ export default function Register() {
   const [formData, setFormData] = useState({
     fullName: '',
     accountNumber: '',
+    nationalId: '',
     password: '',
     confirmPassword: ''
   });
 
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({});
 
   const PRIMARY_COLOR = '#8B5CF6';
   const BUTTON_COLOR = '#4F46E5';
@@ -39,9 +41,23 @@ export default function Register() {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    const sanitizedValue = value.replace(/[<>]/g, "");
+    let sanitizedValue = value.replace(/[<>]/g, "");
+
+    if (name === 'accountNumber') {
+      sanitizedValue = sanitizedValue.replace(/\D/g, "").slice(0, 10);
+    }
+
+    if (name === 'nationalId') {
+      sanitizedValue = sanitizedValue.replace(/\D/g, "").slice(0, 13);
+    }
+
+    if (name === 'fullName') {
+      sanitizedValue = sanitizedValue.replace(/[^a-zA-Z\s'-]/g, "");
+    }
+
     setFormData({ ...formData, [name]: sanitizedValue });
     setError('');
+    setFieldErrors((prev) => ({ ...prev, [name]: '' }));
     e.target.setCustomValidity('');
   };
 
@@ -66,46 +82,72 @@ export default function Register() {
     const form = e.target;
     const fullNameInput = form.elements.fullName;
     const accountInput = form.elements.accountNumber;
+    const nationalIdInput = form.elements.nationalId;
+    const passwordInput = form.elements.password;
+    const confirmPasswordInput = form.elements.confirmPassword;
 
     fullNameInput.setCustomValidity("");
     accountInput.setCustomValidity("");
+    nationalIdInput.setCustomValidity("");
+    passwordInput.setCustomValidity("");
+    confirmPasswordInput.setCustomValidity("");
+
+    const validationErrors = {};
 
     // Validate full name (at least 3 characters, letters and spaces only)
     if (!/^[a-zA-Z\s]{3,}$/.test(formData.fullName)) {
-      fullNameInput.setCustomValidity("Please enter a valid full name (at least 3 characters, letters only).");
-      form.reportValidity();
-      return;
+      const message = "Please enter a valid full name (at least 3 characters, letters only).";
+      fullNameInput.setCustomValidity(message);
+      validationErrors.fullName = message;
     }
 
     if (!/^\d{10}$/.test(formData.accountNumber)) {
-      accountInput.setCustomValidity("Please enter exactly 10 digits for your Account Number.");
-      form.reportValidity();
-      return;
+      const message = "Please enter exactly 10 digits for your Account Number.";
+      accountInput.setCustomValidity(message);
+      validationErrors.accountNumber = message;
+    }
+
+    if (!/^\d{13}$/.test(formData.nationalId)) {
+      const message = "Please enter exactly 13 digits for your National ID.";
+      nationalIdInput.setCustomValidity(message);
+      validationErrors.nationalId = message;
     }
 
     if (formData.password.length < 6) {
-      setError("Password must be at least 6 characters long.");
-      return;
+      const message = "Password must be at least 6 characters long.";
+      passwordInput.setCustomValidity(message);
+      validationErrors.password = message;
     }
 
     if (formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match. Please verify.");
+      const message = "Passwords do not match. Please verify.";
+      confirmPasswordInput.setCustomValidity(message);
+      validationErrors.confirmPassword = message;
+    }
+
+    if (Object.keys(validationErrors).length) {
+      setFieldErrors(validationErrors);
+      setError('Please correct the highlighted fields.');
+      form.reportValidity();
       return;
     }
 
     setLoading(true);
     setError('');
+    setFieldErrors({});
 
     try {
       console.log("📤 Sending registration request:", { 
         fullName: formData.fullName, 
-        accountNumber: formData.accountNumber 
+        accountNumber: formData.accountNumber,
+        nationalId: formData.nationalId
       });
 
       // Make API call to register endpoint
       const response = await axiosInstance.post('/auth/register', {
         fullName: formData.fullName,
         accountNumber: formData.accountNumber,
+        nationalId: formData.nationalId,
         password: formData.password
       });
 
@@ -118,18 +160,28 @@ export default function Register() {
       }
 
       // Show success message and redirect to login
-  alert('Registration successful! Please login with your credentials.');
-  navigate("/login", { replace: true });
+      alert('Registration successful! Please login with your credentials.');
+      navigate("/login", { replace: true });
     } catch (err) {
       console.error("❌ Registration error:", err);
       
       // Handle error response
-      if (err.response?.data?.message) {
+      if (err.response?.data?.errors?.length) {
+        const apiFieldErrors = err.response.data.errors.reduce((acc, current) => {
+          if (current.param) {
+            acc[current.param] = current.msg;
+            const inputElement = form.elements[current.param];
+            if (inputElement) {
+              inputElement.setCustomValidity(current.msg);
+            }
+          }
+          return acc;
+        }, {});
+        setFieldErrors(apiFieldErrors);
+        setError(err.response.data.message || 'Please correct the highlighted fields.');
+        form.reportValidity();
+      } else if (err.response?.data?.message) {
         setError(err.response.data.message);
-      } else if (err.response?.data?.errors) {
-        // Handle validation errors
-        const validationErrors = err.response.data.errors.map(e => e.msg).join(', ');
-        setError(validationErrors);
       } else if (err.message) {
         setError(err.message);
       } else {
@@ -144,10 +196,12 @@ export default function Register() {
     setFormData({
       fullName: '',
       accountNumber: '',
+      nationalId: '',
       password: '',
       confirmPassword: ''
     });
     setError('');
+    setFieldErrors({});
   };
 
   const buttonEffect = {
@@ -286,17 +340,18 @@ export default function Register() {
 
           <form onSubmit={handleRegister}>
             {[
-              { name: 'fullName', label: 'Full Name', placeholder: 'Enter your full name' },
-              { name: 'accountNumber', label: 'Account Number', placeholder: '10-digit Account number' },
-              { name: 'password', label: 'Password', placeholder: 'Choose a strong password' },
-              { name: 'confirmPassword', label: 'Confirm Password', placeholder: 'Confirm your password' }
-            ].map(({ name, label, placeholder }) => (
+              { name: 'fullName', label: 'Full Name', placeholder: 'Enter your full name', type: 'text', autoComplete: 'name' },
+              { name: 'accountNumber', label: 'Account Number', placeholder: '10-digit Account number', type: 'text', autoComplete: 'off', inputMode: 'numeric', maxLength: 10 },
+              { name: 'nationalId', label: 'National ID Number', placeholder: '13-digit National ID number', type: 'text', autoComplete: 'off', inputMode: 'numeric', maxLength: 13 },
+              { name: 'password', label: 'Password', placeholder: 'Choose a strong password', type: 'password', autoComplete: 'new-password' },
+              { name: 'confirmPassword', label: 'Confirm Password', placeholder: 'Confirm your password', type: 'password', autoComplete: 'new-password' }
+            ].map(({ name, label, placeholder, type, autoComplete, inputMode, maxLength }) => (
               <div key={name} style={{ marginBottom: '20px' }}>
                 <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', fontSize: '14px', color: DARK_TEXT }}>
                   {label}:
                 </label>
                 <input
-                  type={name.includes('password') ? 'password' : 'text'}
+                  type={type}
                   name={name}
                   placeholder={placeholder}
                   value={formData[name]}
@@ -305,7 +360,26 @@ export default function Register() {
                   style={inputStyle}
                   onFocus={handleInputFocus}
                   onBlur={handleInputBlur}
+                  disabled={loading}
+                  autoComplete={autoComplete}
+                  inputMode={inputMode}
+                  maxLength={maxLength}
+                  aria-invalid={Boolean(fieldErrors[name])}
+                  aria-describedby={fieldErrors[name] ? `${name}-error` : undefined}
                 />
+                {fieldErrors[name] && (
+                  <div
+                    id={`${name}-error`}
+                    style={{
+                      color: '#EF4444',
+                      marginTop: '8px',
+                      fontSize: '13px',
+                      fontWeight: 600
+                    }}
+                  >
+                    {fieldErrors[name]}
+                  </div>
+                )}
               </div>
             ))}
 

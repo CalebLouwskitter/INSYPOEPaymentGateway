@@ -19,14 +19,14 @@ const generateJwt = (fullName, userId) => {
 const register = async (req, res) => {
     try {
         // pull the required information from the incoming request
-    const { fullName, accountNumber, password } = req.body;
+        const { fullName, accountNumber, nationalId, password } = req.body;
 
-        console.log('[AUTH] Registration attempt:', { fullName, accountNumber, hasPassword: !!password });
+        console.log('[AUTH] Registration attempt:', { fullName, accountNumber, nationalId, hasPassword: !!password });
 
         // validate input
-        if (!fullName || !accountNumber || !password) {
+        if (!fullName || !accountNumber || !nationalId || !password) {
             console.log('[AUTH] Registration failed: Missing required fields');
-            return res.status(400).json({ message: "Full name, account number, and password are required" });
+            return res.status(400).json({ message: "Full name, account number, national ID, and password are required" });
         }
 
         if (password.length < 6) {
@@ -40,9 +40,16 @@ const register = async (req, res) => {
             return res.status(400).json({ message: "Account number must be exactly 10 digits" });
         }
 
+        // Validate national ID format (13 digits)
+        if (!/^\d{13}$/.test(nationalId)) {
+            console.log('[AUTH] Registration failed: Invalid national ID format');
+            return res.status(400).json({ message: "National ID must be exactly 13 digits" });
+        }
+
         // Sanitize inputs to prevent NoSQL injection
         const sanitizedFullName = String(fullName).trim();
         const sanitizedAccountNumber = String(accountNumber).trim();
+        const sanitizedNationalId = String(nationalId).trim();
         
         // before signing the user up, we need to check if their account number is already in use
         const exists = await User.findOne().where('accountNumber').equals(sanitizedAccountNumber);
@@ -53,10 +60,18 @@ const register = async (req, res) => {
             return res.status(400).json({ message: "Account number already exists" });
         }
 
+        const nationalIdExists = await User.findOne().where('nationalId').equals(sanitizedNationalId);
+
+        if (nationalIdExists) {
+            console.log('[AUTH] Registration failed: National ID already exists');
+            return res.status(400).json({ message: "National ID already exists" });
+        }
+
         // create the new user with sanitized data (model will hash password)
         const newUser = new User({
             fullName: sanitizedFullName,
             accountNumber: sanitizedAccountNumber,
+            nationalId: sanitizedNationalId,
             password: password,
             // email removed from model; no email stored
         });
@@ -73,7 +88,8 @@ const register = async (req, res) => {
             user: {
                 id: newUser._id,
                 fullName: newUser.fullName,
-                accountNumber: newUser.accountNumber
+                accountNumber: newUser.accountNumber,
+                nationalId: newUser.nationalId
             }
         });
     } catch (error) {
@@ -84,14 +100,14 @@ const register = async (req, res) => {
 
 const login = async (req, res) => {
     try {
-        const { fullName, accountNumber, password } = req.body;
+        const { fullName, accountNumber, nationalId, password } = req.body;
 
-        console.log('[AUTH] Login attempt:', { fullName, accountNumber, hasPassword: !!password });
+        console.log('[AUTH] Login attempt:', { fullName, accountNumber, nationalId, hasPassword: !!password });
 
         // validate input
-        if (!fullName || !accountNumber || !password) {
+        if (!fullName || !accountNumber || !nationalId || !password) {
             console.log('[AUTH] Login failed: Missing required fields');
-            return res.status(400).json({ message: "Full name, account number, and password are required" });
+            return res.status(400).json({ message: "Full name, account number, national ID, and password are required" });
         }
 
         // Validate account number format (10 digits)
@@ -100,14 +116,21 @@ const login = async (req, res) => {
             return res.status(400).json({ message: "Account number must be exactly 10 digits" });
         }
 
+        if (!/^\d{13}$/.test(nationalId)) {
+            console.log('[AUTH] Login failed: Invalid national ID format');
+            return res.status(400).json({ message: "National ID must be exactly 13 digits" });
+        }
+
         // Sanitize inputs to prevent NoSQL injection
         const sanitizedFullName = String(fullName).trim();
         const sanitizedAccountNumber = String(accountNumber).trim();
+        const sanitizedNationalId = String(nationalId).trim();
         
         // find the user in our collection by both fullName and accountNumber
         const user = await User.findOne({
             fullName: sanitizedFullName,
-            accountNumber: sanitizedAccountNumber
+            accountNumber: sanitizedAccountNumber,
+            nationalId: sanitizedNationalId
         });
         
         // if the user is not present in our collection, let them know to try again
@@ -136,7 +159,8 @@ const login = async (req, res) => {
             user: {
                 id: user._id,
                 fullName: user.fullName,
-                accountNumber: user.accountNumber
+                accountNumber: user.accountNumber,
+                nationalId: user.nationalId
             }
         });
     } catch (error) {

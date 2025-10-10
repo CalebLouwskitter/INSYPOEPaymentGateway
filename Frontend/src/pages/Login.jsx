@@ -26,18 +26,33 @@ export default function Login() {
   const [formData, setFormData] = useState({
     fullName: '',
     accountNumber: '',
+    nationalId: '',
     password: ''
   });
 
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({});
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    const sanitizedValue = value.replace(/[<>]/g, "");
+    let sanitizedValue = value.replace(/[<>]/g, "");
+
+    if (name === 'accountNumber') {
+      sanitizedValue = sanitizedValue.replace(/\D/g, "").slice(0, 10);
+    }
+
+    if (name === 'nationalId') {
+      sanitizedValue = sanitizedValue.replace(/\D/g, "").slice(0, 13);
+    }
+
+    if (name === 'fullName') {
+      sanitizedValue = sanitizedValue.replace(/[^a-zA-Z\s'-]/g, "");
+    }
+
     setFormData({ ...formData, [name]: sanitizedValue });
-    // Clear custom validity message and error when user types
     e.target.setCustomValidity('');
+    setFieldErrors((prev) => ({ ...prev, [name]: '' }));
     setError('');
   };
 
@@ -62,49 +77,86 @@ export default function Login() {
     const form = e.target;
     const fullNameInput = form.elements.fullName;
     const accountInput = form.elements.accountNumber;
+    const nationalIdInput = form.elements.nationalId;
+    const passwordInput = form.elements.password;
 
     // Reset previous messages
     fullNameInput.setCustomValidity("");
     accountInput.setCustomValidity("");
+    nationalIdInput.setCustomValidity("");
+    passwordInput.setCustomValidity("");
+
+    const validationErrors = {};
 
     // Validate full name
     if (!/^[a-zA-Z\s]{3,}$/.test(formData.fullName)) {
-      fullNameInput.setCustomValidity("Please enter a valid full name.");
-      form.reportValidity();
-      return;
+      const message = "Please enter a valid full name.";
+      fullNameInput.setCustomValidity(message);
+      validationErrors.fullName = message;
     }
 
     // Custom validity messages for account number
     if (!/^\d{10}$/.test(formData.accountNumber)) {
-      accountInput.setCustomValidity("Please enter exactly 10 digits for your Account Number.");
+      const message = "Please enter exactly 10 digits for your Account Number.";
+      accountInput.setCustomValidity(message);
+      validationErrors.accountNumber = message;
+    }
+
+    if (!/^\d{13}$/.test(formData.nationalId)) {
+      const message = "Please enter exactly 13 digits for your National ID.";
+      nationalIdInput.setCustomValidity(message);
+      validationErrors.nationalId = message;
+    }
+
+    if (!formData.password) {
+      const message = "Password is required.";
+      passwordInput.setCustomValidity(message);
+      validationErrors.password = message;
+    }
+
+    if (Object.keys(validationErrors).length) {
+      setFieldErrors(validationErrors);
+      setError('Please correct the highlighted fields.');
       form.reportValidity();
       return;
     }
 
     setLoading(true);
     setError('');
+    setFieldErrors({});
 
     try {
       // Use context login which handles API call and state
       const response = await login({
         fullName: formData.fullName,
         accountNumber: formData.accountNumber,
+        nationalId: formData.nationalId,
         password: formData.password,
       });
 
       console.log('✅ Login Success:', response?.data);
 
-    navigate('/dashboard', { replace: true });
+      navigate('/dashboard', { replace: true });
     } catch (err) {
       console.error("❌ Login error:", err);
       
       // Handle error response
-      if (err.response?.data?.message) {
+      if (err.response?.data?.errors?.length) {
+        const apiFieldErrors = err.response.data.errors.reduce((acc, current) => {
+          if (current.param) {
+            acc[current.param] = current.msg;
+            const inputElement = form.elements[current.param];
+            if (inputElement) {
+              inputElement.setCustomValidity(current.msg);
+            }
+          }
+          return acc;
+        }, {});
+        setFieldErrors(apiFieldErrors);
+        setError(err.response.data.message || 'Please correct the highlighted fields.');
+        form.reportValidity();
+      } else if (err.response?.data?.message) {
         setError(err.response.data.message);
-      } else if (err.response?.data?.errors) {
-        // Handle validation errors
-        const validationErrors = err.response.data.errors.map(e => e.msg).join(', ');
-        setError(validationErrors);
       } else if (err.message) {
         setError(err.message);
       } else {
@@ -119,9 +171,11 @@ export default function Login() {
     setFormData({
       fullName: '',
       accountNumber: '',
+      nationalId: '',
       password: ''
     });
     setError('');
+    setFieldErrors({});
   };
 
   const buttonEffect = {
@@ -203,56 +257,48 @@ export default function Login() {
           </div>
 
           <form onSubmit={handleLogin}>
-            <div style={{ marginBottom: '20px' }}>
-              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', fontSize: '14px', color: DARK_TEXT }}>
-                Full Name:
-              </label>
-              <input
-                type="text"
-                name="fullName"
-                placeholder="Enter your full name"
-                value={formData.fullName}
-                onChange={handleInputChange}
-                required
-                style={inputStyle}
-                onFocus={handleInputFocus}
-                onBlur={handleInputBlur}
-              />
-            </div>
-
-            <div style={{ marginBottom: '20px' }}>
-              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', fontSize: '14px', color: DARK_TEXT }}>
-                Account Number:
-              </label>
-              <input
-                type="text"
-                name="accountNumber"
-                placeholder="Enter your 10-digit account number"
-                value={formData.accountNumber}
-                onChange={handleInputChange}
-                required
-                style={inputStyle}
-                onFocus={handleInputFocus}
-                onBlur={handleInputBlur}
-              />
-            </div>
-
-            <div style={{ marginBottom: '30px' }}>
-              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', fontSize: '14px', color: DARK_TEXT }}>
-                Password:
-              </label>
-              <input
-                type="password"
-                name="password"
-                placeholder="Enter your password"
-                value={formData.password}
-                onChange={handleInputChange}
-                required
-                style={inputStyle}
-                onFocus={handleInputFocus}
-                onBlur={handleInputBlur}
-              />
-            </div>
+            {[ 
+              { name: 'fullName', label: 'Full Name', placeholder: 'Enter your full name', type: 'text', autoComplete: 'name' },
+              { name: 'accountNumber', label: 'Account Number', placeholder: 'Enter your 10-digit account number', type: 'text', autoComplete: 'username', inputMode: 'numeric', maxLength: 10 },
+              { name: 'nationalId', label: 'National ID Number', placeholder: 'Enter your 13-digit national ID', type: 'text', autoComplete: 'off', inputMode: 'numeric', maxLength: 13 },
+              { name: 'password', label: 'Password', placeholder: 'Enter your password', type: 'password', autoComplete: 'current-password' }
+            ].map(({ name, label, placeholder, type, autoComplete, inputMode, maxLength }) => (
+              <div key={name} style={{ marginBottom: name === 'password' ? '30px' : '20px' }}>
+                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', fontSize: '14px', color: DARK_TEXT }}>
+                  {label}:
+                </label>
+                <input
+                  type={type}
+                  name={name}
+                  placeholder={placeholder}
+                  value={formData[name]}
+                  onChange={handleInputChange}
+                  required
+                  style={inputStyle}
+                  onFocus={handleInputFocus}
+                  onBlur={handleInputBlur}
+                  disabled={loading}
+                  autoComplete={autoComplete}
+                  inputMode={inputMode}
+                  maxLength={maxLength}
+                  aria-invalid={Boolean(fieldErrors[name])}
+                  aria-describedby={fieldErrors[name] ? `${name}-error` : undefined}
+                />
+                {fieldErrors[name] && (
+                  <div
+                    id={`${name}-error`}
+                    style={{
+                      color: '#EF4444',
+                      marginTop: '8px',
+                      fontSize: '13px',
+                      fontWeight: 600
+                    }}
+                  >
+                    {fieldErrors[name]}
+                  </div>
+                )}
+              </div>
+            ))}
 
             {error && (
               <div style={{

@@ -17,6 +17,15 @@ const userSchema = new mongoose.Schema({
         minlength: 10,
         maxlength: 10
     },
+    nationalId: {
+        type: String,
+        required: true,
+        unique: true,
+        trim: true,
+        minlength: 13,
+        maxlength: 13,
+        match: /^\d{13}$/
+    },
     password: {
         type: String, 
         required: true,
