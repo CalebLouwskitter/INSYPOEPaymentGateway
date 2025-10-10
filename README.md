@@ -1,12 +1,136 @@
-## Video
-https://youtu.be/SuzQhvoI0qc
+## INSY POE Payment Gateway
 
-## Contributors
-Caleb : ST10275378
+An end-to-end payment portal built for INSY7314 Task 2. The platform demonstrates secure customer onboarding, payment capture and reporting across a React frontend and Node.js/Express backend backed by MongoDB. T
 
-Logan : ST10268888
+### Quick Links
+- Demo video: https://youtu.be/SuzQhvoI0qc
 
-Kyle : ST10085208
+### Contributors
+- Caleb Louwskitter : ST10275378
+- Logan : ST10268888
+- Kyle : ST10085208
+
+---
+
+## Solution Overview
+
+- **Architecture**: React frontend (`Frontend/`), Express API (`Backend/`), shared middleware package, MongoDB Atlas/local instance, optional Nginx reverse proxy. Docker Compose orchestrates services for local development.
+- **Primary Features**: Customer registration and login, JWT-based session management, payment initiation and status management, secure test harness endpoints, CircleCI DevSecOps pipeline with automated quality and security checks.
+- **Built With**: Node.js 18, Express 4, MongoDB & Mongoose, React 18, Docker, CircleCI.
+
+---
+
+## Getting Started
+
+### Prerequisites
+- Node.js 18+ and npm
+- Docker Desktop (for containerised workflows)
+- MongoDB instance (Atlas connection string or local `mongodb://localhost:27017`)
+- `openssl` (only if you need to regenerate TLS assets)
+
+### Environment Variables
+Copy `.env.example` to `.env` in the repo root and fill in values:
+
+```bash
+cp .env.example .env
+```
+
+Key variables:
+- `MONGODB_URI` – MongoDB connection string for app runtime.
+- `JWT_SECRET` – Signing key for JWT tokens.
+- `USE_HTTPS` – Set to `true` to serve the API with the bundled certificate in `certs/`.
+- `FORCE_HTTPS` – Set to `true` (or run in production) to reject non-HTTPS requests even behind a proxy.
+- `FRONTEND_URL` / `CORS_ORIGINS` – Comma-separated values the backend should trust for CORS.
+
+### Run Locally (API only)
+```bash
+cd Backend
+npm install
+npm run dev
+```
+The API serves on `http://localhost:5000` (or `https://localhost:5000` when `USE_HTTPS=true` and certificates are present).
+
+### Run Locally (Frontend)
+```bash
+cd Frontend
+npm install
+npm run dev
+```
+The React app is available on `http://localhost:5173` (default Vite port).
+
+### Docker Compose (full stack)
+```bash
+docker compose up --build
+```
+This brings up `backend`, `frontend`, and `mongodb` services defined in `docker-compose.yml`. The compose file mounts the local certificate bundle so HTTPS works out of the box.
+
+### Testing & Quality Gates
+- Backend: `cd Backend && npm test`
+- Frontend: `cd Frontend && CI=true npm test -- --watchAll=false`
+- Coverage output stored under respective `coverage/` directories and published as CircleCI artifacts.
+
+---
+
+## Security Controls (Rubric Alignment)
+
+### Password Security
+- Passwords are never stored in plaintext. The `userModel` (`Backend/Models/userModel.js`) hashes every password with `bcryptjs` using 12 salt rounds during the Mongoose `pre('save')` hook, exceeding the rubric’s “basic hashing” requirement.
+- Authentication compares passwords with `bcrypt.compare`, ensuring timing-safe verification.
+- JWT tokens carry minimal PII and expire after 1 hour; logout adds tokens to an in-memory blacklist (`Backend/Middleware/authMiddleware.js`).
+
+### Input Whitelisting & Validation
+- Express-validator enforces strict field-level validation (`Backend/Middleware/validationMiddleware.js`). Only regex-whitelisted names, 10-digit account numbers, and 13-digit national IDs pass.
+- Payment endpoints restrict `currency`, `paymentMethod`, and status fields to predefined allowlists, preventing injection vectors.
+- Additional sanitisation layers: `express-mongo-sanitize`, `xss-clean`, and `hpp` strip malicious payloads (`Backend/Middleware/securityMiddleware.js`).
+
+### Securing Data in Transit with SSL
+- A trusted certificate/key pair ships in `certs/`. When `USE_HTTPS=true`, `server.js` mounts an HTTPS server with the bundle and logs secure URLs.
+- `FORCE_HTTPS` plus Express `trust proxy` ensure downgrades are rejected when deployed behind TLS-terminating proxies. Non-HTTPS requests receive explicit error responses to prevent accidental leakage.
+- The frontend is also configured for HTTPS via the provided Nginx reverse proxy (`Frontend/Dockerfile`, `Frontend/nginx.conf`).
+
+### Protecting Against Attacks
+- **Header Hardening**: Helmet enforces CSP, X-Frame-Options (`frameguard`), HSTS, and referrer/cross-origin policies.
+- **Rate Limiting**: `express-rate-limit` profiles separate quotas for login, registration, payments, and general API usage (`Backend/Middleware/rateLimitMiddleware.js`).
+- **CORS**: Dynamic allow-list driven by environment variables rejects unknown origins and only exposes safe headers.
+- **Sanitisation & Logging**: Structured logging masks sensitive fields and provides correlation IDs (`Backend/Middleware/loggerMiddleware.js`); sanitizers mitigate XSS, NoSQL injection, and HTTP parameter pollution.
+- **Monitoring Hooks**: `/health` and `/api/v1` root endpoints provide readiness signals for load balancers or uptime monitors.
+
+---
+
+## DevSecOps Pipeline (CircleCI)
+
+The `.circleci/config.yml` workflow offers an automated pipeline triggered on every push:
+
+1. **Security Stage** – Runs `npm audit` for both workspaces, Gitleaks secret scanning, and Trivy filesystem scans (HIGH/CRITICAL severities) to surface vulnerabilities before builds start.
+2. **Quality Stage** – Executes backend linting (if config present), backend Jest tests with MongoDB service, and frontend Vitest/Jest suite with coverage upload.
+3. **Build Stage** – Builds backend and frontend artifacts, persists the React production build, and assembles Docker images for both services.
+4. **Packaging Stage** – Validates `docker-compose.yml`, exports Docker image tarballs, and persists them for downstream deployments.
+
+This pipeline satisfies the rubric’s DevSecOps requirement by combining automated testing, vulnerability scanning, container image validation, and artifact retention on every push. Adjust or extend the workflow by editing `.circleci/config.yml`.
+
+---
+
+## API Surface (selected endpoints)
+
+| Method | Endpoint | Description | Middleware Highlights |
+|--------|----------|-------------|------------------------|
+| POST | `/api/v1/auth/register` | Register a customer account | `validateRegister`, rate limit, bcrypt hashing |
+| POST | `/api/v1/auth/login` | Authenticate and receive JWT | `validateLogin`, login limiter |
+| POST | `/api/v1/auth/logout` | Invalidate current JWT | `verifyToken` |
+| POST | `/api/v1/payments` | Create payment intent | `validateCreatePayment`, payment limiter |
+| PATCH | `/api/v1/payments/:id/status` | Update payment status | `validateUpdatePaymentStatus`, JWT auth |
+| GET | `/health` | Liveness probe | Public endpoint |
+
+Refer to `Backend/Routes/` for the complete routing table.
+
+---
+
+## Troubleshooting
+- **CORS blocked**: Ensure `FRONTEND_URL`/`CORS_ORIGINS` include your frontend origin and restart the backend.
+- **TLS certificate errors**: Delete and regenerate the `certs/` bundle or disable HTTPS locally by setting `USE_HTTPS=false`.
+- **MongoDB connection failures**: Confirm the database is reachable and `MONGODB_URI` matches the environment.
+
+---
 
 ## References
 
