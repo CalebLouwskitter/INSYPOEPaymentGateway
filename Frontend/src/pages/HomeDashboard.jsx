@@ -447,3 +447,4 @@ export default function HomeDashboard() {
 }
 
 // Unicode Consortium. 2024. Unicode Emoji List. Available at: https://unicode.org/emoji/ (Accessed: 10 October 2025).
+// W3Schools, 2025. Styling React Using CSS. Available at: https://www.w3schools.com/react/react_css.asp [Accessed 10 October 2025].

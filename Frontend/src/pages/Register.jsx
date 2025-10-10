@@ -231,6 +231,7 @@ export default function Register() {
     onMouseUp: (e) => e.target.style.transform = 'scale(1)'
   };
 
+  // (W3Schools, 2025)
   return (
     <div style={{
       display: 'flex',
@@ -550,6 +551,6 @@ export default function Register() {
   );
 }
 
-// References:
 // Meta Platforms, Inc. (2025) React - A JavaScript library for building user interfaces. Available at: https://reactjs.org/ (Accessed: 07 January 2025).
 // Remix Software, Inc. (2025) React Router - Declarative routing for React. Available at: https://reactrouter.com/ (Accessed: 07 January 2025).
+// W3Schools, 2025. Styling React Using CSS. Available at: https://www.w3schools.com/react/react_css.asp [Accessed 10 October 2025].

@@ -299,6 +299,7 @@ export default function CreatePayment() {
     }
   };
 
+  // (W3Schools, 2025)
   return (
     <div className="payment-portal">
       <style>{`
@@ -768,3 +769,4 @@ export default function CreatePayment() {
     </div>
   );
 }
+// W3Schools, 2025. Styling React Using CSS. Available at: https://www.w3schools.com/react/react_css.asp [Accessed 10 October 2025].

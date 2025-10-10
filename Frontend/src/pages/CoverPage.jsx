@@ -19,7 +19,8 @@ export default function CoverPage() {
     }
   }, [isAuthenticated, navigate]);
 
-  return (
+  //(W3Schools, 2025)
+  return ( 
     <div style={{
       minHeight: '100vh',
       display: 'flex',
@@ -177,3 +178,4 @@ export default function CoverPage() {
 
 //Sheta, D. 2025. Seven Indian rupee banknotes hanging from clothesline on clothes pegs [Photograph]. Pexels. Available at: https://www.pexels.com/photo/seven-indian-rupee-banknotes-hanging-from-clothesline-on-clothes-pegs-3521353/ (Accessed: 10 October 2025)
 //Lusina, A. 2025. Person picking fake Monopoly money [Photograph]. Pexels. Available at: https://www.pexels.com/photo/person-picking-fake-monopoly-money-4792381/ (Accessed: 10 October 2025).
+// W3Schools, 2025. Styling React Using CSS. Available at: https://www.w3schools.com/react/react_css.asp [Accessed 10 October 2025].
