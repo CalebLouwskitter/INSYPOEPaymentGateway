@@ -2,9 +2,11 @@
 https://youtu.be/SuzQhvoI0qc
 
 ## Contributors
--Caleb
--Logan
--Kyle
+Caleb : ST10275378
+
+Logan : ST10268888
+
+Kyle : ST10085208
 
 ## References
 
