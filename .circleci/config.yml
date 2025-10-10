@@ -4,6 +4,7 @@
 version: 2.1
 
 # Define reusable executors
+# (CircleCI, 2025)
 executors:
   node-executor:
     docker:
@@ -15,6 +16,7 @@ executors:
       DOCKER_BUILDKIT: 1
 
 # Define jobs to be invoked later in a workflow
+# (CircleCI, 2025)
 jobs:
   # Backend Tests
   test-backend:
@@ -66,6 +68,7 @@ jobs:
           path: ~/project/Backend/coverage
 
   # Frontend Tests
+  # (CircleCI, 2025)
   test-frontend:
     executor: node-executor
     working_directory: ~/project/Frontend
@@ -90,6 +93,7 @@ jobs:
           path: ~/project/Frontend/coverage
 
   # Build Backend
+  # (CircleCI, 2025)
   build-backend:
     executor: node-executor
     working_directory: ~/project/Backend
@@ -108,6 +112,7 @@ jobs:
           command: echo "Backend build successful"
 
   # Build Frontend
+  # (CircleCI, 2025)
   build-frontend:
     executor: node-executor
     working_directory: ~/project/Frontend
@@ -132,6 +137,7 @@ jobs:
           path: ~/project/Frontend/build
 
   # Build Docker Images
+  # (CircleCI, 2025)
   build-docker-images:
     machine:
       image: ubuntu-2204:current
@@ -166,6 +172,7 @@ jobs:
             - docker-cache
 
   # Lint Backend Code
+  # (CircleCI, 2025)
   lint-backend:
     executor: node-executor
     working_directory: ~/project/Backend
@@ -189,6 +196,7 @@ jobs:
             fi
 
   # Security Audit
+  # (CircleCI, 2025)
   security-audit:
     executor: node-executor
     steps:
@@ -223,6 +231,7 @@ jobs:
           command: trivy fs --exit-code 0 --severity HIGH,CRITICAL --no-progress . || true
 
 # Orchestrate jobs using workflows
+# (CircleCI, 2025)
 workflows:
   # Main workflow for building and testing
   build-test-deploy:
@@ -257,6 +266,7 @@ workflows:
             - test-frontend
 
       # Build Docker images after all builds pass
+      # (CircleCI, 2025)
       - build-docker-images:
           requires:
             - build-backend
