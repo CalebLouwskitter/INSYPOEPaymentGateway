@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import cityscapeImage from "../assets/pexels-anete-lusina-4792381.webp";
+import abstractImage from "../assets/pexels-disha-sheta-596631-3521353.webp";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -192,7 +194,10 @@ export default function Login() {
       display: 'flex',
       minHeight: '100vh',
       fontFamily: 'Inter, sans-serif',
-      backgroundColor: '#1e1933',
+      backgroundImage: `linear-gradient(135deg, rgba(17, 17, 35, 0.85), rgba(17, 17, 35, 0.9)), url(${cityscapeImage})`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      backgroundRepeat: 'no-repeat',
       color: 'white',
     }}>
       <div style={{
@@ -203,35 +208,45 @@ export default function Login() {
         padding: '40px',
         minWidth: '350px',
         maxWidth: '650px',
-        background: 'linear-gradient(315deg, #1a0f3d 0%, #3f2f70 100%)',
+        backgroundImage: `linear-gradient(315deg, rgba(17, 17, 35, 0.88), rgba(39, 30, 90, 0.85)), url(${abstractImage})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
         position: 'relative',
         overflow: 'hidden',
-        boxShadow: 'inset 0 0 20px rgba(0,0,0,0.3)'
+        boxShadow: 'inset 0 0 20px rgba(0,0,0,0.4)',
+        opacity: 0,
+        animation: 'fadeInLeft 1.3s ease-out forwards'
       }}>
         <div style={{
           position: 'absolute',
           width: '550px',
           height: '550px',
-          background: 'linear-gradient(315deg, rgba(173, 216, 230, 0.6), rgba(135, 206, 235, 0.4))',
+          backgroundImage: `linear-gradient(315deg, rgba(173, 216, 230, 0.45), rgba(135, 206, 235, 0.35)), url(${cityscapeImage})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
           borderRadius: '45% 55% 65% 35% / 55% 45% 55% 45%',
           top: '65%',
           left: '70%',
           transform: 'rotate(150deg)',
-          filter: 'blur(120px) opacity(0.8)',
-          animation: 'moveShape1Left 20s infinite alternate ease-in-out'
+          filter: 'blur(120px)',
+          opacity: 0,
+          animation: 'fadeIn 2.1s ease-out forwards, moveShape1Left 20s infinite alternate ease-in-out'
         }}></div>
 
         <div style={{
           position: 'absolute',
           width: '400px',
           height: '400px',
-          background: 'linear-gradient(225deg, rgba(255, 105, 180, 0.7), rgba(147, 112, 219, 0.5))',
+          backgroundImage: `linear-gradient(225deg, rgba(255, 105, 180, 0.45), rgba(147, 112, 219, 0.35)), url(${abstractImage})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
           borderRadius: '65% 35% 40% 60% / 65% 35% 55% 45%',
           bottom: '75%',
           right: '80%',
           transform: 'rotate(10deg)',
-          filter: 'blur(110px) opacity(0.9)',
-          animation: 'moveShape2Left 25s infinite alternate ease-in-out'
+          filter: 'blur(110px)',
+          opacity: 0,
+          animation: 'fadeIn 2.1s ease-out forwards, moveShape2Left 25s infinite alternate ease-in-out'
         }}></div>
 
         <div style={{
@@ -243,7 +258,9 @@ export default function Login() {
           boxShadow: '0 10px 30px rgba(0, 0, 0, 0.4)',
           color: DARK_TEXT,
           zIndex: 2,
-          position: 'relative'
+          position: 'relative',
+          opacity: 0,
+          animation: 'fadeInUp 1.5s ease-out forwards'
         }}>
           <div style={{
             color: PRIMARY_COLOR,
@@ -392,53 +409,104 @@ export default function Login() {
         flexDirection: 'column',
         justifyContent: 'center',
         alignItems: 'center',
-        background: 'linear-gradient(135deg, #1a0f3d 0%, #3f2f70 100%)',
+        backgroundImage: `linear-gradient(135deg, rgba(39, 30, 90, 0.85), rgba(25, 19, 58, 0.88)), url(${abstractImage})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
         position: 'relative',
         overflow: 'hidden',
-        boxShadow: 'inset 0 0 20px rgba(0,0,0,0.3)'
+        boxShadow: 'inset 0 0 20px rgba(0,0,0,0.45)',
+        opacity: 0,
+        animation: 'fadeInRight 1.3s ease-out forwards'
       }}>
         <div style={{
           position: 'absolute',
           width: '550px',
           height: '550px',
-          background: 'linear-gradient(135deg, rgba(173, 216, 230, 0.6), rgba(135, 206, 235, 0.4))',
+          backgroundImage: `linear-gradient(135deg, rgba(173, 216, 230, 0.45), rgba(135, 206, 235, 0.35)), url(${cityscapeImage})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
           borderRadius: '45% 55% 65% 35% / 55% 45% 55% 45%',
           top: '-15%',
           right: '55%',
           transform: 'rotate(-30deg)',
-          filter: 'blur(120px) opacity(0.8)',
-          animation: 'moveShape1 20s infinite alternate ease-in-out'
+          filter: 'blur(120px)',
+          opacity: 0,
+          animation: 'fadeIn 2.1s ease-out forwards, moveShape1 20s infinite alternate ease-in-out'
         }}></div>
 
         <div style={{
           position: 'absolute',
           width: '400px',
           height: '400px',
-          background: 'linear-gradient(45deg, rgba(255, 105, 180, 0.7), rgba(147, 112, 219, 0.5))',
+          backgroundImage: `linear-gradient(45deg, rgba(255, 105, 180, 0.45), rgba(147, 112, 219, 0.35)), url(${abstractImage})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
           borderRadius: '65% 35% 40% 60% / 65% 35% 55% 45%',
           bottom: '5%',
           left: '15%',
           transform: 'rotate(25deg)',
-          filter: 'blur(110px) opacity(0.9)',
-          animation: 'moveShape2 25s infinite alternate ease-in-out'
+          filter: 'blur(110px)',
+          opacity: 0,
+          animation: 'fadeIn 2.1s ease-out forwards, moveShape2 25s infinite alternate ease-in-out'
         }}></div>
 
         <h2 style={{
           fontSize: '3.2em',
           textShadow: '0 0 20px rgba(255, 255, 255, 0.6)',
           zIndex: 1,
-          fontWeight: 900
+          fontWeight: 900,
+          opacity: 0,
+          animation: 'fadeInUp 1.6s ease-out forwards'
         }}>
           Secure Banking
         </h2>
         <p style={{
           fontSize: '1.6em',
           marginTop: '10px',
-          zIndex: 1
+          zIndex: 1,
+          opacity: 0,
+          animation: 'fadeInUp 1.7s ease-out forwards'
         }}>
           Access Your Finances Easily
         </p>
       </div>
+
+      <style>
+        {`
+          @keyframes fadeIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+          }
+          @keyframes fadeInUp {
+            0% { opacity: 0; transform: translateY(20px); }
+            100% { opacity: 1; transform: translateY(0); }
+          }
+          @keyframes fadeInLeft {
+            0% { opacity: 0; transform: translateX(-30px); }
+            100% { opacity: 1; transform: translateX(0); }
+          }
+          @keyframes fadeInRight {
+            0% { opacity: 0; transform: translateX(30px); }
+            100% { opacity: 1; transform: translateX(0); }
+          }
+          @keyframes moveShape1Left {
+            0% { transform: translate(0, 0) rotate(150deg); }
+            100% { transform: translate(-80px, 80px) rotate(160deg); }
+          }
+          @keyframes moveShape2Left {
+            0% { transform: translate(0, 0) rotate(10deg); }
+            100% { transform: translate(50px, -60px) rotate(0deg); }
+          }
+          @keyframes moveShape1 {
+            0% { transform: translate(0,0) rotate(-30deg); }
+            100% { transform: translate(80px, -80px) rotate(-40deg); }
+          }
+          @keyframes moveShape2 {
+            0% { transform: translate(0,0) rotate(25deg); }
+            100% { transform: translate(-50px, 60px) rotate(35deg); }
+          }
+        `}
+      </style>
     </div>
   );
 }

@@ -1,6 +1,8 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
+import cityscapeImage from '../assets/pexels-anete-lusina-4792381.webp';
+import abstractImage from '../assets/pexels-disha-sheta-596631-3521353.webp';
 
 export default function CoverPage() {
   const navigate = useNavigate();
@@ -21,7 +23,10 @@ export default function CoverPage() {
       justifyContent: 'center',
       alignItems: 'center',
       fontFamily: 'Inter, sans-serif',
-      backgroundColor: '#1e1933',
+      backgroundImage: `linear-gradient(135deg, rgba(17, 17, 35, 0.85), rgba(17, 17, 35, 0.85)), url(${cityscapeImage})`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      backgroundRepeat: 'no-repeat',
       color: 'white',
       position: 'relative',
       overflow: 'hidden'
@@ -31,24 +36,30 @@ export default function CoverPage() {
         position: 'absolute',
         width: '600px',
         height: '600px',
-        background: 'linear-gradient(135deg, rgba(173,216,230,0.6), rgba(135,206,235,0.4))',
+        backgroundImage: `linear-gradient(135deg, rgba(173,216,230,0.55), rgba(135,206,235,0.35)), url(${abstractImage})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
         borderRadius: '45% 55% 65% 35% / 55% 45% 55% 45%',
         top: '-20%',
         left: '-15%',
         filter: 'blur(150px)',
-        animation: 'moveShape1 20s infinite alternate ease-in-out'
+        opacity: 0,
+        animation: 'fadeIn 2.4s ease-out forwards, moveShape1 20s infinite alternate ease-in-out'
       }}></div>
 
       <div style={{
         position: 'absolute',
         width: '500px',
         height: '500px',
-        background: 'linear-gradient(225deg, rgba(255,105,180,0.7), rgba(147,112,219,0.5))',
+        backgroundImage: `linear-gradient(225deg, rgba(255,105,180,0.6), rgba(147,112,219,0.45)), url(${abstractImage})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
         borderRadius: '65% 35% 40% 60% / 65% 35% 55% 45%',
         bottom: '-15%',
         right: '-10%',
         filter: 'blur(140px)',
-        animation: 'moveShape2 25s infinite alternate ease-in-out'
+        opacity: 0,
+        animation: 'fadeIn 2.4s ease-out forwards, moveShape2 25s infinite alternate ease-in-out'
       }}></div>
 
       {/* Main Content */}
@@ -60,13 +71,16 @@ export default function CoverPage() {
         backgroundColor: 'rgba(0,0,0,0.25)',
         backdropFilter: 'blur(10px)',
         maxWidth: '500px',
-        width: '90%'
+        width: '90%',
+        opacity: 0,
+        animation: 'fadeInUp 1.4s ease-out forwards'
       }}>
         <h1 style={{ fontSize: '3em', fontWeight: 900, marginBottom: '15px', color: PRIMARY_COLOR }}>
           Welcome to Macsaton
         </h1>
         <p style={{ fontSize: '1.5em', marginBottom: '40px', color: '#E5E7EB' }}>
-          Notascam... no I mean macsaton
+          Your gateway to seamless banking and financial management.
+          
         </p>
 
         <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
@@ -133,6 +147,14 @@ export default function CoverPage() {
       {/* Animation Keyframes */}
       <style>
         {`
+          @keyframes fadeIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+          }
+          @keyframes fadeInUp {
+            0% { opacity: 0; transform: translateY(25px); }
+            100% { opacity: 1; transform: translateY(0); }
+          }
           @keyframes moveShape1 {
             0% { transform: translate(0,0) rotate(0deg); }
             50% { transform: translate(50px, -50px) rotate(20deg); }
