@@ -1,14 +1,21 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+
+// Import API service functions for handling payments and logout
 import {
 	getAllPayments,
 	updatePaymentStatus,
 	deletePayment,
 	logout as apiLogout,
 } from "../services/paymentService.js";
+
+// Import authentication context to manage user session
 import { useAuth } from "../context/AuthContext.jsx";
+
+// Import dashboard stylesheet
 import "./HomeDashboard.css";
 
+// Defines how each payment status appears on the dashboard
 const statusMeta = {
 	pending: { label: "Pending", badgeClass: "badge badge--warning", actionLabel: "Mark Paid" },
 	completed: { label: "Paid", badgeClass: "badge badge--success", actionLabel: "View" },
@@ -16,6 +23,7 @@ const statusMeta = {
 	refunded: { label: "Refunded", badgeClass: "badge badge--neutral", actionLabel: "View" },
 };
 
+// Available payment methods used across forms
 const paymentMethods = [
 	{ value: "credit_card", label: "Credit Card" },
 	{ value: "debit_card", label: "Debit Card" },
@@ -24,6 +32,7 @@ const paymentMethods = [
 	{ value: "mobile_wallet", label: "Mobile Wallet" },
 ];
 
+// All valid statuses that can be assigned to a payment
 const allowedStatuses = [
 	{ value: "pending", label: "Pending" },
 	{ value: "completed", label: "Completed" },
@@ -31,38 +40,39 @@ const allowedStatuses = [
 	{ value: "refunded", label: "Refunded" },
 ];
 
+// Preconfigured quick payment options shown on the dashboard
 const quickPaymentOptions = [
 	{
 		id: "utilities",
-		icon: "⚡",
+		icon: "⚡", // (Unicode Consortium, 2024)
 		title: "Utility Bill",
 		description: "Securely settle electricity, water, or gas charges.",
 		preset: { amount: 125.4, currency: "USD", paymentMethod: "debit_card", description: "Utility bill payment" },
 	},
 	{
 		id: "housing",
-		icon: "🏠",
+		icon: "🏠", // (Unicode Consortium, 2024)
 		title: "Monthly Rent",
 		description: "Send your housing payment with bank-level encryption.",
 		preset: { amount: 1250.0, currency: "USD", paymentMethod: "bank_transfer", description: "Monthly rent" },
 	},
 	{
 		id: "subscription",
-		icon: "💻",
+		icon: "💻", //(Unicode Consortium, 2024)
 		title: "Software Subscription",
 		description: "Renew your SaaS or streaming services in one click.",
 		preset: { amount: 69.99, currency: "USD", paymentMethod: "credit_card", description: "Subscription renewal" },
 	},
 	{
 		id: "donation",
-		icon: "🤝",
+		icon: "🤝", // (Unicode Consortium, 2024)
 		title: "Charity Donation",
 		description: "Support your favourite causes via trusted payment rails.",
 		preset: { amount: 100.0, currency: "USD", paymentMethod: "paypal", description: "Charity donation" },
 	},
 	{
 		id: "travel",
-		icon: "✈️",
+		icon: "✈️", // (Unicode Consortium, 2024)
 		title: "Travel Booking",
 		description: "Lock in flights or hotels with tokenised wallets.",
 		preset: { amount: 450.0, currency: "USD", paymentMethod: "mobile_wallet", description: "Travel booking" },
@@ -102,16 +112,19 @@ export default function HomeDashboard() {
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [selectedPaymentId, setSelectedPaymentId] = useState("");
 
+	// Stores selected status for updating payments
 	const [updateData, setUpdateData] = useState({
 		status: "pending",
 	});
 
+	// Calculates total amount due for pending/failed payments
 	const totalDue = useMemo(() => {
 		return payments
 			.filter((p) => p.status === "pending" || p.status === "failed")
 			.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
 	}, [payments]);
 
+	// Calculates count and total amount for each payment status
 	const statusTotals = useMemo(() => {
 		const base = {
 			pending: { count: 0, amount: 0 },
@@ -132,6 +145,7 @@ export default function HomeDashboard() {
 		return base;
 	}, [payments]);
 
+	// Opens payment portal with pre-filled payment data
 	const startQuickPayment = (option) => {
 		if (!option?.preset) return;
 		navigate("/paymentportal", {
@@ -147,6 +161,7 @@ export default function HomeDashboard() {
 		});
 	};
 
+	// Fetches all payment data from backend API
 	const loadPayments = useCallback(async () => {
 		setLoading(true);
 		try {
@@ -163,6 +178,7 @@ export default function HomeDashboard() {
 		}
 	}, []);
 
+	// Loads payment data on component mount and ensures user is authenticated
 	useEffect(() => {
 		if (!isAuthenticated) {
 			navigate("/login", { replace: true });
@@ -175,6 +191,7 @@ export default function HomeDashboard() {
 		return null;
 	}
 
+	// Handles selection of a payment for update
 	const handleSelectPayment = (e) => {
 		const paymentId = e.target.value;
 		setSelectedPaymentId(paymentId);
@@ -182,6 +199,7 @@ export default function HomeDashboard() {
 		setUpdateData({ status: payment?.status || "pending" });
 	};
 
+	// Submits update to change a payment’s status
 	const handleUpdateStatus = async (e) => {
 		e.preventDefault();
 		if (!selectedPaymentId) {
@@ -202,6 +220,7 @@ export default function HomeDashboard() {
 		}
 	};
 
+	// Deletes a payment record after user confirmation
 	const handleDeletePayment = async (paymentId) => {
 		if (!paymentId) return;
 		const confirmed = window.confirm("Delete this payment permanently?");
@@ -220,6 +239,7 @@ export default function HomeDashboard() {
 		}
 	};
 
+	// Logs out user and clears authentication state
 	const handleLogout = async () => {
 		try {
 			await apiLogout();
@@ -251,8 +271,10 @@ export default function HomeDashboard() {
 				</div>
 			</header>
 
+			{/* ERROR BANNER */}
 			{error && <div className="banner banner--error">{error}</div>}
 
+			{/* PAYMENT SUMMARY CARDS */}
 			<section className="dashboard__summary">
 				<div className="summary-card">
 					<div className="summary-card__icon" aria-hidden>⚠️</div>
@@ -262,6 +284,7 @@ export default function HomeDashboard() {
 					</div>
 				</div>
 
+				{/* Displays payment totals by status */}
 				<div className="summary-grid">
 					{Object.entries(statusTotals).map(([status, info]) => (
 						<div key={status} className="summary-grid__item">
@@ -273,6 +296,7 @@ export default function HomeDashboard() {
 				</div>
 			</section>
 
+			{/* QUICK PAYMENT SHORTCUTS */}
 			<section className="dashboard__quick">
 				<div className="dashboard__quick-header">
 					<div>
@@ -287,6 +311,8 @@ export default function HomeDashboard() {
 						Open Payment Portal
 					</button>
 				</div>
+
+				{/* Displays clickable quick payment cards */}
 				<div className="quick-grid" role="list">
 					{quickPaymentOptions.map((option) => (
 						<button
@@ -310,6 +336,7 @@ export default function HomeDashboard() {
 				</div>
 			</section>
 
+			{/* MAIN DASHBOARD CONTENT: TABLE + FORM */}
 			<section className="dashboard__content">
 				<div className="card card--table">
 					<div className="card__header">
@@ -317,6 +344,7 @@ export default function HomeDashboard() {
 						<span>{payments.length} total</span>
 					</div>
 
+					{/* Handles loading, empty, and filled states */}
 					{loading ? (
 						<div className="card__empty">Loading payments...</div>
 					) : payments.length === 0 ? (
@@ -372,6 +400,7 @@ export default function HomeDashboard() {
 					)}
 				</div>
 
+				{/* PAYMENT STATUS UPDATE FORM */}
 				<div className="card card--forms">
 					<div className="card__section card__section--border">
 						<h3>Update Payment Status</h3>
@@ -388,6 +417,7 @@ export default function HomeDashboard() {
 								</select>
 							</label>
 
+							{/* Choose new status */}
 							<label className="form__field">
 								<span>Status</span>
 								<select
@@ -404,6 +434,7 @@ export default function HomeDashboard() {
 								</select>
 							</label>
 
+							{/* Submit button */}
 							<button type="submit" className="btn btn--primary" disabled={!selectedPaymentId || isSubmitting}>
 								{isSubmitting ? "Updating..." : "Update Status"}
 							</button>
@@ -415,4 +446,4 @@ export default function HomeDashboard() {
 	);
 }
 
-
+// Unicode Consortium. 2024. Unicode Emoji List. Available at: https://unicode.org/emoji/ (Accessed: 10 October 2025).

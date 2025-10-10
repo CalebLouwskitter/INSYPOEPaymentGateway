@@ -1,15 +1,18 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
-import cityscapeImage from '../assets/pexels-anete-lusina-4792381.webp';
-import abstractImage from '../assets/pexels-disha-sheta-596631-3521353.webp';
+import cityscapeImage from '../assets/pexels-anete-lusina-4792381.webp'; // (Lusina, 2025)
+import abstractImage from '../assets/pexels-disha-sheta-596631-3521353.webp'; //(Sheta, 2025)
 
 export default function CoverPage() {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
+
+  // Define main brand colors
   const PRIMARY_COLOR = '#8B5CF6';
   const BUTTON_COLOR = '#4F46E5';
 
+  // Automatically redirect to the dashboard if the user is already logged in
   useEffect(() => {
     if (isAuthenticated) {
       navigate('/dashboard', { replace: true });
@@ -171,3 +174,6 @@ export default function CoverPage() {
     </div>
   );
 }
+
+//Sheta, D. 2025. Seven Indian rupee banknotes hanging from clothesline on clothes pegs [Photograph]. Pexels. Available at: https://www.pexels.com/photo/seven-indian-rupee-banknotes-hanging-from-clothesline-on-clothes-pegs-3521353/ (Accessed: 10 October 2025)
+//Lusina, A. 2025. Person picking fake Monopoly money [Photograph]. Pexels. Available at: https://www.pexels.com/photo/person-picking-fake-monopoly-money-4792381/ (Accessed: 10 October 2025).

@@ -1,18 +1,19 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import cityscapeImage from "../assets/pexels-anete-lusina-4792381.webp";
-import abstractImage from "../assets/pexels-disha-sheta-596631-3521353.webp";
+import cityscapeImage from "../assets/pexels-anete-lusina-4792381.webp"; // (Lusina, 2025)
+import abstractImage from "../assets/pexels-disha-sheta-596631-3521353.webp"; //(Sheta, 2025)
 
 export default function Login() {
   const navigate = useNavigate();
   const { login, isAuthenticated } = useAuth();
 
-  // Color constants
+  // Theme colors
   const PRIMARY_COLOR = '#8B5CF6';
   const BUTTON_COLOR = '#4F46E5';
   const DARK_TEXT = '#1F2937';
 
+  // Common style for input fields
   const inputStyle = {
     width: '100%',
     padding: '12px',
@@ -32,24 +33,25 @@ export default function Login() {
     password: ''
   });
 
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [fieldErrors, setFieldErrors] = useState({});
+  const [error, setError] = useState(''); // General error message
+  const [loading, setLoading] = useState(false); // Login loading state
+  const [fieldErrors, setFieldErrors] = useState({}); // Field-specific validation errors
 
+  // Update form state and sanitize inputs
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    let sanitizedValue = value.replace(/[<>]/g, "");
+    let sanitizedValue = value.replace(/[<>]/g, ""); // Remove potentially harmful characters
 
     if (name === 'accountNumber') {
-      sanitizedValue = sanitizedValue.replace(/\D/g, "").slice(0, 10);
+      sanitizedValue = sanitizedValue.replace(/\D/g, "").slice(0, 10); // Only digits, max 10
     }
 
     if (name === 'nationalId') {
-      sanitizedValue = sanitizedValue.replace(/\D/g, "").slice(0, 13);
+      sanitizedValue = sanitizedValue.replace(/\D/g, "").slice(0, 13); // Only digits, max 13
     }
 
     if (name === 'fullName') {
-      sanitizedValue = sanitizedValue.replace(/[^a-zA-Z\s'-]/g, "");
+      sanitizedValue = sanitizedValue.replace(/[^a-zA-Z\s'-]/g, ""); // Only letters, spaces, hyphen, apostrophe
     }
 
     setFormData({ ...formData, [name]: sanitizedValue });
@@ -58,6 +60,7 @@ export default function Login() {
     setError('');
   };
 
+  // Redirect to dashboard if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
       navigate('/dashboard', { replace: true });
@@ -74,6 +77,7 @@ export default function Login() {
     e.target.style.backgroundColor = '#F3F4F6';
   };
 
+  // Handle form submission
   const handleLogin = async (e) => {
     e.preventDefault();
     const form = e.target;
@@ -136,11 +140,11 @@ export default function Login() {
         password: formData.password,
       });
 
-      console.log('✅ Login Success:', response?.data);
+      console.log('Login Success:', response?.data);
 
       navigate('/dashboard', { replace: true });
     } catch (err) {
-      console.error("❌ Login error:", err);
+      console.error("Login error:", err);
       
       // Handle error response
       if (err.response?.data?.errors?.length) {
@@ -194,7 +198,7 @@ export default function Login() {
       display: 'flex',
       minHeight: '100vh',
       fontFamily: 'Inter, sans-serif',
-      backgroundImage: `linear-gradient(135deg, rgba(17, 17, 35, 0.85), rgba(17, 17, 35, 0.9)), url(${cityscapeImage})`,
+      backgroundImage: `linear-gradient(135deg, rgba(17, 17, 35, 0.85), rgba(17, 17, 35, 0.9)), url(${cityscapeImage})`, // (Lusina, 2025)
       backgroundSize: 'cover',
       backgroundPosition: 'center',
       backgroundRepeat: 'no-repeat',
@@ -208,7 +212,7 @@ export default function Login() {
         padding: '40px',
         minWidth: '350px',
         maxWidth: '650px',
-        backgroundImage: `linear-gradient(315deg, rgba(17, 17, 35, 0.88), rgba(39, 30, 90, 0.85)), url(${abstractImage})`,
+        backgroundImage: `linear-gradient(315deg, rgba(17, 17, 35, 0.88), rgba(39, 30, 90, 0.85)), url(${abstractImage})`, //(Sheta, 2025)
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         position: 'relative',
@@ -221,7 +225,7 @@ export default function Login() {
           position: 'absolute',
           width: '550px',
           height: '550px',
-          backgroundImage: `linear-gradient(315deg, rgba(173, 216, 230, 0.45), rgba(135, 206, 235, 0.35)), url(${cityscapeImage})`,
+          backgroundImage: `linear-gradient(315deg, rgba(173, 216, 230, 0.45), rgba(135, 206, 235, 0.35)), url(${cityscapeImage})`, // (Lusina, 2025)
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           borderRadius: '45% 55% 65% 35% / 55% 45% 55% 45%',
@@ -237,7 +241,7 @@ export default function Login() {
           position: 'absolute',
           width: '400px',
           height: '400px',
-          backgroundImage: `linear-gradient(225deg, rgba(255, 105, 180, 0.45), rgba(147, 112, 219, 0.35)), url(${abstractImage})`,
+          backgroundImage: `linear-gradient(225deg, rgba(255, 105, 180, 0.45), rgba(147, 112, 219, 0.35)), url(${abstractImage})`, //(Sheta, 2025)
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           borderRadius: '65% 35% 40% 60% / 65% 35% 55% 45%',
@@ -409,7 +413,7 @@ export default function Login() {
         flexDirection: 'column',
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundImage: `linear-gradient(135deg, rgba(39, 30, 90, 0.85), rgba(25, 19, 58, 0.88)), url(${abstractImage})`,
+        backgroundImage: `linear-gradient(135deg, rgba(39, 30, 90, 0.85), rgba(25, 19, 58, 0.88)), url(${abstractImage})`, //(Sheta, 2025)
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         position: 'relative',
@@ -422,7 +426,7 @@ export default function Login() {
           position: 'absolute',
           width: '550px',
           height: '550px',
-          backgroundImage: `linear-gradient(135deg, rgba(173, 216, 230, 0.45), rgba(135, 206, 235, 0.35)), url(${cityscapeImage})`,
+          backgroundImage: `linear-gradient(135deg, rgba(173, 216, 230, 0.45), rgba(135, 206, 235, 0.35)), url(${cityscapeImage})`, // (Lusina, 2025)
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           borderRadius: '45% 55% 65% 35% / 55% 45% 55% 45%',
@@ -438,7 +442,7 @@ export default function Login() {
           position: 'absolute',
           width: '400px',
           height: '400px',
-          backgroundImage: `linear-gradient(45deg, rgba(255, 105, 180, 0.45), rgba(147, 112, 219, 0.35)), url(${abstractImage})`,
+          backgroundImage: `linear-gradient(45deg, rgba(255, 105, 180, 0.45), rgba(147, 112, 219, 0.35)), url(${abstractImage})`, //(Sheta, 2025)
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           borderRadius: '65% 35% 40% 60% / 65% 35% 55% 45%',
@@ -510,3 +514,6 @@ export default function Login() {
     </div>
   );
 }
+
+//Sheta, D. 2025. Seven Indian rupee banknotes hanging from clothesline on clothes pegs [Photograph]. Pexels. Available at: https://www.pexels.com/photo/seven-indian-rupee-banknotes-hanging-from-clothesline-on-clothes-pegs-3521353/ (Accessed: 10 October 2025)
+//Lusina, A. 2025. Person picking fake Monopoly money [Photograph]. Pexels. Available at: https://www.pexels.com/photo/person-picking-fake-monopoly-money-4792381/ (Accessed: 10 October 2025).
