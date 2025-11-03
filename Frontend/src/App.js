@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext.jsx";
+import { EmployeeAuthProvider } from "./context/EmployeeAuthContext.jsx";
 import CoverPage from './pages/CoverPage.jsx'
 import Login from './pages/Login.jsx'
 import Register from './pages/Register.jsx'
@@ -7,34 +8,71 @@ import Dashboard from './pages/HomeDashboard.jsx'
 import PaymentPortal from './pages/PaymentPortal.jsx'
 import ProtectedRoute from './components/ProtectedRoute.jsx'
 
+// Employee portal imports
+import EmployeeLogin from './pages/EmployeeLogin.jsx';
+import EmployeeDashboard from './pages/EmployeeDashboard.jsx';
+import PaymentHistory from './pages/PaymentHistory.jsx';
+import AdminDashboard from './pages/AdminDashboard.jsx';
+import EmployeeProtectedRoute from './components/EmployeeProtectedRoute.jsx';
+
 function App() {
   return (
     <AuthProvider>
-      {/* Navigation for applicarion*/}
-      <Router>
-        <Routes>
-          <Route path="/" element={<CoverPage />} /> {/* (React Navigation, 2025) */}
-          <Route path="/coverpage" element={<CoverPage />} /> {/* (React Navigation, 2025) */}
-          <Route path="/register" element={<Register />} /> {/* (React Navigation, 2025) */}
-          <Route path="/login" element={<Login />} /> {/* (React Navigation, 2025) */}
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/paymentportal"
-            element={
-              <ProtectedRoute>
-                <PaymentPortal />
-              </ProtectedRoute>
-            }
-          />
-        </Routes>
-      </Router>
+      <EmployeeAuthProvider>
+        {/* Navigation for application */}
+        <Router>
+          <Routes>
+            {/* Customer Portal Routes */}
+            <Route path="/" element={<CoverPage />} /> {/* (React Navigation, 2025) */}
+            <Route path="/coverpage" element={<CoverPage />} /> {/* (React Navigation, 2025) */}
+            <Route path="/register" element={<Register />} /> {/* (React Navigation, 2025) */}
+            <Route path="/login" element={<Login />} /> {/* (React Navigation, 2025) */}
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/paymentportal"
+              element={
+                <ProtectedRoute>
+                  <PaymentPortal />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Employee Portal Routes */}
+            <Route path="/employee/login" element={<EmployeeLogin />} />
+            <Route
+              path="/employee/dashboard"
+              element={
+                <EmployeeProtectedRoute>
+                  <EmployeeDashboard />
+                </EmployeeProtectedRoute>
+              }
+            />
+            <Route
+              path="/employee/history"
+              element={
+                <EmployeeProtectedRoute>
+                  <PaymentHistory />
+                </EmployeeProtectedRoute>
+              }
+            />
+            <Route
+              path="/employee/admin"
+              element={
+                <EmployeeProtectedRoute requireAdmin={true}>
+                  <AdminDashboard />
+                </EmployeeProtectedRoute>
+              }
+            />
+          </Routes>
+        </Router>
+      </EmployeeAuthProvider>
     </AuthProvider>
   );
 }
