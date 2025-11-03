@@ -17,7 +17,7 @@ const verifyToken = (req, res, next) => {
     // we split after the space, as standard auth headers look like the following:
     // Bearer: <token> (and we just want the token aspect)
     // Auth0. (2025)
-    const token = authHeader && authHeader.split(" ")[1];
+    const token = authHeader?.split(" ")[1];
 
     // if no token, 401 unauthorized
     if (!token) return res.status(401).json({message: "No token provided"});

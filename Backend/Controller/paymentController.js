@@ -1,5 +1,5 @@
 const Payment = require('../Models/paymentModel.js');
-const crypto = require('crypto');
+const crypto = require('node:crypto');
 
 // helper function to generate a unique transaction ID
 const generateTransactionId = () => {

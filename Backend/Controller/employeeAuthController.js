@@ -12,8 +12,18 @@ const employeeLogin = async (req, res) => {
     try {
         const { username, password } = req.body;
 
+        // Defensive checks in addition to route validation to avoid NoSQL injection from crafted payloads
+        if (typeof username !== 'string' || typeof password !== 'string') {
+            return res.status(400).json({ success: false, message: 'Invalid credentials' });
+        }
+        // Enforce expected username shape server-side as an allow-list guard
+        if (!/^[a-zA-Z0-9_]{3,50}$/.test(username)) {
+            return res.status(400).json({ success: false, message: 'Invalid credentials' });
+        }
+
         // Find employee by username
-        const employee = await Employee.findOne({ username });
+        const employee = await Employee.findOne()
+            .where('username').equals(username);
         if (!employee) {
             return res.status(401).json({ 
                 success: false, 

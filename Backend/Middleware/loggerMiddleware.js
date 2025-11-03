@@ -3,11 +3,11 @@
 // Controlled by environment flags so you can turn verbosity on/off without code changes.
 
  // (Node.js, 2025)
-const { randomUUID } = require('crypto');
+const { randomUUID } = require('node:crypto');
 
 // Fields that should be masked if present in request bodies
  // (Node.js, 2025)
-const SENSITIVE_KEYS = ['password', 'token', 'authorization', 'auth', 'secret'];
+const SENSITIVE_KEYS = new Set(['password', 'token', 'authorization', 'auth', 'secret']);
 
 // Recursively sanitize an object/array/value by masking sensitive fields
  // (Node.js, 2025)
@@ -17,7 +17,7 @@ function sanitize(value) {
   if (typeof value === 'object') {
     const out = {};
     for (const [k, v] of Object.entries(value)) {
-      if (SENSITIVE_KEYS.includes(k.toLowerCase())) {
+      if (SENSITIVE_KEYS.has(k.toLowerCase())) {
         out[k] = '***';
       } else {
         out[k] = sanitize(v);
@@ -45,15 +45,15 @@ function loggerMiddleware(options = {}) {
 
     // Determine if body should be logged (after JSON parsing middleware)
     // (Node.js, 2025)
-    let bodyForLog;
-    if (logBodies && req.body && req.is && req.is('application/json')) {
+  let bodyForLog;
+  if (logBodies && req.body && req.is?.('application/json')) {
       // Only log up to 2KB of body to avoid noise
       const sanitized = sanitize(req.body);
       const json = JSON.stringify(sanitized);
       bodyForLog = json.length > 2048 ? json.slice(0, 2048) + '…(truncated)' : json;
     }
     // Log the incoming request
-    const userTag = req.user ? (req.user.id || req.user._id || req.user.username || 'user') : 'anon';
+  const userTag = req.user ? (req.user.id || req.user._id || req.user.username || 'user') : 'anon';
     console.log(`[REQ] id=${req.id} method=${req.method} url=${req.originalUrl} user=${userTag} ip=${req.ip}${bodyForLog ? ' body=' + bodyForLog : ''}`);
     // Log when the response is finished
     res.on('finish', () => {

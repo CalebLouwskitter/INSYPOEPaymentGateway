@@ -33,17 +33,28 @@ const createEmployee = async (req, res) => {
     try {
         const { username, password, role } = req.body;
 
+        // Extra server-side guards to prevent NoSQL operator injection
+        if (typeof username !== 'string' || typeof password !== 'string') {
+            return res.status(400).json({ success: false, message: 'Invalid input' });
+        }
+        if (role && !['admin', 'employee'].includes(role)) {
+            return res.status(400).json({ success: false, message: 'Invalid role' });
+        }
+        if (!/^[a-zA-Z0-9_]{3,50}$/.test(username)) {
+            return res.status(400).json({ success: false, message: 'Invalid username' });
+        }
+
         // If attempting to create an admin, only super admin may do so
         if (role === 'admin') {
             const requester = await Employee.findById(req.user.id).select('role createdBy');
-            if (!requester || requester.role !== 'admin') {
+            if (requester?.role !== 'admin') {
                 return res.status(403).json({
                     success: false,
                     message: 'Only admins can create accounts'
                 });
             }
             // Super admin is the only admin with createdBy === null
-            if (requester.createdBy !== null) {
+            if (requester?.createdBy !== null) {
                 return res.status(403).json({
                     success: false,
                     message: 'Only super admin can create admin accounts'
@@ -52,7 +63,7 @@ const createEmployee = async (req, res) => {
         }
 
         // Check if employee already exists
-        const existingEmployee = await Employee.findOne({ username });
+    const existingEmployee = await Employee.findOne().where('username').equals(username);
         if (existingEmployee) {
             return res.status(400).json({ 
                 success: false, 
@@ -62,8 +73,8 @@ const createEmployee = async (req, res) => {
 
         // Create new employee
         const employee = new Employee({
-            username,
-            password,
+            username: String(username),
+            password: String(password),
             role: role || 'employee',
             createdBy: req.user.id
         });
@@ -112,7 +123,7 @@ const deleteEmployee = async (req, res) => {
         }
 
         // Determine if requester is super admin (admin with createdBy === null)
-        const requester = await Employee.findById(req.user.id).select('role createdBy');
+    const requester = await Employee.findById(req.user.id).select('role createdBy');
 
         // Never allow deletion of super admin account
         if (employee.role === 'admin' && employee.createdBy === null) {
@@ -124,7 +135,7 @@ const deleteEmployee = async (req, res) => {
 
         // If target is an admin (not super), only super admin may delete
         if (employee.role === 'admin') {
-            if (!requester || requester.role !== 'admin' || requester.createdBy !== null) {
+            if (requester?.role !== 'admin' || requester?.createdBy !== null) {
                 return res.status(403).json({
                     success: false,
                     message: 'Only super admin can delete admin accounts'

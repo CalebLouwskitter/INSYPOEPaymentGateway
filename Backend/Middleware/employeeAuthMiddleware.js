@@ -11,7 +11,7 @@ const employeeTokenBlacklist = new Set();
 // (Auth0. 2025)
 const verifyEmployeeToken = (req, res, next) => {
     const authHeader = req.headers["authorization"];
-    const token = authHeader && authHeader.split(" ")[1];
+    const token = authHeader?.split(" ")[1];
 
     if (!token) {
         return res.status(401).json({ message: "No token provided" });
@@ -28,7 +28,7 @@ const verifyEmployeeToken = (req, res, next) => {
         }
         
         // Verify this is an employee token
-        if (decoded.type !== 'employee') {
+        if (decoded?.type !== 'employee') {
             return res.status(403).json({ message: "Invalid token type" });
         }
         
@@ -39,7 +39,7 @@ const verifyEmployeeToken = (req, res, next) => {
 
 // Verify admin role
 const verifyAdminRole = (req, res, next) => {
-    if (req.user.role !== 'admin') {
+    if (req.user?.role !== 'admin') {
         return res.status(403).json({ 
             message: "Access denied. Admin privileges required." 
         });
@@ -49,7 +49,7 @@ const verifyAdminRole = (req, res, next) => {
 
 // Verify employee or admin role
 const verifyEmployeeRole = (req, res, next) => {
-    if (!['employee', 'admin'].includes(req.user.role)) {
+    if (!['employee', 'admin'].includes(req.user?.role)) {
         return res.status(403).json({ 
             message: "Access denied. Employee privileges required." 
         });
