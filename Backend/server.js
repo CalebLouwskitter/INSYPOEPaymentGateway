@@ -20,6 +20,7 @@ const { loggerMiddleware } = require('./Middleware/loggerMiddleware.js');
 const authRoutes = require('./Routes/Authrouting.js');
 const paymentRoutes = require('./Routes/paymentRouting.js');
 const testRoutes = require('./Routes/testRoutes.js');
+const employeeRoutes = require('./Routes/employeeRoutes.js');
 
 // Apply security middlewares
 securityMiddlewares(app);
@@ -70,6 +71,7 @@ app.get('/api/v1', (req, res) => {
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/payments', paymentRoutes);
 app.use('/api/v1/test', testRoutes);
+app.use('/api/v1/employee', employeeRoutes);
 
 // 404 handler
 app.use((req, res) => {
