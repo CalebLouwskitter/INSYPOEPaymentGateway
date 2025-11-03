@@ -18,6 +18,44 @@ export default function EmployeeNavigation() {
     navigate('/employee/login', { replace: true });
   };
 
+  const handleKeyPress = (event, path) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      navigate(path);
+    }
+  };
+
+  const handleMouseEnter = (event) => {
+    event.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.2)';
+  };
+
+  const handleMouseLeave = (event, path) => {
+    if (location.pathname !== path) {
+      event.currentTarget.style.backgroundColor = 'transparent';
+    }
+  };
+
+  const navLinks = isAdmin
+    ? [
+        {
+          path: '/employee/admin',
+          label: 'Manage Employees',
+          ariaLabel: 'Navigate to manage employees',
+        },
+      ]
+    : [
+        {
+          path: '/employee/dashboard',
+          label: 'Pending Payments',
+          ariaLabel: 'Navigate to pending payments',
+        },
+        {
+          path: '/employee/history',
+          label: 'Payment History',
+          ariaLabel: 'Navigate to payment history',
+        },
+      ];
+
   const navStyle = {
     // Glassmorphism nav: translucent gradient, blur and subtle border
     background: 'linear-gradient(135deg, rgba(76,81,191,0.65) 0%, rgba(118,75,162,0.55) 100%)',
@@ -107,77 +145,21 @@ export default function EmployeeNavigation() {
       
       <div style={menuStyle}>
         {/* Employee menu items */}
-        {!isAdmin && (
-          <>
-            <div
-              role="button"
-              tabIndex={0}
-              style={linkStyle(location.pathname === '/employee/dashboard')}
-              onClick={() => navigate('/employee/dashboard')}
-              onKeyPress={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  navigate('/employee/dashboard');
-                }
-              }}
-              onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(255,255,255,0.2)'}
-              onMouseLeave={(e) => {
-                if (location.pathname !== '/employee/dashboard') {
-                  e.target.style.backgroundColor = 'transparent';
-                }
-              }}
-              aria-label="Navigate to pending payments"
-            >
-              Pending Payments
-            </div>
-            <div
-              role="button"
-              tabIndex={0}
-              style={linkStyle(location.pathname === '/employee/history')}
-              onClick={() => navigate('/employee/history')}
-              onKeyPress={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  navigate('/employee/history');
-                }
-              }}
-              onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(255,255,255,0.2)'}
-              onMouseLeave={(e) => {
-                if (location.pathname !== '/employee/history') {
-                  e.target.style.backgroundColor = 'transparent';
-                }
-              }}
-              aria-label="Navigate to payment history"
-            >
-              Payment History
-            </div>
-          </>
-        )}
-
-        {/* Admin menu items */}
-        {isAdmin && (
+        {navLinks.map(({ path, label, ariaLabel }) => (
           <div
+            key={path}
             role="button"
             tabIndex={0}
-            style={linkStyle(location.pathname === '/employee/admin')}
-            onClick={() => navigate('/employee/admin')}
-            onKeyPress={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                navigate('/employee/admin');
-              }
-            }}
-            onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(255,255,255,0.2)'}
-            onMouseLeave={(e) => {
-              if (location.pathname !== '/employee/admin') {
-                e.target.style.backgroundColor = 'transparent';
-              }
-            }}
-            aria-label="Navigate to manage employees"
+            style={linkStyle(location.pathname === path)}
+            onClick={() => navigate(path)}
+            onKeyPress={(event) => handleKeyPress(event, path)}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={(event) => handleMouseLeave(event, path)}
+            aria-label={ariaLabel}
           >
-            Manage Employees
+            {label}
           </div>
-        )}
+        ))}
 
         {/* User info and logout */}
         <div style={userInfoStyle}>

@@ -191,7 +191,7 @@
 .brand-auth-page {
   display: flex;
   min-height: 100vh;
-  font-family: 'Inter, sans-serif';
+  font-family: 'Inter', sans-serif;
   background-image: var(--brand-page-overlay, linear-gradient(135deg, rgba(17, 17, 35, 0.85), rgba(17, 17, 35, 0.9))), var(--brand-page-image, none);
   background-size: cover;
   background-position: center;
@@ -271,7 +271,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  font-family: 'Inter, sans-serif';
+  font-family: 'Inter', sans-serif;
   position: relative;
   overflow: hidden;
   background-image: var(--brand-page-overlay, linear-gradient(135deg, rgba(17, 17, 35, 0.85), rgba(17, 17, 35, 0.85))), var(--brand-page-image, none);
