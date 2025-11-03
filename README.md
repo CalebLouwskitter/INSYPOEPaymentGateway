@@ -187,3 +187,6 @@ W3Schools, 2025. Styling React Using CSS. Available at: https://www.w3schools.co
 
 Docker, 2025. Accelerated Container Application Development. Available at: https://www.docker.com/
  (Accessed: 10 October 2025).
+Jestjs.io. (2025) Jest - Getting Started. Available at: https://jestjs.io/docs/getting-started (Accessed: 07 October 2025).
+
+Visionmedia. (2025) supertest - npm. Available at: https://www.npmjs.com/package/supertest (Accessed: 07 October 2025).
