@@ -8,6 +8,10 @@ import adminService from '../services/adminService';
 // References:
 // React Team. (2025) useEffect - React. Available at: https://react.dev/reference/react/useEffect (Accessed: 03 November 2025).
 
+// Password validation constants to avoid magic numbers flagged by static analysis
+const PASSWORD_MIN_LENGTH = 6;
+const PASSWORD_REQUIREMENTS_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/;
+
 export default function AdminDashboard() {
   const navigate = useNavigate();
   const { isEmployeeAuthenticated, isAdmin, employeeUser } = useEmployeeAuth();
@@ -97,11 +101,11 @@ export default function AdminDashboard() {
       errors.username = 'Username must be 3-50 characters (letters, numbers, underscore only)';
     }
 
-    // Password validation (min 6 chars, must have uppercase, lowercase, digit)
-    if (createFormData.password.length < 6) {
-      errors.password = 'Password must be at least 6 characters';
+    // Password validation (min length and complexity requirements)
+    if (createFormData.password.length < PASSWORD_MIN_LENGTH) {
+      errors.password = `Password must be at least ${PASSWORD_MIN_LENGTH} characters`;
     }
-    if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(createFormData.password)) {
+    if (!PASSWORD_REQUIREMENTS_REGEX.test(createFormData.password)) {
       errors.password = 'Password must contain uppercase, lowercase, and digit';
     }
 

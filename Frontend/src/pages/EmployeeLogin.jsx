@@ -6,6 +6,9 @@ import { useEmployeeAuth } from "../context/EmployeeAuthContext";
 // React Team. (2025) useState - React. Available at: https://react.dev/reference/react/useState (Accessed: 03 November 2025).
 // React Router Team. (2025) useNavigate - React Router. Available at: https://reactrouter.com/en/main/hooks/use-navigate (Accessed: 03 November 2025).
 
+// Password validation constant to avoid magic number flagged by static analysis
+const PASSWORD_MIN_LENGTH = 6;
+
 export default function EmployeeLogin() {
   const navigate = useNavigate();
   const { employeeLogin, isEmployeeAuthenticated, isAdmin } = useEmployeeAuth();
@@ -91,9 +94,9 @@ export default function EmployeeLogin() {
       validationErrors.username = "Username must be 3-50 characters (letters, numbers, underscore only)";
     }
 
-    // Validate password length
-    if (!formData.password || formData.password.length < 6) {
-      validationErrors.password = "Password must be at least 6 characters";
+    // Validate password length using constant
+    if (!formData.password || formData.password.length < PASSWORD_MIN_LENGTH) {
+      validationErrors.password = `Password must be at least ${PASSWORD_MIN_LENGTH} characters`;
     }
 
     if (Object.keys(validationErrors).length > 0) {
