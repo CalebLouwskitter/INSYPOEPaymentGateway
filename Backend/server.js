@@ -3,10 +3,10 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
-const https = require('https');
-const http = require('http');
-const fs = require('fs');
-const path = require('path');
+const https = require('node:https');
+const http = require('node:http');
+const fs = require('node:fs');
+const path = require('node:path');
 require('dotenv').config();
 
 const app = express();
@@ -52,10 +52,15 @@ morgan.token('id', (req) => req.id || '-');
 const morganFormat = ':id :method :url :status :response-time ms - :res[content-length]';
 app.use(morgan(morganFormat));
 
-// MongoDB Connection
-mongoose.connect(process.env.MONGODB_URI)
-.then(() => console.log('MongoDB connected successfully'))
-.catch((err) => console.error('MongoDB connection error:', err));
+// MongoDB Connection (avoid promise chain for clarity)
+(async () => {
+  try {
+    await mongoose.connect(process.env.MONGODB_URI);
+    console.log('MongoDB connected successfully');
+  } catch (err) {
+    console.error('MongoDB connection error:', err);
+  }
+})();
 
 // Health check endpoint
 app.get('/health', (req, res) => {
