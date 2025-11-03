@@ -164,115 +164,191 @@ export default function CreatePayment() {
     navigate(-1);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const GENERAL_VALIDATION_MESSAGE = "Please correct the highlighted fields.";
+
+  const resetFeedback = () => {
     setMessage("");
     setError("");
     setFieldErrors({});
+  };
 
-    const amountNum = Number.parseFloat(formData.amount);
+  const showValidationErrors = (errors) => {
+    setFieldErrors(errors);
+    setError(GENERAL_VALIDATION_MESSAGE);
+  };
 
-    if (!Number.isFinite(amountNum) || amountNum <= 0) {
-      setFieldErrors((prev) => ({ ...prev, amount: "Amount must be a number greater than zero." }));
-      setError("Please correct the highlighted fields.");
+  const parseValidAmount = (rawAmount) => {
+    const parsed = Number.parseFloat(rawAmount);
+
+    if (!Number.isFinite(parsed) || parsed <= 0) {
+      return { errorFields: { amount: "Amount must be a number greater than zero." } };
+    }
+
+    return { value: parsed };
+  };
+
+  const isAllowedSelection = (value, collection) => collection.some((item) => item.value === value);
+
+  const validateSelections = (data) => {
+    const errors = {};
+
+    if (!isAllowedSelection(data.currency, allowedCurrencies)) {
+      errors.currency = "Invalid currency selection.";
+    }
+
+    if (!isAllowedSelection(data.paymentMethod, paymentMethods)) {
+      errors.paymentMethod = "Invalid payment method selection.";
+    }
+
+    return errors;
+  };
+
+  const validateCardFields = (data) => {
+    if (data.paymentMethod !== "credit_card" && data.paymentMethod !== "debit_card") {
+      return {};
+    }
+
+    const digits = data.cardNumber.replace(/\s/g, "");
+    const errors = {};
+
+    if (digits.length < 13 || digits.length > 16) {
+      errors.cardNumber = "Card number must be 13-16 digits.";
+    }
+
+    if (!/^[a-zA-Z\s'-]{3,}$/.test(data.cardHolder)) {
+      errors.cardHolder = "Enter a valid cardholder name.";
+    }
+
+    if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(data.cardExpiry)) {
+      errors.cardExpiry = "Use MM/YY format.";
+    }
+
+    if (!/^\d{3,4}$/.test(data.cardCvv)) {
+      errors.cardCvv = "CVV must be 3 or 4 digits.";
+    }
+
+    return errors;
+  };
+
+  const validateBankFields = (data) => {
+    if (data.paymentMethod !== "bank_transfer") {
+      return {};
+    }
+
+    const bankDigits = data.bankAccountNumber.replace(/\D/g, "");
+    const errors = {};
+
+    if (bankDigits.length < 8 || bankDigits.length > 20) {
+      errors.bankAccountNumber = "Account number must be 8-20 digits.";
+    }
+
+    if (!data.bankReference.trim()) {
+      errors.bankReference = "Reference is required for bank transfers.";
+    }
+
+    return errors;
+  };
+
+  const validatePaymentMethodFields = (data) => ({
+    ...validateCardFields(data),
+    ...validateBankFields(data),
+  });
+
+  const buildPaymentMetadata = (data) => {
+    if (data.paymentMethod === "credit_card" || data.paymentMethod === "debit_card") {
+      const digits = data.cardNumber.replace(/\s/g, "");
+      return {
+        cardHolder: data.cardHolder.trim(),
+        cardLast4: digits.slice(-4),
+        cardBrand: data.paymentMethod,
+        cardExpiry: data.cardExpiry,
+      };
+    }
+
+    if (data.paymentMethod === "bank_transfer") {
+      const bankDigits = data.bankAccountNumber.replace(/\D/g, "");
+      return {
+        bankAccountMasked: bankDigits.replace(/\d(?=\d{4})/g, "*"),
+        bankReference: data.bankReference.trim(),
+      };
+    }
+
+    return {};
+  };
+
+  const attemptAutoComplete = async (paymentId) => {
+    if (!paymentId) {
       return;
     }
 
-    // Ensure currency and payment method are from allowed lists to prevent tampering
-    const isCurrencyAllowed = allowedCurrencies.some((c) => c.value === formData.currency);
-    if (!isCurrencyAllowed) {
-      setFieldErrors((prev) => ({ ...prev, currency: "Invalid currency selection." }));
-      setError("Please correct the highlighted fields.");
+    try {
+      await updatePaymentStatus(paymentId, "completed");
+    } catch (statusErr) {
+      console.warn("Unable to auto-complete payment status", statusErr);
+    }
+  };
+
+  const handlePaymentFailure = (err) => {
+    console.error("Create payment error", err);
+
+    if (err?.response?.data?.errors) {
+      const apiErrors = err.response.data.errors.reduce((acc, current) => {
+        if (current.param) {
+          acc[current.param] = current.msg;
+        }
+        return acc;
+      }, {});
+
+      setFieldErrors(apiErrors);
+      setError(err.response.data.message || GENERAL_VALIDATION_MESSAGE);
       return;
     }
 
-    const isMethodAllowed = paymentMethods.some((m) => m.value === formData.paymentMethod);
-    if (!isMethodAllowed) {
-      setFieldErrors((prev) => ({ ...prev, paymentMethod: "Invalid payment method selection." }));
-      setError("Please correct the highlighted fields.");
+    const fallbackMessage = err?.response?.data?.message || err.message || "Failed to create payment";
+    setError(fallbackMessage);
+  };
+
+  const sanitizeDescription = (description) => description.trim();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    resetFeedback();
+
+    const amountValidation = parseValidAmount(formData.amount);
+    if (amountValidation.errorFields) {
+      showValidationErrors(amountValidation.errorFields);
       return;
     }
 
-    const validationErrors = {};
+    const amountNum = amountValidation.value;
 
-    if (formData.paymentMethod === "credit_card" || formData.paymentMethod === "debit_card") {
-      const digits = formData.cardNumber.replace(/\s/g, "");
-      if (digits.length < 13 || digits.length > 16) {
-        validationErrors.cardNumber = "Card number must be 13-16 digits.";
-      }
-
-      if (!/^[a-zA-Z\s'-]{3,}$/.test(formData.cardHolder)) {
-        validationErrors.cardHolder = "Enter a valid cardholder name.";
-      }
-
-      if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(formData.cardExpiry)) {
-        validationErrors.cardExpiry = "Use MM/YY format.";
-      }
-
-      if (!/^\d{3,4}$/.test(formData.cardCvv)) {
-        validationErrors.cardCvv = "CVV must be 3 or 4 digits.";
-      }
-    }
-
-    if (formData.paymentMethod === "bank_transfer") {
-      const bankDigits = formData.bankAccountNumber.replace(/\D/g, "");
-      if (bankDigits.length < 8 || bankDigits.length > 20) {
-        validationErrors.bankAccountNumber = "Account number must be 8-20 digits.";
-      }
-      if (!formData.bankReference.trim()) {
-        validationErrors.bankReference = "Reference is required for bank transfers.";
-      }
-    }
-
-    if (Object.keys(validationErrors).length) {
-      setFieldErrors(validationErrors);
-      setError("Please correct the highlighted fields.");
+    const selectionErrors = validateSelections(formData);
+    if (Object.keys(selectionErrors).length) {
+      showValidationErrors(selectionErrors);
       return;
     }
 
-     // Submit payment
+    const methodErrors = validatePaymentMethodFields(formData);
+    if (Object.keys(methodErrors).length) {
+      showValidationErrors(methodErrors);
+      return;
+    }
+
     setIsSubmitting(true);
     try {
-      const sanitizedDescription = formData.description.trim();
-
-      const metadata = {};
-
-      if (formData.paymentMethod === "credit_card" || formData.paymentMethod === "debit_card") {
-        const digits = formData.cardNumber.replace(/\s/g, "");
-        metadata.cardHolder = formData.cardHolder.trim();
-        metadata.cardLast4 = digits.slice(-4);
-        metadata.cardBrand = formData.paymentMethod;
-        metadata.cardExpiry = formData.cardExpiry;
-      }
-
-      if (formData.paymentMethod === "bank_transfer") {
-        const bankDigits = formData.bankAccountNumber.replace(/\D/g, "");
-        metadata.bankAccountMasked = bankDigits.replace(/\d(?=\d{4})/g, "*");
-        metadata.bankReference = formData.bankReference.trim();
-      }
-
-      // Create payment via API
       const response = await createPayment({
         amount: amountNum,
         currency: formData.currency,
         paymentMethod: formData.paymentMethod,
-        description: sanitizedDescription,
-        metadata,
+        description: sanitizeDescription(formData.description),
+        metadata: buildPaymentMetadata(formData),
       });
 
       const paymentId = response?.data?.data?._id;
       const transactionId = response?.data?.data?.transactionId;
 
-      // Attempt to mark payment as completed
-      if (paymentId) {
-        try {
-          await updatePaymentStatus(paymentId, "completed");
-        } catch (statusErr) {
-          console.warn("Unable to auto-complete payment status", statusErr);
-        }
-      }
+      await attemptAutoComplete(paymentId);
 
-      // Show success message
       const amountDisplay = `${formData.currency} ${amountNum.toFixed(2)}`;
       const referenceDisplay = transactionId ? ` Reference: ${transactionId}` : "";
       setMessage(`Payment completed. ${amountDisplay} processed securely.${referenceDisplay}`);
@@ -280,20 +356,7 @@ export default function CreatePayment() {
       setFieldErrors({});
       setError("");
     } catch (err) {
-      console.error("Create payment error", err);
-      const msg = err?.response?.data?.message || err.message || "Failed to create payment";
-      if (err?.response?.data?.errors) {
-        const apiErrors = err.response.data.errors.reduce((acc, current) => {
-          if (current.param) {
-            acc[current.param] = current.msg;
-          }
-          return acc;
-        }, {});
-        setFieldErrors(apiErrors);
-        setError(err.response.data.message || "Please correct the highlighted fields.");
-      } else {
-        setError(msg);
-      }
+      handlePaymentFailure(err);
     } finally {
       setIsSubmitting(false);
     }
