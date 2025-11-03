@@ -9,7 +9,9 @@ import adminService from '../services/adminService';
 // React Team. (2025) useEffect - React. Available at: https://react.dev/reference/react/useEffect (Accessed: 03 November 2025).
 
 // Password validation constants to avoid magic numbers flagged by static analysis
+// Note: These are validation rules, not actual passwords or secrets
 const PASSWORD_MIN_LENGTH = 6;
+// NOSONAR: This regex validates password complexity requirements (not a hardcoded credential)
 const PASSWORD_REQUIREMENTS_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/;
 
 export default function AdminDashboard() {
@@ -105,6 +107,7 @@ export default function AdminDashboard() {
     if (createFormData.password.length < PASSWORD_MIN_LENGTH) {
       errors.password = `Password must be at least ${PASSWORD_MIN_LENGTH} characters`;
     }
+    // NOSONAR: Validation regex checks password strength, not a credential
     if (!PASSWORD_REQUIREMENTS_REGEX.test(createFormData.password)) {
       errors.password = 'Password must contain uppercase, lowercase, and digit';
     }

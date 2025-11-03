@@ -5,7 +5,6 @@ import { useEmployeeAuth } from "../context/EmployeeAuthContext";
 // References:
 // React Team. (2025) useState - React. Available at: https://react.dev/reference/react/useState (Accessed: 03 November 2025).
 // React Router Team. (2025) useNavigate - React Router. Available at: https://reactrouter.com/en/main/hooks/use-navigate (Accessed: 03 November 2025).
-
 // Password validation constant to avoid magic number flagged by static analysis
 const PASSWORD_MIN_LENGTH = 6;
 
@@ -343,13 +342,22 @@ export default function EmployeeLogin() {
         }}>
           Not an employee?{' '}
           <span
+            role="button"
+            tabIndex={0}
             onClick={() => navigate('/login')}
+            onKeyPress={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                navigate('/login');
+              }
+            }}
             style={{
               color: PRIMARY_COLOR,
               cursor: 'pointer',
               fontWeight: '600',
               textDecoration: 'underline',
             }}
+            aria-label="Navigate to customer portal"
           >
             Go to Customer Portal
           </span>

@@ -110,26 +110,44 @@ export default function EmployeeNavigation() {
         {!isAdmin && (
           <>
             <div
+              role="button"
+              tabIndex={0}
               style={linkStyle(location.pathname === '/employee/dashboard')}
               onClick={() => navigate('/employee/dashboard')}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  navigate('/employee/dashboard');
+                }
+              }}
               onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(255,255,255,0.2)'}
               onMouseLeave={(e) => {
                 if (location.pathname !== '/employee/dashboard') {
                   e.target.style.backgroundColor = 'transparent';
                 }
               }}
+              aria-label="Navigate to pending payments"
             >
               Pending Payments
             </div>
             <div
+              role="button"
+              tabIndex={0}
               style={linkStyle(location.pathname === '/employee/history')}
               onClick={() => navigate('/employee/history')}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  navigate('/employee/history');
+                }
+              }}
               onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(255,255,255,0.2)'}
               onMouseLeave={(e) => {
                 if (location.pathname !== '/employee/history') {
                   e.target.style.backgroundColor = 'transparent';
                 }
               }}
+              aria-label="Navigate to payment history"
             >
               Payment History
             </div>
@@ -139,14 +157,23 @@ export default function EmployeeNavigation() {
         {/* Admin menu items */}
         {isAdmin && (
           <div
+            role="button"
+            tabIndex={0}
             style={linkStyle(location.pathname === '/employee/admin')}
             onClick={() => navigate('/employee/admin')}
+            onKeyPress={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                navigate('/employee/admin');
+              }
+            }}
             onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(255,255,255,0.2)'}
             onMouseLeave={(e) => {
               if (location.pathname !== '/employee/admin') {
                 e.target.style.backgroundColor = 'transparent';
               }
             }}
+            aria-label="Navigate to manage employees"
           >
             Manage Employees
           </div>
