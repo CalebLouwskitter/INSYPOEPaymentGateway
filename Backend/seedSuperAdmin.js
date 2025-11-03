@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { randomBytes } = require('node:crypto');
 const Employee = require('./Models/employeeModel');
 require('dotenv').config();
 
@@ -32,13 +33,11 @@ const createSuperAdmin = async () => {
             process.exit(0);
         }
 
-    // Password must meet validation requirements:
-    // - At least 8 characters
-    // - At least one uppercase letter
-    // - At least one lowercase letter
-    // - At least one number
-    // - At least one special character
-    const strongPassword = 'SuperAdmin123!';
+    // Determine password securely: use env if provided; otherwise generate a strong random password
+    const envPassword = process.env.SUPERADMIN_PASSWORD;
+    const strongPassword = (typeof envPassword === 'string' && envPassword.length >= 8)
+        ? envPassword
+        : `Sa_${randomBytes(12).toString('base64url')}_!`;
 
         // Create super admin account
         const superAdmin = new Employee({
@@ -50,24 +49,22 @@ const createSuperAdmin = async () => {
 
         await superAdmin.save();
 
-        console.log('✅ Super admin account created successfully!');
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log('Username: superadmin');
-    console.log('Password: SuperAdmin123!');
-        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-        console.log('⚠️  IMPORTANT: Please change this password after first login!');
-        console.log('');
-        console.log('Password Requirements:');
-        console.log('- At least 8 characters');
-        console.log('- At least one uppercase letter');
-        console.log('- At least one lowercase letter');
-        console.log('- At least one number');
-        console.log('- At least one special character');
+        console.log('Super admin account created successfully!');
+        console.log('-------------------------------------------');
+        console.log('Username: superadmin');
+        // Only print the generated password; if provided via env we assume caller knows it
+        if (!envPassword) {
+            console.log(`Password: ${strongPassword}`);
+        } else {
+            console.log('Password: (provided via SUPERADMIN_PASSWORD env var)');
+        }
+            console.log('-------------------------------------------');
+        console.log('  IMPORTANT: Please change this password after first login!');
 
         await mongoose.connection.close();
         process.exit(0);
     } catch (error) {
-        console.error('❌ Error creating super admin:', error.message);
+        console.error(' Error creating super admin:', error.message);
         if (error.errors) {
             console.error('Validation errors:');
             Object.keys(error.errors).forEach(key => {
