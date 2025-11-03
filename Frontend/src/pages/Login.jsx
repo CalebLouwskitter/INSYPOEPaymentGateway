@@ -404,6 +404,51 @@ export default function Login() {
               Register Now
             </button>
           </div>
+
+          {/* Employee Portal Link */}
+          <div style={{
+            marginTop: '25px',
+            textAlign: 'center',
+            paddingTop: '20px',
+            borderTop: '1px solid #E5E7EB'
+          }}>
+            <p style={{ color: '#6B7280', marginBottom: '12px', fontSize: '14px' }}>Employee Access</p>
+            <button
+              onClick={() => navigate('/employee/login')}
+              style={{
+                padding: '10px 20px',
+                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                color: '#10B981',
+                border: '2px solid #10B981',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontSize: '15px',
+                fontWeight: '600',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseOver={(e) => {
+                e.target.style.backgroundColor = '#10B981';
+                e.target.style.color = 'white';
+              }}
+              onMouseOut={(e) => {
+                e.target.style.backgroundColor = 'rgba(16, 185, 129, 0.1)';
+                e.target.style.color = '#10B981';
+              }}
+              onFocus={(e) => {
+                e.target.style.backgroundColor = '#10B981';
+                e.target.style.color = 'white';
+              }}
+              onBlur={(e) => {
+                e.target.style.backgroundColor = 'rgba(16, 185, 129, 0.1)';
+                e.target.style.color = '#10B981';
+              }}
+            >
+              <span>👨‍💼</span> Employee Portal
+            </button>
+          </div>
         </div>
       </div>
 

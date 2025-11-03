@@ -262,6 +262,20 @@ export default function HomeDashboard() {
 					{user?.accountNumber && (
 						<span className="dashboard__user">User ID: {user.accountNumber}</span>
 					)}
+					<button 
+						className="btn btn--success" 
+						onClick={() => navigate("/employee/login")}
+						style={{
+							backgroundColor: '#10B981',
+							color: 'white',
+							border: 'none',
+							display: 'inline-flex',
+							alignItems: 'center',
+							gap: '6px'
+						}}
+					>
+						<span>👨‍💼</span> Employee Portal
+					</button>
 					<button className="btn btn--primary" onClick={() => navigate("/paymentportal")}>
 						+ Create Payment
 					</button>

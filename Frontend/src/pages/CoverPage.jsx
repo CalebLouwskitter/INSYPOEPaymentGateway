@@ -144,6 +144,53 @@ export default function CoverPage() {
             Register
           </button>
         </div>
+
+        {/* Employee Portal Link */}
+        <div style={{
+          marginTop: '40px',
+          paddingTop: '30px',
+          borderTop: '1px solid rgba(255,255,255,0.2)',
+          textAlign: 'center'
+        }}>
+          <p style={{ fontSize: '14px', color: '#9CA3AF', marginBottom: '12px' }}>
+            Are you an employee?
+          </p>
+          <button
+            onClick={() => navigate('/employee/login')}
+            style={{
+              padding: '12px 24px',
+              fontSize: '16px',
+              fontWeight: '600',
+              borderRadius: '8px',
+              border: '2px solid #10B981',
+              backgroundColor: 'rgba(16, 185, 129, 0.1)',
+              color: '#10B981',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}
+            onMouseOver={(e) => {
+              e.target.style.backgroundColor = '#10B981';
+              e.target.style.color = 'white';
+            }}
+            onMouseOut={(e) => {
+              e.target.style.backgroundColor = 'rgba(16, 185, 129, 0.1)';
+              e.target.style.color = '#10B981';
+            }}
+            onFocus={(e) => {
+              e.target.style.backgroundColor = '#10B981';
+              e.target.style.color = 'white';
+            }}
+            onBlur={(e) => {
+              e.target.style.backgroundColor = 'rgba(16, 185, 129, 0.1)';
+              e.target.style.color = '#10B981';
+            }}
+          >
+            <span>👨‍💼</span> Employee Portal
+          </button>
+        </div>
       </div>
 
 
