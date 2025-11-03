@@ -1,5 +1,6 @@
 import { Navigate } from 'react-router-dom';
 import { useEmployeeAuth } from '../context/EmployeeAuthContext.jsx';
+import PropTypes from 'prop-types';
 
 // References:
 // React Router Team. (2025) Navigate - React Router. Available at: https://reactrouter.com/en/main/components/navigate (Accessed: 03 November 2025).
@@ -10,7 +11,7 @@ import { useEmployeeAuth } from '../context/EmployeeAuthContext.jsx';
  * Optionally restricts access by role
  */
 export default function EmployeeProtectedRoute({ children, requireAdmin = false }) {
-  const { isEmployeeAuthenticated, isAdmin, employeeUser } = useEmployeeAuth();
+  const { isEmployeeAuthenticated, isAdmin } = useEmployeeAuth();
 
   // Not authenticated - redirect to employee login
   if (!isEmployeeAuthenticated) {
@@ -25,3 +26,12 @@ export default function EmployeeProtectedRoute({ children, requireAdmin = false 
   // Authenticated and authorized
   return children;
 }
+
+EmployeeProtectedRoute.propTypes = {
+  children: PropTypes.node.isRequired,
+  requireAdmin: PropTypes.bool,
+};
+
+EmployeeProtectedRoute.defaultProps = {
+  requireAdmin: false,
+};

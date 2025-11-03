@@ -1,5 +1,6 @@
 // allow us to send the user to different pages
 import { Navigate } from 'react-router-dom'
+import PropTypes from 'prop-types'
 // import our Auth context file, so that we can check authentication
 import { useAuth } from '../context/AuthContext.jsx'
 
@@ -15,4 +16,8 @@ export default function ProtectedRoute({children}) {
 
     // otherwise, let them have access to the page they want to go to!
     return children;
+}
+
+ProtectedRoute.propTypes = {
+    children: PropTypes.node.isRequired,
 }

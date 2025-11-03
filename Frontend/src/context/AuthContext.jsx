@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import PropTypes from 'prop-types';
 import axiosInstance from '../interfaces/axiosInstance';
 
 const AuthContext = createContext();
@@ -58,8 +59,18 @@ export function AuthProvider({ children }) {
     return resp;
   };
 
+  const value = useMemo(() => ({
+    user,
+    token,
+    isAuthenticated,
+    login,
+    logout,
+    register,
+    setUser,
+  }), [user, token, isAuthenticated]);
+
   return (
-    <AuthContext.Provider value={{ user, token, isAuthenticated, login, logout, register, setUser }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
@@ -68,3 +79,6 @@ export function AuthProvider({ children }) {
 export function useAuth() {
   return useContext(AuthContext);
 }
+AuthProvider.propTypes = {
+  children: PropTypes.node.isRequired,
+};

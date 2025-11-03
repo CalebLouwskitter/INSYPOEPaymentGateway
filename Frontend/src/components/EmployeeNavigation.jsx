@@ -19,19 +19,32 @@ export default function EmployeeNavigation() {
   };
 
   const navStyle = {
-    backgroundColor: '#1F2937',
+    // Glassmorphism nav: translucent gradient, blur and subtle border
+    background: 'linear-gradient(135deg, rgba(76,81,191,0.65) 0%, rgba(118,75,162,0.55) 100%)',
     color: 'white',
-    padding: '1rem 2rem',
+    padding: '0.85rem 1.5rem',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+    backdropFilter: 'blur(12px)',
+    WebkitBackdropFilter: 'blur(12px)',
+    border: '1px solid rgba(255,255,255,0.18)',
+    borderRadius: '14px',
+    margin: '0.5rem 1rem',
+    position: 'sticky',
+    top: 0,
+    zIndex: 50,
+    boxShadow: '0 10px 30px rgba(0,0,0,0.12)'
   };
 
   const brandStyle = {
-    fontSize: '1.5rem',
-    fontWeight: 'bold',
-    color: '#8B5CF6',
+    fontSize: '1.15rem',
+    fontWeight: '700',
+    color: 'rgba(255,255,255,0.95)',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    textShadow: '0 1px 2px rgba(0,0,0,0.2)'
   };
 
   const menuStyle = {
@@ -42,38 +55,48 @@ export default function EmployeeNavigation() {
 
   const linkStyle = (isActive) => ({
     padding: '0.5rem 1rem',
-    borderRadius: '0.5rem',
+    borderRadius: '10px',
     cursor: 'pointer',
-    backgroundColor: isActive ? '#374151' : 'transparent',
-    transition: 'background-color 0.3s',
+    backgroundColor: isActive ? 'rgba(255,255,255,0.18)' : 'transparent',
+    border: isActive ? '1px solid rgba(255,255,255,0.28)' : '1px solid transparent',
+    transition: 'all 0.25s ease',
     textDecoration: 'none',
     color: 'white',
+    fontWeight: '600',
+    fontSize: '0.95rem',
+    backdropFilter: isActive ? 'blur(6px)' : 'none',
   });
 
   const buttonStyle = {
-    padding: '0.5rem 1rem',
-    borderRadius: '0.5rem',
+    padding: '0.5rem 1.1rem',
+    borderRadius: '10px',
     cursor: 'pointer',
-    backgroundColor: '#EF4444',
-    border: 'none',
+    backgroundColor: 'rgba(245,101,101,0.85)',
+    border: '1px solid rgba(255,255,255,0.25)',
     color: 'white',
-    fontWeight: '500',
-    transition: 'background-color 0.3s',
+    fontWeight: '700',
+    transition: 'all 0.25s ease',
+    fontSize: '0.95rem',
+    boxShadow: '0 6px 16px rgba(245, 101, 101, 0.25)'
   };
 
   const userInfoStyle = {
     fontSize: '0.9rem',
-    color: '#D1D5DB',
+    color: 'rgba(255,255,255,0.92)',
     marginRight: '1rem',
+    fontWeight: '600',
   };
 
   const roleBadgeStyle = {
-    backgroundColor: isAdmin ? '#8B5CF6' : '#10B981',
-    padding: '0.25rem 0.5rem',
-    borderRadius: '0.25rem',
-    fontSize: '0.75rem',
-    fontWeight: 'bold',
+    backgroundColor: isAdmin ? 'rgba(128,90,213,0.85)' : 'rgba(72,187,120,0.85)',
+    padding: '0.35rem 0.75rem',
+    borderRadius: '999px',
+    border: '1px solid rgba(255,255,255,0.25)',
+    fontSize: '0.7rem',
+    fontWeight: '800',
     marginLeft: '0.5rem',
+    textTransform: 'uppercase',
+    letterSpacing: '0.05em'
   };
 
   return (
@@ -89,7 +112,7 @@ export default function EmployeeNavigation() {
             <div
               style={linkStyle(location.pathname === '/employee/dashboard')}
               onClick={() => navigate('/employee/dashboard')}
-              onMouseEnter={(e) => e.target.style.backgroundColor = '#374151'}
+              onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(255,255,255,0.2)'}
               onMouseLeave={(e) => {
                 if (location.pathname !== '/employee/dashboard') {
                   e.target.style.backgroundColor = 'transparent';
@@ -101,7 +124,7 @@ export default function EmployeeNavigation() {
             <div
               style={linkStyle(location.pathname === '/employee/history')}
               onClick={() => navigate('/employee/history')}
-              onMouseEnter={(e) => e.target.style.backgroundColor = '#374151'}
+              onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(255,255,255,0.2)'}
               onMouseLeave={(e) => {
                 if (location.pathname !== '/employee/history') {
                   e.target.style.backgroundColor = 'transparent';
@@ -118,7 +141,7 @@ export default function EmployeeNavigation() {
           <div
             style={linkStyle(location.pathname === '/employee/admin')}
             onClick={() => navigate('/employee/admin')}
-            onMouseEnter={(e) => e.target.style.backgroundColor = '#374151'}
+            onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(255,255,255,0.2)'}
             onMouseLeave={(e) => {
               if (location.pathname !== '/employee/admin') {
                 e.target.style.backgroundColor = 'transparent';
@@ -133,15 +156,15 @@ export default function EmployeeNavigation() {
         <div style={userInfoStyle}>
           {employeeUser?.username}
           <span style={roleBadgeStyle}>
-            {isAdmin ? 'ADMIN' : 'EMPLOYEE'}
+            {isAdmin ? 'Admin' : 'Employee'}
           </span>
         </div>
         
         <button
           style={buttonStyle}
           onClick={handleLogout}
-          onMouseEnter={(e) => e.target.style.backgroundColor = '#DC2626'}
-          onMouseLeave={(e) => e.target.style.backgroundColor = '#EF4444'}
+          onMouseEnter={(e) => e.target.style.backgroundColor = '#E53E3E'}
+          onMouseLeave={(e) => e.target.style.backgroundColor = '#F56565'}
         >
           Logout
         </button>

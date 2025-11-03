@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import PropTypes from 'prop-types';
 import employeeAxiosInstance from '../interfaces/employeeAxiosInstance';
 
 // References:
@@ -82,7 +83,7 @@ export function EmployeeAuthProvider({ children }) {
     }
   };
 
-  const value = {
+  const value = useMemo(() => ({
     employeeUser,
     employeeToken,
     isEmployeeAuthenticated,
@@ -90,7 +91,7 @@ export function EmployeeAuthProvider({ children }) {
     isEmployee,
     employeeLogin,
     employeeLogout,
-  };
+  }), [employeeUser, employeeToken, isEmployeeAuthenticated, isAdmin, isEmployee]);
 
   return (
     <EmployeeAuthContext.Provider value={value}>
@@ -109,3 +110,6 @@ export function useEmployeeAuth() {
 }
 
 export default EmployeeAuthContext;
+EmployeeAuthProvider.propTypes = {
+  children: PropTypes.node.isRequired,
+};

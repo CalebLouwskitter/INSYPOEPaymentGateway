@@ -84,7 +84,8 @@ export default function EmployeeDashboard() {
 
   const containerStyle = {
     minHeight: '100vh',
-    backgroundColor: '#F9FAFB',
+    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    padding: '0',
   };
 
   const contentStyle = {
@@ -95,53 +96,61 @@ export default function EmployeeDashboard() {
 
   const headerStyle = {
     marginBottom: '2rem',
+    backgroundColor: 'white',
+    padding: '1.5rem 2rem',
+    borderRadius: '12px',
+    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
   };
 
   const titleStyle = {
-    fontSize: '2rem',
-    fontWeight: 'bold',
-    color: '#1F2937',
+    fontSize: '1.75rem',
+    fontWeight: '600',
+    color: '#667eea',
     marginBottom: '0.5rem',
   };
 
   const subtitleStyle = {
     fontSize: '1rem',
-    color: '#6B7280',
+    color: '#718096',
   };
 
   const statsContainerStyle = {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-    gap: '1rem',
+    gap: '1.5rem',
     marginBottom: '2rem',
   };
 
   const statCardStyle = {
-    backgroundColor: 'white',
-    padding: '1.5rem',
-    borderRadius: '10px',
-    boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+    backgroundColor: '#9F7AEA',
+    padding: '1.75rem',
+    borderRadius: '12px',
+    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+    transition: 'transform 0.3s ease',
   };
 
   const statNumberStyle = {
-    fontSize: '2rem',
+    fontSize: '2.5rem',
     fontWeight: 'bold',
-    color: '#8B5CF6',
+    color: 'white',
   };
 
   const statLabelStyle = {
-    fontSize: '0.9rem',
-    color: '#6B7280',
+    fontSize: '0.95rem',
+    color: 'white',
     marginTop: '0.5rem',
+    fontWeight: '500',
+    opacity: 0.95,
   };
 
   const messageStyle = (isError) => ({
-    padding: '1rem',
-    borderRadius: '10px',
+    padding: '1rem 1.5rem',
+    borderRadius: '8px',
     marginBottom: '1.5rem',
-    backgroundColor: isError ? '#FEE2E2' : '#D1FAE5',
-    border: `1px solid ${isError ? '#EF4444' : '#10B981'}`,
-    color: isError ? '#EF4444' : '#065F46',
+    backgroundColor: isError ? '#FED7D7' : '#C6F6D5',
+    border: `1px solid ${isError ? '#FC8181' : '#68D391'}`,
+    color: isError ? '#C53030' : '#2F855A',
+    fontWeight: '500',
   });
 
   if (!isEmployeeAuthenticated) {
@@ -163,7 +172,11 @@ export default function EmployeeDashboard() {
 
         {/* Stats */}
         <div style={statsContainerStyle}>
-          <div style={statCardStyle}>
+          <div 
+            style={statCardStyle}
+            onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-3px)'}
+            onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+          >
             <div style={statNumberStyle}>{payments.length}</div>
             <div style={statLabelStyle}>Pending Payments</div>
           </div>
@@ -189,11 +202,11 @@ export default function EmployeeDashboard() {
             textAlign: 'center',
             padding: '3rem',
             backgroundColor: 'white',
-            borderRadius: '10px',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+            borderRadius: '12px',
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
           }}>
-            <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>⏳</div>
-            <p style={{ color: '#6B7280' }}>Loading payments...</p>
+            <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>⏳</div>
+            <p style={{ color: '#718096', fontSize: '1rem', fontWeight: '500' }}>Loading payments...</p>
           </div>
         )}
 

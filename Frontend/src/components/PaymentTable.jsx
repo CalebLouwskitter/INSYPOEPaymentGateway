@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import PropTypes from 'prop-types';
 
 // References:
 // React Team. (2025) useState - React. Available at: https://react.dev/reference/react/useState (Accessed: 03 November 2025).
@@ -220,3 +221,38 @@ export default function PaymentTable({ payments, onApprove, onDeny, showActions 
     </div>
   );
 }
+
+PaymentTable.propTypes = {
+  payments: PropTypes.arrayOf(PropTypes.shape({
+    _id: PropTypes.string.isRequired,
+    transactionId: PropTypes.string,
+    userId: PropTypes.oneOfType([
+      PropTypes.shape({
+        fullName: PropTypes.string,
+        accountNumber: PropTypes.string,
+      }),
+      PropTypes.string,
+    ]),
+    amount: PropTypes.number.isRequired,
+    currency: PropTypes.string,
+    paymentMethod: PropTypes.string,
+    status: PropTypes.string.isRequired,
+    createdAt: PropTypes.oneOfType([PropTypes.string, PropTypes.instanceOf(Date)]),
+    processedBy: PropTypes.oneOfType([
+      PropTypes.shape({ username: PropTypes.string }),
+      PropTypes.string,
+    ]),
+    processedAt: PropTypes.oneOfType([PropTypes.string, PropTypes.instanceOf(Date)]),
+  })).isRequired,
+  onApprove: PropTypes.func,
+  onDeny: PropTypes.func,
+  showActions: PropTypes.bool,
+  isHistory: PropTypes.bool,
+};
+
+PaymentTable.defaultProps = {
+  onApprove: undefined,
+  onDeny: undefined,
+  showActions: true,
+  isHistory: false,
+};

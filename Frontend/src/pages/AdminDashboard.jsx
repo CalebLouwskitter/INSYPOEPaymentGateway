@@ -151,7 +151,8 @@ export default function AdminDashboard() {
   // Styles
   const containerStyle = {
     minHeight: '100vh',
-    backgroundColor: '#F9FAFB',
+    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    padding: '0',
   };
 
   const contentStyle = {
@@ -165,77 +166,87 @@ export default function AdminDashboard() {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
+    backgroundColor: 'white',
+    padding: '1.5rem 2rem',
+    borderRadius: '12px',
+    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
   };
 
   const titleStyle = {
-    fontSize: '2rem',
-    fontWeight: 'bold',
-    color: '#1F2937',
+    fontSize: '1.75rem',
+    fontWeight: '600',
+    color: '#667eea',
   };
 
   const buttonStyle = (isPrimary = false) => ({
-    padding: '0.75rem 1.5rem',
-    borderRadius: '0.5rem',
+    padding: '0.65rem 1.5rem',
+    borderRadius: '8px',
     border: 'none',
     cursor: 'pointer',
     fontWeight: '600',
-    fontSize: '0.9rem',
-    backgroundColor: isPrimary ? '#8B5CF6' : '#10B981',
+    fontSize: '0.95rem',
+    backgroundColor: isPrimary ? '#667eea' : '#48BB78',
     color: 'white',
-    transition: 'opacity 0.3s',
+    transition: 'all 0.3s ease',
+    boxShadow: '0 2px 6px rgba(0, 0, 0, 0.15)',
   });
 
   const formContainerStyle = {
     backgroundColor: 'white',
     padding: '2rem',
-    borderRadius: '10px',
-    boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+    borderRadius: '12px',
+    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
     marginBottom: '2rem',
   };
 
   const inputStyle = {
     width: '100%',
-    padding: '0.75rem',
+    padding: '0.75rem 1rem',
     fontSize: '1rem',
-    borderRadius: '0.5rem',
-    border: '1px solid #D1D5DB',
+    borderRadius: '8px',
+    border: '1px solid #E2E8F0',
     boxSizing: 'border-box',
+    transition: 'all 0.3s ease',
+    backgroundColor: '#F7FAFC',
   };
 
   const messageStyle = (isError) => ({
-    padding: '1rem',
-    borderRadius: '10px',
+    padding: '1rem 1.5rem',
+    borderRadius: '8px',
     marginBottom: '1.5rem',
-    backgroundColor: isError ? '#FEE2E2' : '#D1FAE5',
-    border: `1px solid ${isError ? '#EF4444' : '#10B981'}`,
-    color: isError ? '#EF4444' : '#065F46',
+    backgroundColor: isError ? '#FED7D7' : '#C6F6D5',
+    border: `1px solid ${isError ? '#FC8181' : '#68D391'}`,
+    color: isError ? '#C53030' : '#2F855A',
+    fontWeight: '500',
   });
 
   const statsContainerStyle = {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-    gap: '1rem',
+    gap: '1.5rem',
     marginBottom: '2rem',
   };
 
   const statCardStyle = (color) => ({
-    backgroundColor: 'white',
-    padding: '1.5rem',
-    borderRadius: '10px',
-    boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-    borderLeft: `4px solid ${color}`,
+    backgroundColor: color,
+    padding: '1.75rem',
+    borderRadius: '12px',
+    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+    transition: 'transform 0.3s ease',
   });
 
   const statNumberStyle = (color) => ({
-    fontSize: '2rem',
+    fontSize: '2.5rem',
     fontWeight: 'bold',
-    color: color,
+    color: 'white',
   });
 
   const statLabelStyle = {
-    fontSize: '0.9rem',
-    color: '#6B7280',
+    fontSize: '0.95rem',
+    color: 'white',
     marginTop: '0.5rem',
+    fontWeight: '500',
+    opacity: 0.95,
   };
 
   // Calculate stats
@@ -257,8 +268,14 @@ export default function AdminDashboard() {
           <button
             style={buttonStyle(false)}
             onClick={() => setShowCreateForm(!showCreateForm)}
-            onMouseEnter={(e) => e.target.style.opacity = '0.8'}
-            onMouseLeave={(e) => e.target.style.opacity = '1'}
+            onMouseEnter={(e) => {
+              e.target.style.transform = 'translateY(-2px)';
+              e.target.style.boxShadow = '0 4px 12px rgba(72, 187, 120, 0.4)';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.transform = 'translateY(0)';
+              e.target.style.boxShadow = '0 2px 6px rgba(0, 0, 0, 0.15)';
+            }}
           >
             {showCreateForm ? '✗ Cancel' : '+ Create Employee'}
           </button>
@@ -266,16 +283,28 @@ export default function AdminDashboard() {
 
         {/* Stats */}
         <div style={statsContainerStyle}>
-          <div style={statCardStyle('#8B5CF6')}>
-            <div style={statNumberStyle('#8B5CF6')}>{employees.length}</div>
+          <div 
+            style={statCardStyle('#9F7AEA')}
+            onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-3px)'}
+            onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+          >
+            <div style={statNumberStyle('#9F7AEA')}>{employees.length}</div>
             <div style={statLabelStyle}>Total Employees</div>
           </div>
-          <div style={statCardStyle('#10B981')}>
-            <div style={statNumberStyle('#10B981')}>{adminCount}</div>
+          <div 
+            style={statCardStyle('#48BB78')}
+            onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-3px)'}
+            onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+          >
+            <div style={statNumberStyle('#48BB78')}>{adminCount}</div>
             <div style={statLabelStyle}>Administrators</div>
           </div>
-          <div style={statCardStyle('#3B82F6')}>
-            <div style={statNumberStyle('#3B82F6')}>{employeeCount}</div>
+          <div 
+            style={statCardStyle('#4299E1')}
+            onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-3px)'}
+            onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+          >
+            <div style={statNumberStyle('#4299E1')}>{employeeCount}</div>
             <div style={statLabelStyle}>Regular Employees</div>
           </div>
         </div>
@@ -297,12 +326,17 @@ export default function AdminDashboard() {
         {/* Create employee form */}
         {showCreateForm && (
           <div style={formContainerStyle}>
-            <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1.5rem', color: '#1F2937' }}>
+            <h2 style={{ 
+              fontSize: '1.5rem', 
+              fontWeight: '600', 
+              marginBottom: '1.5rem', 
+              color: '#667eea',
+            }}>
               Create New Employee
             </h2>
             <form onSubmit={handleCreateEmployee}>
               <div style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: '#4A5568' }}>
                   Username
                 </label>
                 <input
@@ -314,18 +348,26 @@ export default function AdminDashboard() {
                   required
                   style={{
                     ...inputStyle,
-                    borderColor: formErrors.username ? '#EF4444' : '#D1D5DB',
+                    borderColor: formErrors.username ? '#FC8181' : '#E2E8F0',
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#667eea';
+                    e.target.style.backgroundColor = 'white';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = formErrors.username ? '#FC8181' : '#E2E8F0';
+                    e.target.style.backgroundColor = '#F7FAFC';
                   }}
                 />
                 {formErrors.username && (
-                  <p style={{ color: '#EF4444', fontSize: '0.875rem', marginTop: '0.5rem' }}>
+                  <p style={{ color: '#C53030', fontSize: '0.875rem', marginTop: '0.5rem' }}>
                     {formErrors.username}
                   </p>
                 )}
               </div>
 
               <div style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: '#4A5568' }}>
                   Password
                 </label>
                 <input
@@ -337,18 +379,26 @@ export default function AdminDashboard() {
                   required
                   style={{
                     ...inputStyle,
-                    borderColor: formErrors.password ? '#EF4444' : '#D1D5DB',
+                    borderColor: formErrors.password ? '#FC8181' : '#E2E8F0',
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#667eea';
+                    e.target.style.backgroundColor = 'white';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = formErrors.password ? '#FC8181' : '#E2E8F0';
+                    e.target.style.backgroundColor = '#F7FAFC';
                   }}
                 />
                 {formErrors.password && (
-                  <p style={{ color: '#EF4444', fontSize: '0.875rem', marginTop: '0.5rem' }}>
+                  <p style={{ color: '#C53030', fontSize: '0.875rem', marginTop: '0.5rem' }}>
                     {formErrors.password}
                   </p>
                 )}
               </div>
 
               <div style={{ marginBottom: '1.5rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: '#4A5568' }}>
                   Role
                 </label>
                 <select
@@ -356,6 +406,14 @@ export default function AdminDashboard() {
                   value={createFormData.role}
                   onChange={handleFormChange}
                   style={inputStyle}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#667eea';
+                    e.target.style.backgroundColor = 'white';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = '#E2E8F0';
+                    e.target.style.backgroundColor = '#F7FAFC';
+                  }}
                 >
                   <option value="employee">Employee</option>
                   <option value="admin">Administrator</option>
@@ -365,8 +423,14 @@ export default function AdminDashboard() {
               <button
                 type="submit"
                 style={buttonStyle(true)}
-                onMouseEnter={(e) => e.target.style.opacity = '0.8'}
-                onMouseLeave={(e) => e.target.style.opacity = '1'}
+                onMouseEnter={(e) => {
+                  e.target.style.transform = 'translateY(-2px)';
+                  e.target.style.boxShadow = '0 4px 12px rgba(102, 126, 234, 0.4)';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.transform = 'translateY(0)';
+                  e.target.style.boxShadow = '0 2px 6px rgba(0, 0, 0, 0.15)';
+                }}
               >
                 Create Employee
               </button>
@@ -380,11 +444,11 @@ export default function AdminDashboard() {
             textAlign: 'center',
             padding: '3rem',
             backgroundColor: 'white',
-            borderRadius: '10px',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+            borderRadius: '12px',
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
           }}>
-            <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>⏳</div>
-            <p style={{ color: '#6B7280' }}>Loading employees...</p>
+            <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>⏳</div>
+            <p style={{ color: '#718096', fontSize: '1rem', fontWeight: '500' }}>Loading employees...</p>
           </div>
         )}
 
