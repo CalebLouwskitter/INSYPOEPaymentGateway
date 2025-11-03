@@ -20,8 +20,17 @@ const paymentSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['pending', 'completed', 'failed', 'refunded'],
+        enum: ['pending', 'approved', 'denied', 'completed', 'failed', 'refunded'],
         default: 'pending'
+    },
+    processedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Employee',
+        default: null
+    },
+    processedAt: {
+        type: Date,
+        default: null
     },
     paymentMethod: {
         type: String,
