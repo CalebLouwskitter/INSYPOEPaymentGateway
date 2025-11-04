@@ -1,8 +1,21 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useEmployeeAuth } from '../context/EmployeeAuthContext.jsx';
+import { useState, useEffect } from 'react';
+import {
+  COLORS,
+  GLASS_STYLES,
+  SPACING,
+  BORDERS,
+  TYPOGRAPHY,
+  TRANSITIONS,
+  BUTTON_STYLES,
+  BREAKPOINTS,
+  SHADOWS
+} from '../constants/styles.js';
 
 // References:
 // React Router Team. (2025) useNavigate - React Router. Available at: https://reactrouter.com/en/main/hooks/use-navigate (Accessed: 03 November 2025).
+// React Team. (2025) useEffect - React. Available at: https://react.dev/reference/react/useEffect (Accessed: 04 November 2025).
 
 /**
  * Navigation component for employee portal
@@ -12,6 +25,20 @@ export default function EmployeeNavigation() {
   const navigate = useNavigate();
   const location = useLocation();
   const { employeeUser, isAdmin, employeeLogout } = useEmployeeAuth();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Handle responsive behavior
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < parseInt(BREAKPOINTS.md));
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const handleLogout = async () => {
     await employeeLogout();
@@ -22,17 +49,26 @@ export default function EmployeeNavigation() {
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
       navigate(path);
+      if (isMobile) {
+        setIsMobileMenuOpen(false);
+      }
     }
   };
 
   const handleMouseEnter = (event) => {
-    event.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.2)';
+    if (!isMobile) {
+      event.currentTarget.style.backgroundColor = COLORS.gray[100];
+    }
   };
 
   const handleMouseLeave = (event, path) => {
-    if (location.pathname !== path) {
+    if (!isMobile && location.pathname !== path) {
       event.currentTarget.style.backgroundColor = 'transparent';
     }
+  };
+
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
   };
 
   const navLinks = isAdmin
@@ -41,6 +77,7 @@ export default function EmployeeNavigation() {
           path: '/employee/admin',
           label: 'Manage Employees',
           ariaLabel: 'Navigate to manage employees',
+          icon: '👥'
         },
       ]
     : [
@@ -48,104 +85,130 @@ export default function EmployeeNavigation() {
           path: '/employee/dashboard',
           label: 'Pending Payments',
           ariaLabel: 'Navigate to pending payments',
+          icon: '⏳'
         },
         {
           path: '/employee/history',
           label: 'Payment History',
           ariaLabel: 'Navigate to payment history',
+          icon: '📊'
         },
       ];
 
   const navStyle = {
-    // Glassmorphism nav: translucent gradient, blur and subtle border
-    background: 'linear-gradient(135deg, rgba(76,81,191,0.65) 0%, rgba(118,75,162,0.55) 100%)',
-    color: 'white',
-    padding: '0.85rem 1.5rem',
+    ...GLASS_STYLES.nav,
+    color: COLORS.gray[800],
+    padding: `${SPACING.sm} ${SPACING.lg}`,
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backdropFilter: 'blur(12px)',
-    WebkitBackdropFilter: 'blur(12px)',
-    border: '1px solid rgba(255,255,255,0.18)',
-    borderRadius: '14px',
-    margin: '0.5rem 1rem',
+    margin: `${SPACING.sm} ${SPACING.md}`,
     position: 'sticky',
     top: 0,
     zIndex: 50,
-    boxShadow: '0 10px 30px rgba(0,0,0,0.12)'
   };
 
   const brandStyle = {
-    fontSize: '1.15rem',
-    fontWeight: '700',
-    color: 'rgba(255,255,255,0.95)',
+    fontSize: TYPOGRAPHY.fontSize.lg,
+    fontWeight: TYPOGRAPHY.fontWeight.bold,
+    color: COLORS.primary,
     display: 'flex',
     alignItems: 'center',
-    gap: '0.5rem',
-    textShadow: '0 1px 2px rgba(0,0,0,0.2)'
+    gap: SPACING.sm,
+    flexShrink: 0,
   };
 
   const menuStyle = {
-    display: 'flex',
-    gap: '1rem',
+    display: isMobile ? (isMobileMenuOpen ? 'flex' : 'none') : 'flex',
+    gap: SPACING.md,
     alignItems: 'center',
+    flexDirection: isMobile ? 'column' : 'row',
+    position: isMobile ? 'absolute' : 'static',
+    top: '100%',
+    left: 0,
+    right: 0,
+    backgroundColor: isMobile ? COLORS.white : 'transparent',
+    padding: isMobile ? SPACING.lg : '0',
+    borderRadius: isMobile ? BORDERS.radius.lg : '0',
+    boxShadow: isMobile ? SHADOWS.lg : 'none',
+    marginTop: isMobile ? SPACING.sm : '0',
   };
 
   const linkStyle = (isActive) => ({
-    padding: '0.5rem 1rem',
-    borderRadius: '10px',
+    padding: `${SPACING.sm} ${SPACING.md}`,
+    borderRadius: BORDERS.radius.lg,
     cursor: 'pointer',
-    backgroundColor: isActive ? 'rgba(255,255,255,0.18)' : 'transparent',
-    border: isActive ? '1px solid rgba(255,255,255,0.28)' : '1px solid transparent',
-    transition: 'all 0.25s ease',
+    backgroundColor: isActive ? COLORS.primary : 'transparent',
+    border: isActive ? '1px solid transparent' : `1px solid ${COLORS.gray[200]}`,
+    transition: TRANSITIONS.normal,
     textDecoration: 'none',
-    color: 'white',
-    fontWeight: '600',
-    fontSize: '0.95rem',
-    backdropFilter: isActive ? 'blur(6px)' : 'none',
+    color: isActive ? COLORS.white : COLORS.gray[700],
+    fontWeight: TYPOGRAPHY.fontWeight.semibold,
+    fontSize: TYPOGRAPHY.fontSize.sm,
+    display: 'flex',
+    alignItems: 'center',
+    gap: SPACING.xs,
+    width: isMobile ? '100%' : 'auto',
+    justifyContent: isMobile ? 'flex-start' : 'center',
   });
 
-  const buttonStyle = {
-    padding: '0.5rem 1.1rem',
-    borderRadius: '10px',
+  const mobileMenuButtonStyle = {
+    display: isMobile ? 'flex' : 'none',
+    background: 'none',
+    border: 'none',
+    color: COLORS.gray[700],
+    fontSize: TYPOGRAPHY.fontSize.lg,
     cursor: 'pointer',
-    backgroundColor: 'rgba(245,101,101,0.85)',
-    border: '1px solid rgba(255,255,255,0.25)',
-    color: 'white',
-    fontWeight: '700',
-    transition: 'all 0.25s ease',
-    fontSize: '0.95rem',
-    boxShadow: '0 6px 16px rgba(245, 101, 101, 0.25)'
+    padding: SPACING.sm,
+    borderRadius: BORDERS.radius.md,
+    transition: TRANSITIONS.fast,
   };
 
   const userInfoStyle = {
-    fontSize: '0.9rem',
-    color: 'rgba(255,255,255,0.92)',
-    marginRight: '1rem',
-    fontWeight: '600',
+    fontSize: TYPOGRAPHY.fontSize.sm,
+    color: COLORS.gray[600],
+    marginRight: isMobile ? '0' : SPACING.md,
+    fontWeight: TYPOGRAPHY.fontWeight.semibold,
+    display: 'flex',
+    alignItems: 'center',
+    gap: SPACING.sm,
+    flexDirection: isMobile ? 'column' : 'row',
+    width: isMobile ? '100%' : 'auto',
+    textAlign: isMobile ? 'center' : 'left',
   };
 
   const roleBadgeStyle = {
     backgroundColor: isAdmin ? 'rgba(128,90,213,0.85)' : 'rgba(72,187,120,0.85)',
-    padding: '0.35rem 0.75rem',
-    borderRadius: '999px',
+    padding: `${SPACING.xs} ${SPACING.sm}`,
+    borderRadius: BORDERS.radius.full,
     border: '1px solid rgba(255,255,255,0.25)',
-    fontSize: '0.7rem',
-    fontWeight: '800',
-    marginLeft: '0.5rem',
+    fontSize: TYPOGRAPHY.fontSize.xs,
+    fontWeight: TYPOGRAPHY.fontWeight.extrabold,
     textTransform: 'uppercase',
     letterSpacing: '0.05em'
   };
 
   return (
-    <nav style={navStyle}>
+    <nav style={navStyle} role="navigation" aria-label="Employee portal navigation">
       <div style={brandStyle}>
         🏦 Payment Gateway - Employee Portal
       </div>
       
+      {/* Mobile menu toggle button */}
+      <button
+        style={mobileMenuButtonStyle}
+        onClick={toggleMobileMenu}
+        aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
+        aria-expanded={isMobileMenuOpen}
+        onMouseEnter={(e) => e.target.style.backgroundColor = COLORS.gray[100]}
+        onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+      >
+        {isMobileMenuOpen ? '✕' : '☰'}
+      </button>
+      
       <div style={menuStyle}>
         {/* Employee menu items */}
-        {navLinks.map(({ path, label, ariaLabel }) => (
+        {navLinks.map(({ path, label, ariaLabel, icon }) => (
           <div
             key={path}
             role="button"
@@ -156,27 +219,37 @@ export default function EmployeeNavigation() {
             onMouseEnter={handleMouseEnter}
             onMouseLeave={(event) => handleMouseLeave(event, path)}
             aria-label={ariaLabel}
+            aria-current={location.pathname === path ? 'page' : undefined}
           >
+            <span aria-hidden="true">{icon}</span>
             {label}
           </div>
         ))}
 
         {/* User info and logout */}
         <div style={userInfoStyle}>
-          {employeeUser?.username}
-          <span style={roleBadgeStyle}>
-            {isAdmin ? 'Admin' : 'Employee'}
-          </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: SPACING.sm }}>
+            <span aria-label="Current user">{employeeUser?.username}</span>
+            <span style={roleBadgeStyle} aria-label={`User role: ${isAdmin ? 'Admin' : 'Employee'}`}>
+              {isAdmin ? 'Admin' : 'Employee'}
+            </span>
+          </div>
+          
+          <button
+            style={{
+              ...BUTTON_STYLES.danger(),
+              padding: `${SPACING.sm} ${SPACING.md}`,
+              marginTop: isMobile ? SPACING.sm : '0',
+              width: isMobile ? '100%' : 'auto'
+            }}
+            onClick={handleLogout}
+            aria-label="Logout from employee portal"
+            onMouseEnter={(e) => e.target.style.backgroundColor = COLORS.danger}
+            onMouseLeave={(e) => e.target.style.backgroundColor = COLORS.danger}
+          >
+            Logout
+          </button>
         </div>
-        
-        <button
-          style={buttonStyle}
-          onClick={handleLogout}
-          onMouseEnter={(e) => e.target.style.backgroundColor = '#E53E3E'}
-          onMouseLeave={(e) => e.target.style.backgroundColor = '#F56565'}
-        >
-          Logout
-        </button>
       </div>
     </nav>
   );

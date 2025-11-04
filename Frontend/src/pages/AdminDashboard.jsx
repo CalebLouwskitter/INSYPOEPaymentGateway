@@ -1,12 +1,24 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useEmployeeAuth } from '../context/EmployeeAuthContext';
 import EmployeeNavigation from '../components/EmployeeNavigation';
 import EmployeeTable from '../components/EmployeeTable';
 import adminService from '../services/adminService';
+import {
+  COLORS,
+  SPACING,
+  BORDERS,
+  TYPOGRAPHY,
+  SHADOWS,
+  MESSAGE_STYLES,
+  LOADING_STYLES,
+  BUTTON_STYLES,
+  FORM_STYLES
+} from '../constants/styles.js';
 
 // References:
 // React Team. (2025) useEffect - React. Available at: https://react.dev/reference/react/useEffect (Accessed: 03 November 2025).
+// React Team. (2025) useCallback - React. Available at: https://react.dev/reference/react/useCallback (Accessed: 04 November 2025).
 
 // Password validation constants to avoid magic numbers flagged by static analysis
 // Note: These are validation rules, not actual passwords or secrets
@@ -22,12 +34,14 @@ export default function AdminDashboard() {
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [createFormData, setCreateFormData] = useState({
     username: '',
     password: '',
     role: 'employee',
   });
   const [formErrors, setFormErrors] = useState({});
+  const [passwordStrength, setPasswordStrength] = useState(0);
 
   // Redirect non-admin to employee dashboard
   useEffect(() => {
@@ -36,20 +50,25 @@ export default function AdminDashboard() {
     }
   }, [isAdmin, isEmployeeAuthenticated, navigate]);
 
-  // Fetch employees
+  // Clear messages after timeout
   useEffect(() => {
-    if (isAdmin) {
-      fetchEmployees();
+    if (successMessage) {
+      const timer = setTimeout(() => setSuccessMessage(''), 3000);
+      return () => clearTimeout(timer);
     }
-  }, [isAdmin]);
+  }, [successMessage]);
 
-  const fetchEmployees = async () => {
+  // Fetch employees with error handling
+  const fetchEmployees = useCallback(async () => {
     setLoading(true);
     setError('');
+    
     try {
       const response = await adminService.getAllEmployees();
       if (response.success) {
         setEmployees(response.employees || []);
+      } else {
+        throw new Error(response.message || 'Failed to load employees');
       }
     } catch (err) {
       console.error('Error fetching employees:', err);
@@ -57,19 +76,25 @@ export default function AdminDashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (isAdmin) {
+      fetchEmployees();
+    }
+  }, [isAdmin, fetchEmployees]);
 
   const handleDelete = async (employeeId) => {
     setError('');
     setSuccessMessage('');
+    
     try {
       const response = await adminService.deleteEmployee(employeeId);
       if (response.success) {
         setSuccessMessage('Employee deleted successfully! 🗑️');
-        // Remove from list
-        setEmployees(employees.filter(e => e._id !== employeeId));
-        
-        setTimeout(() => setSuccessMessage(''), 3000);
+        setEmployees(prev => prev.filter(e => e._id !== employeeId));
+      } else {
+        throw new Error(response.message || 'Failed to delete employee');
       }
     } catch (err) {
       console.error('Error deleting employee:', err);
@@ -93,6 +118,17 @@ export default function AdminDashboard() {
     setCreateFormData({ ...createFormData, [name]: sanitizedValue });
     setFormErrors({ ...formErrors, [name]: '' });
     setError('');
+
+    // Calculate password strength
+    if (name === 'password') {
+      let strength = 0;
+      if (value.length >= PASSWORD_MIN_LENGTH) strength++;
+      if (/[a-z]/.test(value)) strength++;
+      if (/[A-Z]/.test(value)) strength++;
+      if (/\d/.test(value)) strength++;
+      if (/[!@#$%^&*(),.?":{}|<>]/.test(value)) strength++;
+      setPasswordStrength(strength);
+    }
   };
 
   const validateCreateForm = () => {
@@ -115,6 +151,18 @@ export default function AdminDashboard() {
     return errors;
   };
 
+  const getPasswordStrengthColor = () => {
+    if (passwordStrength <= 2) return COLORS.danger;
+    if (passwordStrength <= 3) return COLORS.warning;
+    return COLORS.success;
+  };
+
+  const getPasswordStrengthText = () => {
+    if (passwordStrength <= 2) return 'Weak';
+    if (passwordStrength <= 3) return 'Medium';
+    return 'Strong';
+  };
+
   const handleCreateEmployee = async (e) => {
     e.preventDefault();
     
@@ -127,18 +175,19 @@ export default function AdminDashboard() {
 
     setError('');
     setSuccessMessage('');
+    setIsSubmitting(true);
     
     try {
       const response = await adminService.createEmployee(createFormData);
       if (response.success) {
         setSuccessMessage('Employee created successfully! ✓');
-        // Refresh employee list
-        fetchEmployees();
+        await fetchEmployees(); // Refresh employee list
         // Reset form
         setCreateFormData({ username: '', password: '', role: 'employee' });
         setShowCreateForm(false);
-        
-        setTimeout(() => setSuccessMessage(''), 3000);
+        setPasswordStrength(0);
+      } else {
+        throw new Error(response.message || 'Failed to create employee');
       }
     } catch (err) {
       console.error('Error creating employee:', err);
@@ -152,108 +201,109 @@ export default function AdminDashboard() {
         setFormErrors(apiErrors);
       }
       setError(err.message || 'Failed to create employee');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  // Styles
+  const resetForm = () => {
+    setCreateFormData({ username: '', password: '', role: 'employee' });
+    setFormErrors({});
+    setPasswordStrength(0);
+    setShowCreateForm(false);
+    setError('');
+  };
+
+  // Component styles using shared constants
   const containerStyle = {
     minHeight: '100vh',
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    backgroundColor: COLORS.gray[50],
     padding: '0',
   };
 
   const contentStyle = {
     maxWidth: '1400px',
     margin: '0 auto',
-    padding: '2rem',
+    padding: SPACING.xl,
   };
 
   const headerStyle = {
-    marginBottom: '2rem',
+    marginBottom: SPACING.xl,
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: 'white',
-    padding: '1.5rem 2rem',
-    borderRadius: '12px',
-    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+    backgroundColor: COLORS.white,
+    padding: `${SPACING.lg} ${SPACING.xl}`,
+    borderRadius: BORDERS.radius.lg,
+    boxShadow: SHADOWS.md,
+    flexWrap: 'wrap',
+    gap: SPACING.md,
   };
 
   const titleStyle = {
-    fontSize: '1.75rem',
-    fontWeight: '600',
-    color: '#667eea',
+    fontSize: TYPOGRAPHY.fontSize['4xl'],
+    fontWeight: TYPOGRAPHY.fontWeight.semibold,
+    color: COLORS.primary,
   };
-
-  const buttonStyle = (isPrimary = false) => ({
-    padding: '0.65rem 1.5rem',
-    borderRadius: '8px',
-    border: 'none',
-    cursor: 'pointer',
-    fontWeight: '600',
-    fontSize: '0.95rem',
-    backgroundColor: isPrimary ? '#667eea' : '#48BB78',
-    color: 'white',
-    transition: 'all 0.3s ease',
-    boxShadow: '0 2px 6px rgba(0, 0, 0, 0.15)',
-  });
 
   const formContainerStyle = {
-    backgroundColor: 'white',
-    padding: '2rem',
-    borderRadius: '12px',
-    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-    marginBottom: '2rem',
+    backgroundColor: COLORS.white,
+    padding: SPACING.xl,
+    borderRadius: BORDERS.radius.lg,
+    boxShadow: SHADOWS.md,
+    marginBottom: SPACING.xl,
   };
-
-  const inputStyle = {
-    width: '100%',
-    padding: '0.75rem 1rem',
-    fontSize: '1rem',
-    borderRadius: '8px',
-    border: '1px solid #E2E8F0',
-    boxSizing: 'border-box',
-    transition: 'all 0.3s ease',
-    backgroundColor: '#F7FAFC',
-  };
-
-  const messageStyle = (isError) => ({
-    padding: '1rem 1.5rem',
-    borderRadius: '8px',
-    marginBottom: '1.5rem',
-    backgroundColor: isError ? '#FED7D7' : '#C6F6D5',
-    border: `1px solid ${isError ? '#FC8181' : '#68D391'}`,
-    color: isError ? '#C53030' : '#2F855A',
-    fontWeight: '500',
-  });
 
   const statsContainerStyle = {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-    gap: '1.5rem',
-    marginBottom: '2rem',
+    gap: SPACING.lg,
+    marginBottom: SPACING.xl,
   };
 
   const statCardStyle = (color) => ({
     backgroundColor: color,
-    padding: '1.75rem',
-    borderRadius: '12px',
-    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+    padding: `${SPACING.lg} ${SPACING.md}`,
+    borderRadius: BORDERS.radius.lg,
+    boxShadow: SHADOWS.md,
     transition: 'transform 0.3s ease',
+    cursor: 'pointer',
   });
 
-  const statNumberStyle = (color) => ({
-    fontSize: '2.5rem',
-    fontWeight: 'bold',
-    color: 'white',
-  });
+  const statNumberStyle = {
+    fontSize: TYPOGRAPHY.fontSize['5xl'],
+    fontWeight: TYPOGRAPHY.fontWeight.bold,
+    color: COLORS.white,
+  };
 
   const statLabelStyle = {
-    fontSize: '0.95rem',
-    color: 'white',
-    marginTop: '0.5rem',
-    fontWeight: '500',
+    fontSize: TYPOGRAPHY.fontSize.base,
+    color: COLORS.white,
+    marginTop: SPACING.sm,
+    fontWeight: TYPOGRAPHY.fontWeight.medium,
     opacity: 0.95,
+  };
+
+  const passwordStrengthStyle = {
+    height: '4px',
+    borderRadius: BORDERS.radius.full,
+    backgroundColor: COLORS.gray[200],
+    marginTop: SPACING.sm,
+    overflow: 'hidden',
+  };
+
+  const passwordStrengthBarStyle = {
+    height: '100%',
+    width: `${(passwordStrength / 5) * 100}%`,
+    backgroundColor: getPasswordStrengthColor(),
+    transition: 'all 0.3s ease',
+  };
+
+  const passwordStrengthTextStyle = {
+    fontSize: TYPOGRAPHY.fontSize.xs,
+    color: getPasswordStrengthColor(),
+    marginTop: SPACING.xs,
+    fontWeight: TYPOGRAPHY.fontWeight.semibold,
   };
 
   // Calculate stats
@@ -270,156 +320,222 @@ export default function AdminDashboard() {
       
       <div style={contentStyle}>
         {/* Header */}
-        <div style={headerStyle}>
+        <header style={headerStyle}>
           <h1 style={titleStyle}>Employee Management</h1>
           <button
-            style={buttonStyle(false)}
+            style={BUTTON_STYLES.success()}
             onClick={() => setShowCreateForm(!showCreateForm)}
+            disabled={isSubmitting}
+            aria-label={showCreateForm ? 'Cancel creating employee' : 'Create new employee'}
+            aria-expanded={showCreateForm}
             onMouseEnter={(e) => {
-              e.target.style.transform = 'translateY(-2px)';
-              e.target.style.boxShadow = '0 4px 12px rgba(72, 187, 120, 0.4)';
+              if (!isSubmitting) {
+                e.target.style.transform = 'translateY(-2px)';
+                e.target.style.boxShadow = '0 4px 12px rgba(72, 187, 120, 0.4)';
+              }
             }}
             onMouseLeave={(e) => {
-              e.target.style.transform = 'translateY(0)';
-              e.target.style.boxShadow = '0 2px 6px rgba(0, 0, 0, 0.15)';
+              if (!isSubmitting) {
+                e.target.style.transform = 'translateY(0)';
+                e.target.style.boxShadow = SHADOWS.md;
+              }
             }}
           >
             {showCreateForm ? '✗ Cancel' : '+ Create Employee'}
           </button>
-        </div>
+        </header>
 
         {/* Stats */}
-        <div style={statsContainerStyle}>
+        <section style={statsContainerStyle} aria-label="Employee statistics">
           <div 
-            style={statCardStyle('#9F7AEA')}
+            style={statCardStyle(COLORS.purple)}
+            onClick={fetchEmployees}
             onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-3px)'}
             onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+            role="button"
+            tabIndex={0}
+            onKeyPress={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                fetchEmployees();
+              }
+            }}
+            aria-label="Refresh employee data"
           >
-            <div style={statNumberStyle('#9F7AEA')}>{employees.length}</div>
+            <div style={statNumberStyle}>{employees.length}</div>
             <div style={statLabelStyle}>Total Employees</div>
           </div>
           <div 
-            style={statCardStyle('#48BB78')}
+            style={statCardStyle(COLORS.success)}
             onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-3px)'}
             onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
           >
-            <div style={statNumberStyle('#48BB78')}>{adminCount}</div>
+            <div style={statNumberStyle}>{adminCount}</div>
             <div style={statLabelStyle}>Administrators</div>
           </div>
           <div 
-            style={statCardStyle('#4299E1')}
+            style={statCardStyle(COLORS.info)}
             onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-3px)'}
             onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
           >
-            <div style={statNumberStyle('#4299E1')}>{employeeCount}</div>
+            <div style={statNumberStyle}>{employeeCount}</div>
             <div style={statLabelStyle}>Regular Employees</div>
           </div>
-        </div>
+        </section>
 
         {/* Success message */}
         {successMessage && (
-          <div style={messageStyle(false)}>
+          <div 
+            style={MESSAGE_STYLES.container(false)}
+            role="alert"
+            aria-live="polite"
+          >
             {successMessage}
           </div>
         )}
 
         {/* Error message */}
         {error && (
-          <div style={messageStyle(true)}>
+          <div 
+            style={MESSAGE_STYLES.container(true)}
+            role="alert"
+            aria-live="assertive"
+          >
             {error}
           </div>
         )}
 
         {/* Create employee form */}
         {showCreateForm && (
-          <div style={formContainerStyle}>
+          <section style={formContainerStyle} aria-label="Create new employee form">
             <h2 style={{ 
-              fontSize: '1.5rem', 
-              fontWeight: '600', 
-              marginBottom: '1.5rem', 
-              color: '#667eea',
+              fontSize: TYPOGRAPHY.fontSize['3xl'], 
+              fontWeight: TYPOGRAPHY.fontWeight.semibold, 
+              marginBottom: SPACING.lg, 
+              color: COLORS.primary,
             }}>
               Create New Employee
             </h2>
-            <form onSubmit={handleCreateEmployee}>
-              <div style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: '#4A5568' }}>
-                  Username
+            <form onSubmit={handleCreateEmployee} noValidate>
+              <div style={{ marginBottom: SPACING.md }}>
+                <label 
+                  htmlFor="username"
+                  style={FORM_STYLES.label}
+                >
+                  Username *
                 </label>
                 <input
+                  id="username"
                   type="text"
                   name="username"
                   value={createFormData.username}
                   onChange={handleFormChange}
                   placeholder="Enter username (letters, numbers, underscore)"
                   required
+                  aria-required="true"
+                  aria-describedby="username-error"
                   style={{
-                    ...inputStyle,
-                    borderColor: formErrors.username ? '#FC8181' : '#E2E8F0',
+                    ...FORM_STYLES.input,
+                    borderColor: formErrors.username ? COLORS.danger : COLORS.gray[200],
                   }}
                   onFocus={(e) => {
-                    e.target.style.borderColor = '#667eea';
-                    e.target.style.backgroundColor = 'white';
+                    e.target.style.borderColor = COLORS.primary;
+                    e.target.style.backgroundColor = COLORS.white;
                   }}
                   onBlur={(e) => {
-                    e.target.style.borderColor = formErrors.username ? '#FC8181' : '#E2E8F0';
-                    e.target.style.backgroundColor = '#F7FAFC';
+                    e.target.style.borderColor = formErrors.username ? COLORS.danger : COLORS.gray[200];
+                    e.target.style.backgroundColor = COLORS.gray[50];
                   }}
                 />
                 {formErrors.username && (
-                  <p style={{ color: '#C53030', fontSize: '0.875rem', marginTop: '0.5rem' }}>
+                  <p 
+                    id="username-error"
+                    style={FORM_STYLES.error}
+                    role="alert"
+                  >
                     {formErrors.username}
                   </p>
                 )}
               </div>
 
-              <div style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: '#4A5568' }}>
-                  Password
+              <div style={{ marginBottom: SPACING.md }}>
+                <label 
+                  htmlFor="password"
+                  style={FORM_STYLES.label}
+                >
+                  Password *
                 </label>
                 <input
+                  id="password"
                   type="password"
                   name="password"
                   value={createFormData.password}
                   onChange={handleFormChange}
                   placeholder="Enter password (min 6 chars, uppercase, lowercase, digit)"
                   required
+                  aria-required="true"
+                  aria-describedby="password-error password-strength"
                   style={{
-                    ...inputStyle,
-                    borderColor: formErrors.password ? '#FC8181' : '#E2E8F0',
+                    ...FORM_STYLES.input,
+                    borderColor: formErrors.password ? COLORS.danger : COLORS.gray[200],
                   }}
                   onFocus={(e) => {
-                    e.target.style.borderColor = '#667eea';
-                    e.target.style.backgroundColor = 'white';
+                    e.target.style.borderColor = COLORS.primary;
+                    e.target.style.backgroundColor = COLORS.white;
                   }}
                   onBlur={(e) => {
-                    e.target.style.borderColor = formErrors.password ? '#FC8181' : '#E2E8F0';
-                    e.target.style.backgroundColor = '#F7FAFC';
+                    e.target.style.borderColor = formErrors.password ? COLORS.danger : COLORS.gray[200];
+                    e.target.style.backgroundColor = COLORS.gray[50];
                   }}
                 />
+                
+                {/* Password strength indicator */}
+                {createFormData.password && (
+                  <div>
+                    <div style={passwordStrengthStyle}>
+                      <div style={passwordStrengthBarStyle} />
+                    </div>
+                    <p 
+                      id="password-strength"
+                      style={passwordStrengthTextStyle}
+                    >
+                      Password strength: {getPasswordStrengthText()}
+                    </p>
+                  </div>
+                )}
+                
                 {formErrors.password && (
-                  <p style={{ color: '#C53030', fontSize: '0.875rem', marginTop: '0.5rem' }}>
+                  <p 
+                    id="password-error"
+                    style={FORM_STYLES.error}
+                    role="alert"
+                  >
                     {formErrors.password}
                   </p>
                 )}
               </div>
 
-              <div style={{ marginBottom: '1.5rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: '#4A5568' }}>
-                  Role
+              <div style={{ marginBottom: SPACING.lg }}>
+                <label 
+                  htmlFor="role"
+                  style={FORM_STYLES.label}
+                >
+                  Role *
                 </label>
                 <select
+                  id="role"
                   name="role"
                   value={createFormData.role}
                   onChange={handleFormChange}
-                  style={inputStyle}
+                  required
+                  aria-required="true"
+                  style={FORM_STYLES.input}
                   onFocus={(e) => {
-                    e.target.style.borderColor = '#667eea';
-                    e.target.style.backgroundColor = 'white';
+                    e.target.style.borderColor = COLORS.primary;
+                    e.target.style.backgroundColor = COLORS.white;
                   }}
                   onBlur={(e) => {
-                    e.target.style.borderColor = '#E2E8F0';
-                    e.target.style.backgroundColor = '#F7FAFC';
+                    e.target.style.borderColor = COLORS.gray[200];
+                    e.target.style.backgroundColor = COLORS.gray[50];
                   }}
                 >
                   <option value="employee">Employee</option>
@@ -427,45 +543,62 @@ export default function AdminDashboard() {
                 </select>
               </div>
 
-              <button
-                type="submit"
-                style={buttonStyle(true)}
-                onMouseEnter={(e) => {
-                  e.target.style.transform = 'translateY(-2px)';
-                  e.target.style.boxShadow = '0 4px 12px rgba(102, 126, 234, 0.4)';
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.transform = 'translateY(0)';
-                  e.target.style.boxShadow = '0 2px 6px rgba(0, 0, 0, 0.15)';
-                }}
-              >
-                Create Employee
-              </button>
+              <div style={{ display: 'flex', gap: SPACING.md, alignItems: 'center' }}>
+                <button
+                  type="submit"
+                  style={BUTTON_STYLES.primary(isSubmitting)}
+                  disabled={isSubmitting}
+                  aria-busy={isSubmitting}
+                  onMouseEnter={(e) => {
+                    if (!isSubmitting) {
+                      e.target.style.transform = 'translateY(-2px)';
+                      e.target.style.boxShadow = '0 4px 12px rgba(102, 126, 234, 0.4)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isSubmitting) {
+                      e.target.style.transform = 'translateY(0)';
+                      e.target.style.boxShadow = SHADOWS.md;
+                    }
+                  }}
+                >
+                  {isSubmitting ? 'Creating...' : 'Create Employee'}
+                </button>
+                
+                <button
+                  type="button"
+                  style={{
+                    ...BUTTON_STYLES.danger(),
+                    backgroundColor: COLORS.gray[400]
+                  }}
+                  onClick={resetForm}
+                  disabled={isSubmitting}
+                  aria-label="Cancel and reset form"
+                >
+                  Cancel
+                </button>
+              </div>
             </form>
-          </div>
+          </section>
         )}
 
         {/* Loading state */}
         {loading && (
-          <div style={{
-            textAlign: 'center',
-            padding: '3rem',
-            backgroundColor: 'white',
-            borderRadius: '12px',
-            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-          }}>
-            <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>⏳</div>
-            <p style={{ color: '#718096', fontSize: '1rem', fontWeight: '500' }}>Loading employees...</p>
+          <div style={LOADING_STYLES.container} role="status" aria-live="polite">
+            <div style={LOADING_STYLES.icon}>⏳</div>
+            <p style={LOADING_STYLES.text}>Loading employees...</p>
           </div>
         )}
 
         {/* Employee table */}
         {!loading && (
-          <EmployeeTable
-            employees={employees}
-            onDelete={handleDelete}
-            currentUserId={employeeUser?.id}
-          />
+          <main>
+            <EmployeeTable
+              employees={employees}
+              onDelete={handleDelete}
+              currentUserId={employeeUser?.id}
+            />
+          </main>
         )}
       </div>
     </div>

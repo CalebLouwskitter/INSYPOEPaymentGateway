@@ -1,8 +1,19 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import PropTypes from 'prop-types';
+import {
+  COLORS,
+  GLASS_STYLES,
+  SPACING,
+  BORDERS,
+  TYPOGRAPHY,
+  TRANSITIONS,
+  SHADOWS,
+  BUTTON_STYLES
+} from '../constants/styles.js';
 
 // References:
 // React Team. (2025) useState - React. Available at: https://react.dev/reference/react/useState (Accessed: 03 November 2025).
+// React Team. (2025) useMemo - React. Available at: https://react.dev/reference/react/useMemo (Accessed: 04 November 2025).
 
 /**
  * Reusable employee table component
@@ -11,6 +22,8 @@ import PropTypes from 'prop-types';
 export default function EmployeeTable({ employees, onDelete, currentUserId }) {
   const [deletingId, setDeletingId] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [sortField, setSortField] = useState('username');
+  const [sortDirection, setSortDirection] = useState('asc');
 
   const handleDelete = async (employeeId, employeeName) => {
     if (window.confirm(`Are you sure you want to delete employee "${employeeName}"?`)) {
@@ -23,84 +36,41 @@ export default function EmployeeTable({ employees, onDelete, currentUserId }) {
     }
   };
 
-  // Glass card container to wrap search + table
-  const cardStyle = {
-    background: 'linear-gradient(135deg, rgba(255,255,255,0.65) 0%, rgba(255,255,255,0.55) 100%)',
-    backdropFilter: 'blur(12px)',
-    WebkitBackdropFilter: 'blur(12px)',
-    border: '1px solid rgba(255,255,255,0.25)',
-    borderRadius: '16px',
-    padding: '1.25rem',
-    boxShadow: '0 14px 30px rgba(0,0,0,0.12)'
+  const handleSort = (field) => {
+    const newDirection = sortField === field && sortDirection === 'asc' ? 'desc' : 'asc';
+    setSortField(field);
+    setSortDirection(newDirection);
   };
 
-  const tableStyle = {
-    width: '100%',
-    borderCollapse: 'separate',
-    borderSpacing: 0,
-    backgroundColor: 'rgba(255,255,255,0.9)',
-    borderRadius: '12px',
-    overflow: 'hidden',
-    boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
-  };
+  // Memoized filtered and sorted employees for performance
+  const processedEmployees = useMemo(() => {
+    let filtered = employees.filter(emp =>
+      emp.username.toLowerCase().includes(searchTerm.toLowerCase())
+    );
 
-  const thStyle = {
-    background: 'linear-gradient(135deg, rgba(45,55,72,0.96) 0%, rgba(102,126,234,0.9) 100%)',
-    color: 'white',
-    padding: '1rem',
-    textAlign: 'left',
-    fontWeight: '700',
-    fontSize: '0.85rem',
-    textTransform: 'uppercase',
-    letterSpacing: '0.06em',
-  };
+    // Sort employees
+    filtered.sort((a, b) => {
+      let aValue = a[sortField];
+      let bValue = b[sortField];
+      
+      if (sortField === 'createdAt') {
+        aValue = new Date(aValue);
+        bValue = new Date(bValue);
+      }
+      
+      if (typeof aValue === 'string') {
+        aValue = aValue.toLowerCase();
+        bValue = bValue.toLowerCase();
+      }
+      
+      if (sortDirection === 'asc') {
+        return aValue > bValue ? 1 : -1;
+      }
+      return aValue < bValue ? 1 : -1;
+    });
 
-  const tdStyle = {
-    padding: '1rem',
-    borderBottom: '1px solid rgba(226,232,240,0.85)',
-    fontSize: '0.95rem',
-    color: '#2D3748',
-    backgroundColor: 'rgba(255,255,255,0.9)'
-  };
-
-  const roleBadgeStyle = (role) => {
-    const isAdmin = role === 'admin';
-    return {
-      padding: '0.35rem 0.75rem',
-      borderRadius: '6px',
-      fontSize: '0.75rem',
-      fontWeight: '700',
-      backgroundColor: isAdmin ? '#805AD5' : '#667eea',
-      color: 'white',
-      display: 'inline-block',
-      textTransform: 'uppercase',
-      letterSpacing: '0.05em',
-    };
-  };
-
-  const buttonStyle = (disabled = false) => ({
-    padding: '0.5rem 1rem',
-    borderRadius: '6px',
-    border: 'none',
-    cursor: disabled ? 'not-allowed' : 'pointer',
-    fontWeight: '600',
-    fontSize: '0.85rem',
-    backgroundColor: disabled ? '#CBD5E0' : '#F56565',
-    color: 'white',
-    transition: 'all 0.3s',
-  });
-
-  const searchInputStyle = {
-    width: '100%',
-    maxWidth: '350px',
-    padding: '0.75rem 1rem',
-    borderRadius: '12px',
-    border: '1px solid rgba(226,232,240,0.9)',
-    fontSize: '0.95rem',
-    marginBottom: '1.25rem',
-    backgroundColor: 'rgba(255,255,255,0.85)',
-    boxShadow: '0 6px 18px rgba(0,0,0,0.08)'
-  };
+    return filtered;
+  }, [employees, searchTerm, sortField, sortDirection]);
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -111,62 +81,155 @@ export default function EmployeeTable({ employees, onDelete, currentUserId }) {
     });
   };
 
-  // Filter employees based on search term
-  const filteredEmployees = employees.filter(emp =>
-    emp.username.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const getRoleBadgeStyle = (role) => {
+    const isAdmin = role === 'admin';
+    return {
+      padding: `${SPACING.xs} ${SPACING.sm}`,
+      borderRadius: BORDERS.radius.sm,
+      fontSize: TYPOGRAPHY.fontSize.xs,
+      fontWeight: TYPOGRAPHY.fontWeight.bold,
+      backgroundColor: isAdmin ? COLORS.purple : COLORS.info,
+      color: COLORS.white,
+      display: 'inline-block',
+      textTransform: 'uppercase',
+      letterSpacing: '0.05em',
+    };
+  };
+
+  const getSortIcon = (field) => {
+    if (sortField !== field) return '↕️';
+    return sortDirection === 'asc' ? '↑' : '↓';
+  };
 
   if (!employees || employees.length === 0) {
     return (
-      <div style={{ ...cardStyle, textAlign: 'center' }}>
-        <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>👥</div>
-        <p style={{ fontSize: '1.1rem', color: '#6B7280' }}>
+      <div style={{ ...GLASS_STYLES.container, textAlign: 'center' }} role="alert">
+        <div style={{ fontSize: TYPOGRAPHY.fontSize['5xl'], marginBottom: SPACING.md }}>👥</div>
+        <p style={{ fontSize: TYPOGRAPHY.fontSize.xl, color: COLORS.gray[500] }}>
           No employees found
         </p>
       </div>
     );
   }
 
+  const tableStyle = {
+    width: '100%',
+    borderCollapse: 'separate',
+    borderSpacing: 0,
+    backgroundColor: 'rgba(255,255,255,0.9)',
+    borderRadius: BORDERS.radius.lg,
+    overflow: 'hidden',
+    boxShadow: SHADOWS.sm,
+  };
+
+  const thStyle = {
+    background: 'linear-gradient(135deg, rgba(45,55,72,0.96) 0%, rgba(102,126,234,0.9) 100%)',
+    color: COLORS.white,
+    padding: SPACING.md,
+    textAlign: 'left',
+    fontWeight: TYPOGRAPHY.fontWeight.bold,
+    fontSize: TYPOGRAPHY.fontSize.sm,
+    textTransform: 'uppercase',
+    letterSpacing: '0.06em',
+    cursor: 'pointer',
+    userSelect: 'none',
+    transition: TRANSITIONS.fast,
+  };
+
+  const tdStyle = {
+    padding: SPACING.md,
+    borderBottom: `1px solid ${COLORS.gray[200]}`,
+    fontSize: TYPOGRAPHY.fontSize.base,
+    color: COLORS.gray[700],
+    backgroundColor: 'rgba(255,255,255,0.9)',
+    transition: TRANSITIONS.fast,
+  };
+
+  const searchInputStyle = {
+    width: '100%',
+    maxWidth: '400px',
+    padding: `${SPACING.sm} ${SPACING.md}`,
+    borderRadius: BORDERS.radius.lg,
+    border: `1px solid ${COLORS.gray[200]}`,
+    fontSize: TYPOGRAPHY.fontSize.base,
+    marginBottom: SPACING.lg,
+    backgroundColor: 'rgba(255,255,255,0.85)',
+    boxShadow: '0 6px 18px rgba(0,0,0,0.08)',
+    transition: TRANSITIONS.normal,
+  };
+
   return (
-    <div style={cardStyle}>
+    <div style={GLASS_STYLES.container}>
       {/* Search bar */}
-      <div style={{ position: 'relative', marginBottom: '1.5rem' }}>
-        <span style={{
-          position: 'absolute',
-          left: '1rem',
-          top: '50%',
+      <div style={{ position: 'relative', marginBottom: SPACING.lg }}>
+        <label htmlFor="employee-search" style={{ 
+          position: 'absolute', 
+          left: SPACING.md, 
+          top: '50%', 
           transform: 'translateY(-50%)',
-          color: '#A0AEC0',
-          fontSize: '1.1rem',
+          color: COLORS.gray[400],
+          fontSize: TYPOGRAPHY.fontSize.lg,
+          zIndex: 1,
         }}>
           🔍
-        </span>
+        </label>
         <input
+          id="employee-search"
           type="text"
           placeholder="Search by username..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
+          aria-label="Search employees by username"
           style={{
             ...searchInputStyle,
             paddingLeft: '2.5rem',
+          }}
+          onFocus={(e) => {
+            e.target.style.borderColor = COLORS.primary;
+            e.target.style.backgroundColor = COLORS.white;
+          }}
+          onBlur={(e) => {
+            e.target.style.borderColor = COLORS.gray[200];
+            e.target.style.backgroundColor = 'rgba(255,255,255,0.85)';
           }}
         />
       </div>
 
       {/* Table */}
-      <div style={{ overflowX: 'auto' }}>
+      <div style={{ overflowX: 'auto' }} role="region" aria-label="Employees table">
         <table style={tableStyle}>
           <thead>
             <tr>
-              <th style={thStyle}>Username</th>
-              <th style={thStyle}>Role</th>
-              <th style={thStyle}>Created Date</th>
+              <th 
+                style={thStyle}
+                onClick={() => handleSort('username')}
+                aria-label="Sort by username"
+                aria-sort={sortField === 'username' ? sortDirection : 'none'}
+              >
+                Username {getSortIcon('username')}
+              </th>
+              <th 
+                style={thStyle}
+                onClick={() => handleSort('role')}
+                aria-label="Sort by role"
+                aria-sort={sortField === 'role' ? sortDirection : 'none'}
+              >
+                Role {getSortIcon('role')}
+              </th>
+              <th 
+                style={thStyle}
+                onClick={() => handleSort('createdAt')}
+                aria-label="Sort by creation date"
+                aria-sort={sortField === 'createdAt' ? sortDirection : 'none'}
+              >
+                Created Date {getSortIcon('createdAt')}
+              </th>
               <th style={thStyle}>Created By</th>
               <th style={thStyle}>Actions</th>
             </tr>
           </thead>
           <tbody>
-            {filteredEmployees.map((employee) => {
+            {processedEmployees.map((employee) => {
               const isSelf = employee._id === currentUserId;
               const isSuperAdmin = employee.role === 'admin' && !employee.createdBy;
               const canDelete = !isSelf && !isSuperAdmin;
@@ -174,29 +237,32 @@ export default function EmployeeTable({ employees, onDelete, currentUserId }) {
               return (
                 <tr
                   key={employee._id}
-                  style={{ transition: 'background-color 0.2s ease' }}
+                  style={{ 
+                    transition: TRANSITIONS.fast,
+                    backgroundColor: 'transparent'
+                  }}
                   onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(102,126,234,0.06)')}
                   onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
                 >
                   <td style={tdStyle}>
-                    <div style={{ fontWeight: '600' }}>
+                    <div style={{ fontWeight: TYPOGRAPHY.fontWeight.semibold }}>
                       {employee.username}
                       {isSelf && (
                         <span style={{
-                          marginLeft: '0.5rem',
-                          fontSize: '0.75rem',
-                          color: '#8B5CF6',
-                          fontWeight: 'normal',
+                          marginLeft: SPACING.sm,
+                          fontSize: TYPOGRAPHY.fontSize.xs,
+                          color: COLORS.purple,
+                          fontWeight: TYPOGRAPHY.fontWeight.normal,
                         }}>
                           (You)
                         </span>
                       )}
                       {isSuperAdmin && (
                         <span style={{
-                          marginLeft: '0.5rem',
-                          fontSize: '0.75rem',
-                          color: '#8B5CF6',
-                          fontWeight: 'normal',
+                          marginLeft: SPACING.sm,
+                          fontSize: TYPOGRAPHY.fontSize.xs,
+                          color: COLORS.purple,
+                          fontWeight: TYPOGRAPHY.fontWeight.normal,
                         }}>
                           (Super Admin)
                         </span>
@@ -204,7 +270,7 @@ export default function EmployeeTable({ employees, onDelete, currentUserId }) {
                     </div>
                   </td>
                   <td style={tdStyle}>
-                    <span style={roleBadgeStyle(employee.role)}>
+                    <span style={getRoleBadgeStyle(employee.role)} aria-label={`Role: ${employee.role}`}>
                       {employee.role.toUpperCase()}
                     </span>
                   </td>
@@ -219,7 +285,9 @@ export default function EmployeeTable({ employees, onDelete, currentUserId }) {
                       <button
                         onClick={() => handleDelete(employee._id, employee.username)}
                         disabled={deletingId === employee._id}
-                        style={buttonStyle(deletingId === employee._id)}
+                        style={BUTTON_STYLES.danger(deletingId === employee._id)}
+                        aria-label={`Delete employee ${employee.username}`}
+                        aria-busy={deletingId === employee._id}
                         onMouseEnter={(e) => {
                           if (deletingId !== employee._id) {
                             e.target.style.opacity = '0.8';
@@ -234,7 +302,11 @@ export default function EmployeeTable({ employees, onDelete, currentUserId }) {
                         {deletingId === employee._id ? 'Deleting...' : '🗑️ Delete'}
                       </button>
                     ) : (
-                      <span style={{ color: '#9CA3AF', fontSize: '0.85rem' }}>
+                      <span style={{ 
+                        color: COLORS.gray[400], 
+                        fontSize: TYPOGRAPHY.fontSize.sm,
+                        fontStyle: 'italic'
+                      }}>
                         {isSelf ? 'Cannot delete self' : 'Protected'}
                       </span>
                     )}
@@ -246,12 +318,12 @@ export default function EmployeeTable({ employees, onDelete, currentUserId }) {
         </table>
       </div>
 
-      {filteredEmployees.length === 0 && searchTerm && (
+      {processedEmployees.length === 0 && searchTerm && (
         <div style={{
           textAlign: 'center',
-          padding: '2rem',
-          color: '#6B7280',
-        }}>
+          padding: `${SPACING.xl} ${SPACING.lg}`,
+          color: COLORS.gray[500],
+        }} role="alert">
           No employees found matching "{searchTerm}"
         </div>
       )}
