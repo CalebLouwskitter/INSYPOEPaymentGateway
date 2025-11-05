@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import PropTypes from 'prop-types';
+import { formatCurrency, formatDate } from '../utils/formatters';
 
 // References:
 // React Team. (2025) useState - React. Available at: https://react.dev/reference/react/useState (Accessed: 03 November 2025).
@@ -81,23 +82,7 @@ export default function PaymentTable({ payments, onApprove, onDeny, showActions 
     };
   };
 
-  const formatCurrency = (amount, currency) => {
-    return new Intl.NumberFormat('en-ZA', {
-      style: 'currency',
-      currency: currency || 'ZAR',
-    }).format(amount);
-  };
-
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleString('en-ZA', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  };
+  // currency and date formatting moved to shared utils to reduce duplication (Sonar)
 
   if (!payments || payments.length === 0) {
     return (
@@ -155,7 +140,7 @@ export default function PaymentTable({ payments, onApprove, onDeny, showActions 
               </td>
               <td style={tdStyle}>
                 <span style={{ textTransform: 'capitalize' }}>
-                  {payment.paymentMethod?.replace(/_/g, ' ')}
+                  {payment.paymentMethod?.replaceAll(/_/g, ' ')}
                 </span>
               </td>
               <td style={tdStyle}>

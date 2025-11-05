@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { formatCurrency, formatDate } from "../utils/formatters";
 
 // Import API service functions for handling payments and logout
 import {
@@ -79,29 +80,7 @@ const quickPaymentOptions = [
 	},
 ];
 
-const formatCurrency = (amount, currency = "ZAR") => {
-	try {
-		return new Intl.NumberFormat("en-US", {
-			style: "currency",
-			currency,
-		}).format(amount || 0);
-	} catch (err) {
-		return `$${Number(amount || 0).toFixed(2)}`;
-	}
-};
-
-const formatDate = (value) => {
-	if (!value) return "-";
-	try {
-		return new Intl.DateTimeFormat("en-US", {
-			year: "numeric",
-			month: "short",
-			day: "2-digit",
-		}).format(new Date(value));
-	} catch (err) {
-		return value;
-	}
-};
+// Formatting helpers moved to shared utils to reduce duplication (Sonar)
 
 export default function HomeDashboard() {
 	const navigate = useNavigate();
