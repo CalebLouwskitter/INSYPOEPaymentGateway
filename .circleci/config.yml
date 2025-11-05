@@ -239,8 +239,8 @@ jobs:
 # Orchestrate jobs using workflows
 # (CircleCI, 2025)
 workflows:
-  # Main workflow for building and testing
-  build-test-deploy:
+  # Build-only workflow (default): saves CI credits by not running tests
+  build-only:
     jobs:
       # Run security audit first
       - security-audit
@@ -250,21 +250,7 @@ workflows:
       # Run linting
       - lint-backend
 
-      # Run tests in parallel (disabled by default; enable with pipeline param 'run-tests')
-      - test-backend:
-          when: << pipeline.parameters.run-tests >>
-          requires:
-            - security-audit
-            - gitleaks-scan
-            - trivy-fs-scan
-      - test-frontend:
-          when: << pipeline.parameters.run-tests >>
-          requires:
-            - security-audit
-            - gitleaks-scan
-            - trivy-fs-scan
-
-      # Build (no hard dependency on tests to save CI credits)
+      # Build (no dependency on tests)
       - build-backend:
           requires:
             - lint-backend
@@ -279,6 +265,24 @@ workflows:
             - build-backend
             - build-frontend
             - security-audit
+
+  # Optional tests workflow: only runs when run-tests=true
+  tests:
+    when: << pipeline.parameters.run-tests >>
+    jobs:
+      - security-audit
+      - gitleaks-scan
+      - trivy-fs-scan
+      - test-backend:
+          requires:
+            - security-audit
+            - gitleaks-scan
+            - trivy-fs-scan
+      - test-frontend:
+          requires:
+            - security-audit
+            - gitleaks-scan
+            - trivy-fs-scan
 
      
 
