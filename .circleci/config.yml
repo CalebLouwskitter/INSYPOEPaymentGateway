@@ -8,6 +8,9 @@ parameters:
   run-tests:
     type: boolean
     default: false
+  run-full:
+    type: boolean
+    default: false
 
 # Define reusable executors
 # (CircleCI, 2025)
@@ -236,6 +239,23 @@ jobs:
           name: Trivy FS scan (HIGH/CRITICAL)
           command: trivy fs --exit-code 0 --severity HIGH,CRITICAL --no-progress . || true
 
+  # Deploy job (placeholder). Replace with real deploy steps for your target.
+  deploy:
+    executor: node-executor
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - run:
+          name: Deploy (placeholder)
+          command: |
+            echo "Starting deploy stage..."
+            echo "Workspace contents:"
+            ls -la
+            echo "Docker cache contents (if any):"
+            ls -la docker-cache || true
+            echo "TODO: Add real deploy commands (e.g., push images, helm/azd/terraform)."
+
 # Orchestrate jobs using workflows
 # (CircleCI, 2025)
 workflows:
@@ -283,6 +303,50 @@ workflows:
             - security-audit
             - gitleaks-scan
             - trivy-fs-scan
+
+  # Full pipeline: Build + Test + Deploy (opt-in)
+  build-test-deploy:
+    when: << pipeline.parameters.run-full >>
+    jobs:
+      # Pre-checks
+      - security-audit
+      - gitleaks-scan
+      - trivy-fs-scan
+
+      # Linting
+      - lint-backend
+
+      # Tests
+      - test-backend:
+          requires:
+            - security-audit
+            - gitleaks-scan
+            - trivy-fs-scan
+      - test-frontend:
+          requires:
+            - security-audit
+            - gitleaks-scan
+            - trivy-fs-scan
+
+      # Builds (after tests)
+      - build-backend:
+          requires:
+            - test-backend
+            - lint-backend
+      - build-frontend:
+          requires:
+            - test-frontend
+
+      # Docker images
+      - build-docker-images:
+          requires:
+            - build-backend
+            - build-frontend
+
+      # Deploy stage
+      - deploy:
+          requires:
+            - build-docker-images
 
      
 
