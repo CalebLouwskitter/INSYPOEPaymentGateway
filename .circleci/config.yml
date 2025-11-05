@@ -10,7 +10,7 @@ parameters:
     default: false
   run-full:
     type: boolean
-    default: false
+    default: true
 
 # Define reusable executors
 # (CircleCI, 2025)
