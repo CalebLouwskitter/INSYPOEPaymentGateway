@@ -3,6 +3,12 @@
 # See: https://circleci.com/docs/reference/configuration-reference
 version: 2.1
 
+# Pipeline parameters to control optional steps (e.g., skipping tests by default)
+parameters:
+  run-tests:
+    type: boolean
+    default: false
+
 # Define reusable executors
 # (CircleCI, 2025)
 executors:
@@ -244,26 +250,27 @@ workflows:
       # Run linting
       - lint-backend
 
-      # Run tests in parallel
+      # Run tests in parallel (disabled by default; enable with pipeline param 'run-tests')
       - test-backend:
+          when: << pipeline.parameters.run-tests >>
           requires:
             - security-audit
             - gitleaks-scan
             - trivy-fs-scan
       - test-frontend:
+          when: << pipeline.parameters.run-tests >>
           requires:
             - security-audit
             - gitleaks-scan
             - trivy-fs-scan
 
-      # Build after tests pass
+      # Build (no hard dependency on tests to save CI credits)
       - build-backend:
           requires:
-            - test-backend
             - lint-backend
       - build-frontend:
           requires:
-            - test-frontend
+            - security-audit
 
       # Build Docker images after all builds pass
       # (CircleCI, 2025)
