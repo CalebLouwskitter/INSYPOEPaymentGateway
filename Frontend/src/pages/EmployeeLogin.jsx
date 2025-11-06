@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useEmployeeAuth } from "../context/EmployeeAuthContext";
+import cityscapeImage from "../assets/pexels-anete-lusina-4792381.webp";
+import "../styles/branding.css";
 
 // References:
 // React Team. (2025) useState - React. Available at: https://react.dev/reference/react/useState (Accessed: 03 November 2025).
@@ -137,14 +139,22 @@ export default function EmployeeLogin() {
   };
 
   return (
-    <div style={{
-      display: 'flex',
-      minHeight: '100vh',
-      backgroundColor: '#F9FAFB',
-      justifyContent: 'center',
-      alignItems: 'center',
-      padding: '2rem',
-    }}>
+    <div
+      className="brand-auth-page"
+      style={{
+        '--brand-page-image': `url(${cityscapeImage})`,
+        '--brand-page-overlay': 'linear-gradient(135deg, rgba(17, 17, 35, 0.85), rgba(39, 30, 90, 0.9))',
+      }}
+    >
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        minHeight: '100vh',
+        backgroundColor: 'transparent',
+        padding: '2rem',
+        width: '100%',
+      }}>
       <div style={{
         backgroundColor: 'white',
         borderRadius: '20px',
@@ -152,6 +162,7 @@ export default function EmployeeLogin() {
         maxWidth: '500px',
         width: '100%',
         padding: '3rem',
+        margin: 0,
       }}>
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
@@ -362,6 +373,7 @@ export default function EmployeeLogin() {
             Go to Customer Portal
           </span>
         </div>
+      </div>
       </div>
     </div>
   );
