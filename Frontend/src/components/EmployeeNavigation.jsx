@@ -201,7 +201,7 @@ export default function EmployeeNavigation() {
       
       <div style={menuStyle}>
         {/* Employee menu items */}
-        {navLinks.map(({ path, label, ariaLabel, icon }) => (
+        {navLinks.map(({ path, label, ariaLabel }) => (
           <div
             key={path}
             role="button"
@@ -214,7 +214,6 @@ export default function EmployeeNavigation() {
             aria-label={ariaLabel}
             aria-current={location.pathname === path ? 'page' : undefined}
           >
-            <span aria-hidden="true">{icon}</span>
             {label}
           </div>
         ))}
