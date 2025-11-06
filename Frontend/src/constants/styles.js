@@ -123,6 +123,18 @@ export const BUTTON_STYLES = {
     transition: TRANSITIONS.normal,
     boxShadow: SHADOWS.md
   }),
+  secondary: (disabled = false) => ({
+    padding: '0.65rem 1.5rem',
+    borderRadius: BORDERS.radius.md,
+    border: `1px solid ${COLORS.gray[300]}`,
+    cursor: disabled ? 'not-allowed' : 'pointer',
+    fontWeight: TYPOGRAPHY.fontWeight.semibold,
+    fontSize: TYPOGRAPHY.fontSize.sm,
+    backgroundColor: COLORS.white,
+    color: COLORS.gray[700],
+    transition: TRANSITIONS.normal,
+    boxShadow: SHADOWS.md
+  }),
   danger: (disabled = false) => ({
     padding: '0.5rem 1rem',
     borderRadius: BORDERS.radius.sm,
