@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import BrandButton from "../components/BrandButton";
+import BrandShape from "../components/BrandShape";
 import cityscapeImage from "../assets/pexels-anete-lusina-4792381.webp"; // (Lusina, 2025)
 import abstractImage from "../assets/pexels-disha-sheta-596631-3521353.webp"; //(Sheta, 2025)
 import "../styles/branding.css";
@@ -182,35 +183,29 @@ export default function Login() {
           '--brand-panel-animation': 'fadeInLeft 1.3s ease-out forwards',
         }}
       >
-        <div
-          className="brand-shape"
-          style={{
-            '--brand-shape-width': '550px',
-            '--brand-shape-height': '550px',
-            '--brand-shape-gradient': 'linear-gradient(315deg, rgba(173, 216, 230, 0.45), rgba(135, 206, 235, 0.35))',
-            '--brand-shape-image': `url(${cityscapeImage})`,
-            '--brand-shape-top': '65%',
-            '--brand-shape-left': '70%',
-            '--brand-shape-transform': 'rotate(150deg)',
-            '--brand-shape-motion': 'moveShape1Left 20s infinite alternate ease-in-out',
-            '--brand-shape-blur': '120px',
-          }}
-        ></div>
+        <BrandShape
+          width="550px"
+          height="550px"
+          gradient="linear-gradient(315deg, rgba(173, 216, 230, 0.45), rgba(135, 206, 235, 0.35))"
+          image={`url(${cityscapeImage})`}
+          top="65%"
+          left="70%"
+          transform="rotate(150deg)"
+          motion="moveShape1Left 20s infinite alternate ease-in-out"
+          blur="120px"
+        />
 
-        <div
-          className="brand-shape"
-          style={{
-            '--brand-shape-width': '400px',
-            '--brand-shape-height': '400px',
-            '--brand-shape-gradient': 'linear-gradient(225deg, rgba(255, 105, 180, 0.45), rgba(147, 112, 219, 0.35))',
-            '--brand-shape-image': `url(${abstractImage})`,
-            '--brand-shape-bottom': '75%',
-            '--brand-shape-right': '80%',
-            '--brand-shape-transform': 'rotate(10deg)',
-            '--brand-shape-motion': 'moveShape2Left 25s infinite alternate ease-in-out',
-            '--brand-shape-blur': '110px',
-          }}
-        ></div>
+        <BrandShape
+          width="400px"
+          height="400px"
+          gradient="linear-gradient(225deg, rgba(255, 105, 180, 0.45), rgba(147, 112, 219, 0.35))"
+          image={`url(${abstractImage})`}
+          bottom="75%"
+          right="80%"
+          transform="rotate(10deg)"
+          motion="moveShape2Left 25s infinite alternate ease-in-out"
+          blur="110px"
+        />
 
         <div className="brand-card">
           <div className="brand-auth-heading">
@@ -299,35 +294,29 @@ export default function Login() {
           '--brand-panel-animation': 'fadeInRight 1.3s ease-out forwards',
         }}
       >
-        <div
-          className="brand-shape"
-          style={{
-            '--brand-shape-width': '550px',
-            '--brand-shape-height': '550px',
-            '--brand-shape-gradient': 'linear-gradient(135deg, rgba(173, 216, 230, 0.45), rgba(135, 206, 235, 0.35))',
-            '--brand-shape-image': `url(${cityscapeImage})`,
-            '--brand-shape-top': '-15%',
-            '--brand-shape-right': '55%',
-            '--brand-shape-transform': 'rotate(-30deg)',
-            '--brand-shape-motion': 'moveShape1 20s infinite alternate ease-in-out',
-            '--brand-shape-blur': '120px',
-          }}
-        ></div>
+        <BrandShape
+          width="550px"
+          height="550px"
+          gradient="linear-gradient(135deg, rgba(173, 216, 230, 0.45), rgba(135, 206, 235, 0.35))"
+          image={`url(${cityscapeImage})`}
+          top="-15%"
+          right="55%"
+          transform="rotate(-30deg)"
+          motion="moveShape1 20s infinite alternate ease-in-out"
+          blur="120px"
+        />
 
-        <div
-          className="brand-shape"
-          style={{
-            '--brand-shape-width': '400px',
-            '--brand-shape-height': '400px',
-            '--brand-shape-gradient': 'linear-gradient(45deg, rgba(255, 105, 180, 0.45), rgba(147, 112, 219, 0.35))',
-            '--brand-shape-image': `url(${abstractImage})`,
-            '--brand-shape-bottom': '5%',
-            '--brand-shape-left': '15%',
-            '--brand-shape-transform': 'rotate(25deg)',
-            '--brand-shape-motion': 'moveShape2 25s infinite alternate ease-in-out',
-            '--brand-shape-blur': '110px',
-          }}
-        ></div>
+        <BrandShape
+          width="400px"
+          height="400px"
+          gradient="linear-gradient(45deg, rgba(255, 105, 180, 0.45), rgba(147, 112, 219, 0.35))"
+          image={`url(${abstractImage})`}
+          bottom="5%"
+          left="15%"
+          transform="rotate(25deg)"
+          motion="moveShape2 25s infinite alternate ease-in-out"
+          blur="110px"
+        />
 
         <h2
           style={{

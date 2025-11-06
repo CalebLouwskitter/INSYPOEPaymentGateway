@@ -3,6 +3,15 @@
 # See: https://circleci.com/docs/reference/configuration-reference
 version: 2.1
 
+# Pipeline parameters to control optional steps (e.g., skipping tests by default)
+parameters:
+  run-tests:
+    type: boolean
+    default: false
+  run-full:
+    type: boolean
+    default: true
+
 # Define reusable executors
 # (CircleCI, 2025)
 executors:
@@ -230,11 +239,28 @@ jobs:
           name: Trivy FS scan (HIGH/CRITICAL)
           command: trivy fs --exit-code 0 --severity HIGH,CRITICAL --no-progress . || true
 
+  # Deploy job (placeholder). Replace with real deploy steps for your target.
+  deploy:
+    executor: node-executor
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - run:
+          name: Deploy (placeholder)
+          command: |
+            echo "Starting deploy stage..."
+            echo "Workspace contents:"
+            ls -la
+            echo "Docker cache contents (if any):"
+            ls -la docker-cache || true
+            echo "TODO: Add real deploy commands (e.g., push images, helm/azd/terraform)."
+
 # Orchestrate jobs using workflows
 # (CircleCI, 2025)
 workflows:
-  # Main workflow for building and testing
-  build-test-deploy:
+  # Build-only workflow (default): saves CI credits by not running tests
+  build-only:
     jobs:
       # Run security audit first
       - security-audit
@@ -244,7 +270,29 @@ workflows:
       # Run linting
       - lint-backend
 
-      # Run tests in parallel
+      # Build (no dependency on tests)
+      - build-backend:
+          requires:
+            - lint-backend
+      - build-frontend:
+          requires:
+            - security-audit
+
+      # Build Docker images after all builds pass
+      # (CircleCI, 2025)
+      - build-docker-images:
+          requires:
+            - build-backend
+            - build-frontend
+            - security-audit
+
+  # Optional tests workflow: only runs when run-tests=true
+  tests:
+    when: << pipeline.parameters.run-tests >>
+    jobs:
+      - security-audit
+      - gitleaks-scan
+      - trivy-fs-scan
       - test-backend:
           requires:
             - security-audit
@@ -256,7 +304,31 @@ workflows:
             - gitleaks-scan
             - trivy-fs-scan
 
-      # Build after tests pass
+  # Full pipeline: Build + Test + Deploy (opt-in)
+  build-test-deploy:
+    when: << pipeline.parameters.run-full >>
+    jobs:
+      # Pre-checks
+      - security-audit
+      - gitleaks-scan
+      - trivy-fs-scan
+
+      # Linting
+      - lint-backend
+
+      # Tests
+      - test-backend:
+          requires:
+            - security-audit
+            - gitleaks-scan
+            - trivy-fs-scan
+      - test-frontend:
+          requires:
+            - security-audit
+            - gitleaks-scan
+            - trivy-fs-scan
+
+      # Builds (after tests)
       - build-backend:
           requires:
             - test-backend
@@ -265,13 +337,16 @@ workflows:
           requires:
             - test-frontend
 
-      # Build Docker images after all builds pass
-      # (CircleCI, 2025)
+      # Docker images
       - build-docker-images:
           requires:
             - build-backend
             - build-frontend
-            - security-audit
+
+      # Deploy stage
+      - deploy:
+          requires:
+            - build-docker-images
 
      
 

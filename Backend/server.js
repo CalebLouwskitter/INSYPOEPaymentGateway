@@ -52,15 +52,19 @@ morgan.token('id', (req) => req.id || '-');
 const morganFormat = ':id :method :url :status :response-time ms - :res[content-length]';
 app.use(morgan(morganFormat));
 
-// MongoDB Connection (avoid promise chain for clarity)
-(async () => {
+// MongoDB Connection using top-level await
+const connectMongoDB = async () => {
   try {
     await mongoose.connect(process.env.MONGODB_URI);
     console.log('MongoDB connected successfully');
   } catch (err) {
     console.error('MongoDB connection error:', err);
   }
-})();
+};
+// Avoid implicit DB connection during tests; tests manage connection lifecycle themselves
+if (process.env.NODE_ENV !== 'test') {
+  connectMongoDB();
+}
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -110,17 +114,19 @@ if (USE_HTTPS && fs.existsSync(certPath) && fs.existsSync(keyPath)) {
   };
   
   server = https.createServer(httpsOptions, app);
-  server.listen(PORT, () => {
-    console.log(`🔒 Backend HTTPS server running on https://localhost:${PORT}`);
-
-    console.log(`📡 API Base URL: https://localhost:${PORT}/api/v1`);
-
-  });
+  if (process.env.NODE_ENV !== 'test') {
+    server.listen(PORT, () => {
+      console.log(`🔒 Backend HTTPS server running on https://localhost:${PORT}`);
+      console.log(`📡 API Base URL: https://localhost:${PORT}/api/v1`);
+    });
+  }
 } else {
   server = http.createServer(app);
-  server.listen(PORT, () => {
-    console.log(`Backend HTTP server running on http://localhost:${PORT}`);
-    console.log(`📡 API Base URL: http://localhost:${PORT}/api/v1`);
-  });
+  if (process.env.NODE_ENV !== 'test') {
+    server.listen(PORT, () => {
+      console.log(`Backend HTTP server running on http://localhost:${PORT}`);
+      console.log(`📡 API Base URL: http://localhost:${PORT}/api/v1`);
+    });
+  }
 }
 module.exports = app;
