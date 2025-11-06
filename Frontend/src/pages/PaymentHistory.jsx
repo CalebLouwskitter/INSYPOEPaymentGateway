@@ -65,9 +65,9 @@ export default function PaymentHistory() {
   };
 
   const titleStyle = {
-    fontSize: '2rem',
-    fontWeight: 'bold',
-    color: '#1F2937',
+    fontSize: TYPOGRAPHY.fontSize['4xl'],
+    fontWeight: TYPOGRAPHY.fontWeight.extrabold,
+    color: COLORS.gray[800],
     marginBottom: '0.5rem',
   };
 

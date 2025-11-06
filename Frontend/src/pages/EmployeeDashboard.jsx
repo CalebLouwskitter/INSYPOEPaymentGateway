@@ -151,8 +151,8 @@ export default function EmployeeDashboard() {
 
   const titleStyle = {
     fontSize: TYPOGRAPHY.fontSize['4xl'],
-    fontWeight: TYPOGRAPHY.fontWeight.semibold,
-    color: COLORS.primary,
+    fontWeight: TYPOGRAPHY.fontWeight.extrabold,
+    color: COLORS.gray[800],
     marginBottom: SPACING.sm,
   };
 
