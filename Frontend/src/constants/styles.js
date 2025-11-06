@@ -92,6 +92,16 @@ export const SHADOWS = {
   xl: '0 10px 30px rgba(0,0,0,0.12)'
 };
 
+// Refined gradients centralised for reuse
+export const GRADIENTS = {
+  brandPrimary: 'linear-gradient(135deg, #6366F1 0%, #764BA2 100%)',
+  brandAccent: 'linear-gradient(135deg, #48BB78 0%, #4299E1 100%)',
+  tableHeader: 'linear-gradient(135deg, #2D3748 0%, #667EEA 60%, #764BA2 100%)',
+  cardPurple: 'linear-gradient(135deg, #9F7AEA 0%, #805AD5 100%)',
+  cardSuccess: 'linear-gradient(135deg, #48BB78 0%, #2F855A 100%)',
+  cardInfo: 'linear-gradient(135deg, #4299E1 0%, #2B6CB0 100%)'
+};
+
 // Glass morphism effects
 export const GLASS_STYLES = {
   container: {

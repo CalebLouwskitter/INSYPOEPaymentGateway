@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useEmployeeAuth } from '../context/EmployeeAuthContext';
 import EmployeeNavigation from '../components/EmployeeNavigation';
 import EmployeeTable from '../components/EmployeeTable';
+import Icon from '../components/Icon';
 import adminService from '../services/adminService';
 import {
   COLORS,
@@ -15,6 +16,14 @@ import {
   BUTTON_STYLES,
   FORM_STYLES
 } from '../constants/styles.js';
+
+// References:
+// React Team. (2025) useEffect - React. Available at: https://react.dev/reference/react/useEffect (Accessed: 03 November 2025).
+// React Team. (2025) useCallback - React. Available at: https://react.dev/reference/react/useCallback (Accessed: 04 November 2025).
+
+// Password validation constants to avoid magic numbers flagged by static analysis
+// Note: These are validation rules, not actual passwords or secrets
+
 // --- Constants for SonarQube & Readability ---
 const FORM_FIELDS = {
   USERNAME: 'username',
@@ -375,9 +384,26 @@ export default function AdminDashboard() {
 
         {/* --- Stats Section --- */}
         <section style={styles.statsContainer} aria-label="Employee statistics">
-          <StatCard icon="👥" label="Total Employees" value={totalCount} color={COLORS.purple} onAction={fetchEmployees} actionLabel="Refresh employee data" />
-          <StatCard icon="👑" label="Administrators" value={adminCount} color={COLORS.success} />
-          <StatCard icon="🧑‍💼" label="Regular Employees" value={employeeCount} color={COLORS.info} />
+          <StatCard
+            icon={<Icon name="group" size={36} title="Total employees icon" />}
+            label="Total Employees"
+            value={totalCount}
+            color={COLORS.purple}
+            onAction={fetchEmployees}
+            actionLabel="Refresh employee data"
+          />
+          <StatCard
+            icon={<Icon name="workspace_premium" size={36} title="Administrators icon" />}
+            label="Administrators"
+            value={adminCount}
+            color={COLORS.success}
+          />
+            <StatCard
+            icon={<Icon name="person" size={36} title="Regular employees icon" />}
+            label="Regular Employees"
+            value={employeeCount}
+            color={COLORS.info}
+          />
         </section>
 
         {/* --- Create Form (Conditional) --- */}
@@ -395,7 +421,7 @@ export default function AdminDashboard() {
         <main>
           {loading ? (
             <div style={LOADING_STYLES.container} role="status" aria-live="polite">
-              <div style={LOADING_STYLES.icon}>⏳</div>
+              <div style={LOADING_STYLES.icon}><Icon name="hourglass_top" size={40} title="Loading" /></div>
               <p style={LOADING_STYLES.text}>Loading employees...</p>
             </div>
           ) : (

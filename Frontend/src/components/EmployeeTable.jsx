@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import PropTypes from 'prop-types';
 import {
   COLORS,
+  GRADIENTS,
   GLASS_STYLES,
   SPACING,
   BORDERS,
@@ -10,6 +11,7 @@ import {
   SHADOWS,
   BUTTON_STYLES
 } from '../constants/styles.js';
+import Icon from './Icon';
 
 // References:
 // React Team. (2025) useState - React. Available at: https://react.dev/reference/react/useState (Accessed: 03 November 2025).
@@ -97,8 +99,8 @@ export default function EmployeeTable({ employees, onDelete, currentUserId }) {
   };
 
   const getSortIcon = (field) => {
-    if (sortField !== field) return '↕️';
-    return sortDirection === 'asc' ? '↑' : '↓';
+    if (sortField !== field) return <Icon name="unfold_more" size={18} />;
+    return sortDirection === 'asc' ? <Icon name="arrow_upward" size={18} /> : <Icon name="arrow_downward" size={18} />;
   };
 
   if (!employees || employees.length === 0) {
@@ -123,7 +125,7 @@ export default function EmployeeTable({ employees, onDelete, currentUserId }) {
   };
 
   const thStyle = {
-    background: 'linear-gradient(135deg, rgba(45,55,72,0.96) 0%, rgba(102,126,234,0.9) 100%)',
+    background: GRADIENTS.tableHeader,
     color: COLORS.white,
     padding: SPACING.md,
     textAlign: 'left',
@@ -161,17 +163,25 @@ export default function EmployeeTable({ employees, onDelete, currentUserId }) {
   return (
     <div style={GLASS_STYLES.container}>
       {/* Search bar */}
-      <div style={{ position: 'relative', marginBottom: SPACING.lg }}>
+      <div style={{ 
+        position: 'relative', 
+        marginBottom: SPACING.lg,
+        width: '100%',
+        maxWidth: '400px',
+        margin: `0 auto ${SPACING.lg} auto`
+      }}>
         <label htmlFor="employee-search" style={{ 
           position: 'absolute', 
-          left: SPACING.md, 
-          top: '50%', 
-          transform: 'translateY(-50%)',
+          left: SPACING.md,
+          top: 0,
+          bottom: 0,
+          display: 'flex',
+          alignItems: 'center',
           color: COLORS.gray[400],
           fontSize: TYPOGRAPHY.fontSize.lg,
           zIndex: 1,
         }}>
-          🔍
+          <Icon name="search" size={20} title="Search" />
         </label>
         <input
           id="employee-search"
@@ -183,6 +193,9 @@ export default function EmployeeTable({ employees, onDelete, currentUserId }) {
           style={{
             ...searchInputStyle,
             paddingLeft: '2.5rem',
+            width: '100%',
+            maxWidth: 'none',
+            boxSizing: 'border-box',
           }}
           onFocus={(e) => {
             e.target.style.borderColor = COLORS.primary;
@@ -299,7 +312,7 @@ export default function EmployeeTable({ employees, onDelete, currentUserId }) {
                           }
                         }}
                       >
-                        {deletingId === employee._id ? 'Deleting...' : '🗑️ Delete'}
+                        {deletingId === employee._id ? 'Deleting...' : (<><Icon name="delete" size={18} /> Delete</>)}
                       </button>
                     ) : (
                       <span style={{ 
