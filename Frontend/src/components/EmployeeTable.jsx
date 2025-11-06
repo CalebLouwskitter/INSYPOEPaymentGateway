@@ -313,7 +313,7 @@ export default function EmployeeTable({ employees, onDelete, currentUserId }) {
                           }
                         }}
                       >
-                        {deletingId === employee._id ? 'Deleting...' : (<><Icon name="delete" size={18} /> Delete</>)}
+                        {deletingId === employee._id ? 'Deleting...' : 'Delete'}
                       </button>
                     ) : (
                       <span style={{ 

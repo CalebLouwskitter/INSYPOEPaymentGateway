@@ -222,6 +222,11 @@
   flex-direction: column;
   text-align: center;
   color: inherit;
+  /* Fill available half on auth pages (override base panel constraints) */
+  max-width: none;
+  min-width: 0;
+  flex: 1.5;
+  width: 100%;
 }
 
 .brand-auth-heading {
