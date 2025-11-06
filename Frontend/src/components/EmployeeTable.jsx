@@ -162,17 +162,6 @@ export default function EmployeeTable({ employees, onDelete, currentUserId }) {
     <div style={GLASS_STYLES.container}>
       {/* Search bar */}
       <div style={{ position: 'relative', marginBottom: SPACING.lg }}>
-        <label htmlFor="employee-search" style={{ 
-          position: 'absolute', 
-          left: SPACING.md, 
-          top: '50%', 
-          transform: 'translateY(-50%)',
-          color: COLORS.gray[400],
-          fontSize: TYPOGRAPHY.fontSize.lg,
-          zIndex: 1,
-        }}>
-          🔍
-        </label>
         <input
           id="employee-search"
           type="text"
@@ -181,8 +170,7 @@ export default function EmployeeTable({ employees, onDelete, currentUserId }) {
           onChange={(e) => setSearchTerm(e.target.value)}
           aria-label="Search employees by username"
           style={{
-            ...searchInputStyle,
-            paddingLeft: '2.5rem',
+            ...searchInputStyle
           }}
           onFocus={(e) => {
             e.target.style.borderColor = COLORS.primary;
@@ -299,7 +287,7 @@ export default function EmployeeTable({ employees, onDelete, currentUserId }) {
                           }
                         }}
                       >
-                        {deletingId === employee._id ? 'Deleting...' : '🗑️ Delete'}
+                        {deletingId === employee._id ? 'Deleting...' : 'Delete'}
                       </button>
                     ) : (
                       <span style={{ 

@@ -184,7 +184,7 @@ export default function EmployeeNavigation() {
   return (
     <nav style={navStyle} role="navigation" aria-label="Employee portal navigation">
       <div style={brandStyle}>
-        🏦 Payment Gateway - Employee Portal
+        Payment Gateway - Employee Portal
       </div>
       
       {/* Mobile menu toggle button */}
