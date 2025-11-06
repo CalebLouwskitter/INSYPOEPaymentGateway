@@ -253,6 +253,7 @@ export default function AdminDashboard() {
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [roleFilter, setRoleFilter] = useState(null);
   
   // State to control UI visibility
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -342,6 +343,12 @@ export default function AdminDashboard() {
     };
   }, [employees]);
 
+  const filteredEmployees = useMemo(() => {
+    if (roleFilter === USER_ROLES.ADMIN) return employees.filter(e => e.role === USER_ROLES.ADMIN);
+    if (roleFilter === USER_ROLES.EMPLOYEE) return employees.filter(e => e.role === USER_ROLES.EMPLOYEE);
+    return employees;
+  }, [employees, roleFilter]);
+
   // Render null if user is not an authenticated admin (guard clause)
   if (!isEmployeeAuthenticated || !isAdmin) {
     return null;
@@ -385,24 +392,26 @@ export default function AdminDashboard() {
         {/* --- Stats Section --- */}
         <section style={styles.statsContainer} aria-label="Employee statistics">
           <StatCard
-            icon={<Icon name="group" size={36} title="Total employees icon" />}
+            icon={null}
             label="Total Employees"
             value={totalCount}
             color={COLORS.purple}
-            onAction={fetchEmployees}
+            onAction={() => setRoleFilter(null)}
             actionLabel="Refresh employee data"
           />
           <StatCard
-            icon={<Icon name="workspace_premium" size={36} title="Administrators icon" />}
+            icon={null}
             label="Administrators"
             value={adminCount}
             color={COLORS.success}
+            onAction={() => setRoleFilter(USER_ROLES.ADMIN)}
           />
             <StatCard
-            icon={<Icon name="person" size={36} title="Regular employees icon" />}
+            icon={null}
             label="Regular Employees"
             value={employeeCount}
             color={COLORS.info}
+            onAction={() => setRoleFilter(USER_ROLES.EMPLOYEE)}
           />
         </section>
 
@@ -426,7 +435,7 @@ export default function AdminDashboard() {
             </div>
           ) : (
             <EmployeeTable
-              employees={employees}
+              employees={filteredEmployees}
               onDelete={handleDeleteEmployee}
               currentUserId={employeeUser?.id}
             />
