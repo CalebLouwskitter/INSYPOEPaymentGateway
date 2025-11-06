@@ -78,9 +78,6 @@ export default function CoverPage() {
             variant="employee"
             onClick={() => navigate('/employee/login')}
           >
-            <span role="img" aria-label="Employee">
-              👨‍💼
-            </span>{' '}
             Employee Portal
           </BrandButton>
         </div>

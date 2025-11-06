@@ -166,12 +166,6 @@ export default function EmployeeLogin() {
       }}>
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <div style={{
-            fontSize: '3rem',
-            marginBottom: '1rem',
-          }}>
-            🏦
-          </div>
           <h1 style={{
             fontSize: '2rem',
             fontWeight: 'bold',
@@ -341,7 +335,7 @@ export default function EmployeeLogin() {
           color: '#6B7280',
           textAlign: 'center',
         }}>
-          🔒 Secure employee access only. All activity is logged.
+          Secure employee access only. All activity is logged.
         </div>
 
         {/* Customer portal link */}
