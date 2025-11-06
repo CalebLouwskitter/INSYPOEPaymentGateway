@@ -173,15 +173,16 @@ export default function EmployeeTable({ employees, onDelete, currentUserId }) {
         <label htmlFor="employee-search" style={{ 
           position: 'absolute', 
           left: SPACING.md,
-          top: 0,
-          bottom: 0,
+          top: '50%',
+          transform: 'translateY(-50%)',
           display: 'flex',
           alignItems: 'center',
           color: COLORS.gray[400],
           fontSize: TYPOGRAPHY.fontSize.lg,
           zIndex: 1,
+          pointerEvents: 'none',
         }}>
-          <Icon name="search" size={20} title="Search" />
+       
         </label>
         <input
           id="employee-search"
