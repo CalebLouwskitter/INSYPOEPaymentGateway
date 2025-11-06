@@ -1,6 +1,6 @@
 ## INSY POE Payment Gateway
 
-An end-to-end payment portal built for INSY7314 Task 2. The platform demonstrates secure customer onboarding, payment capture and reporting across a React frontend and Node.js/Express backend backed by MongoDB. T
+An end-to-end payment portal built for INSY7314 Task 2. The platform demonstrates secure customer onboarding, payment capture, employee payment processing, and comprehensive admin management across a React frontend and Node.js/Express backend backed by MongoDB. The system implements role-based access control with three distinct user types: customers (initiate payments), employees (process payments), and admins (manage employees and process payments).
 
 ### Quick Links
 - Demo video: https://youtu.be/SuzQhvoI0qc
@@ -15,7 +15,11 @@ An end-to-end payment portal built for INSY7314 Task 2. The platform demonstrate
 ## Solution Overview
 
 - **Architecture**: React frontend (`Frontend/`), Express API (`Backend/`), shared middleware package, MongoDB Atlas/local instance, optional Nginx reverse proxy. Docker Compose orchestrates services for local development.
-- **Primary Features**: Customer registration and login, JWT-based session management, payment initiation and status management, secure test harness endpoints, CircleCI DevSecOps pipeline with automated quality and security checks.
+- **Primary Features**: 
+  - **Customer Portal**: Customer registration and login, JWT-based session management, payment initiation and status tracking
+  - **Employee Portal**: Secure employee authentication, view pending payments, approve/deny payments, payment history tracking
+  - **Admin Portal**: Full employee management (create/view/delete), role-based access control (admin/employee), super admin privileges
+  - **Security**: Role-based authentication, separate JWT tokens for customers and employees, rate limiting, input validation
 - **Built With**: Node.js 18, Express 4, MongoDB & Mongoose, React 18, Docker, CircleCI.
 
 ---
@@ -56,13 +60,43 @@ cd Frontend
 npm install
 npm run dev
 ```
-The React app is available on `http://localhost:5173` (default Vite port).
+The React app is available on `http://localhost:5173` 
 
 ### Docker Compose (full stack)
 ```bash
 docker compose up --build
 ```
 This brings up `backend`, `frontend`, and `mongodb` services defined in `docker-compose.yml`. The compose file mounts the local certificate bundle so HTTPS works out of the box.
+
+### Super Admin Setup
+
+Before using the employee/admin portal, you must create a super admin account. This is a one-time setup:
+
+1. **Option A: Auto-generated password**
+   ```bash
+   cd Backend
+   node seedSuperAdmin.js
+   ```
+   This creates a super admin account with username `superadmin` and displays a randomly generated secure password. **Save this password immediately.**
+
+2. **Option B: Custom password** (recommended)
+   ```bash
+   cd Backend
+   set SUPERADMIN_PASSWORD=YourSecurePassword123!
+   node seedSuperAdmin.js
+   ```
+   Replace `YourSecurePassword123!` with your desired password (minimum 8 characters).
+
+3. **Important Notes:**
+   - The script will not overwrite an existing super admin
+   - Only the super admin can create other admin accounts
+   - The super admin account (`createdBy: null`) cannot be deleted
+   - Change the password after first login for security
+
+4. **Access the portal:**
+   - Navigate to `http://localhost:5173/employee-login`
+   - Login with username: `superadmin` and your password
+   - Create additional employee or admin accounts as needed
 
 ### Testing & Quality Gates
 - Backend: `cd Backend && npm test`
@@ -71,12 +105,54 @@ This brings up `backend`, `frontend`, and `mongodb` services defined in `docker-
 
 ---
 
+## User Workflows
+
+### Customer Portal Flow
+1. **Registration** (`/register`): Create account with full name, ID number, account number, and password
+2. **Login** (`/login`): Authenticate with account number and password
+3. **Dashboard** (`/dashboard`): View account overview and initiate payments
+4. **Payment Portal** (`/payment-portal`): Submit new international payment with SWIFT details
+5. **Payment History** (`/payment-history`): Track status of submitted payments (pending/approved/denied)
+
+### Employee Portal Flow
+1. **Login** (`/employee-login`): Authenticate with username and password
+2. **Dashboard** (`/employee-dashboard`): View and manage pending payments
+   - View all pending customer payments with details
+   - Approve or deny payments with one click
+   - View payment history with processing information
+3. **Logout**: Secure logout invalidating JWT token
+
+### Admin Portal Flow
+1. **Login** (`/employee-login`): Authenticate as admin/super admin
+2. **Admin Dashboard** (`/admin-dashboard`): Full system management
+   - **Employee Management Tab**: 
+     - View all employees with role, creator, and creation date
+     - Create new employee or admin accounts
+     - Delete employee accounts (only super admin can delete other admins)
+   - **Payment Management Tab**:
+     - Same functionality as employee dashboard
+     - Approve/deny pending payments
+     - View complete payment history
+3. **Role Restrictions**:
+   - Regular admins can create employee accounts
+   - Only super admin can create other admin accounts
+   - Super admin account cannot be deleted
+
+### Frontend Components
+- **React Router**: Client-side routing with protected routes (`Frontend/src/App.js`)
+- **Context API**: Separate authentication contexts for customers (`AuthContext.jsx`) and employees (`EmployeeAuthContext.jsx`)
+- **Protected Routes**: Route guards ensure proper authentication (`ProtectedRoute.jsx`, `EmployeeProtectedRoute.jsx`)
+- **Axios Interceptors**: Automatic token injection and error handling (`Frontend/src/interfaces/`)
+- **Responsive UI**: Modern, accessible interface with error handling and loading states
+
+---
+
 ## Security Controls (Rubric Alignment)
 
 ### Password Security
-- Passwords are never stored in plaintext. The `userModel` (`Backend/Models/userModel.js`) hashes every password with `bcryptjs` using 12 salt rounds during the Mongoose `pre('save')` hook, exceeding the rubric’s “basic hashing” requirement.
-- Authentication compares passwords with `bcrypt.compare`, ensuring timing-safe verification.
-- JWT tokens carry minimal PII and expire after 1 hour; logout adds tokens to an in-memory blacklist (`Backend/Middleware/authMiddleware.js`).
+- Passwords are never stored in plaintext. Both `userModel` (`Backend/Models/userModel.js`) and `employeeModel` (`Backend/Models/employeeModel.js`) hash every password with `bcryptjs` using 12 salt rounds during the Mongoose `pre('save')` hook, exceeding the rubric's "basic hashing" requirement.
+- Authentication compares passwords with `bcrypt.compare`, ensuring timing-safe verification across both customer and employee login flows.
+- JWT tokens carry minimal PII and expire after 1 hour; logout adds tokens to an in-memory blacklist (`Backend/Middleware/authMiddleware.js`, `Backend/Middleware/employeeAuthMiddleware.js`).
 
 ### Input Whitelisting & Validation
 - Express-validator enforces strict field-level validation (`Backend/Middleware/validationMiddleware.js`). Only regex-whitelisted names, 10-digit account numbers, and 13-digit national IDs pass.
@@ -95,6 +171,21 @@ This brings up `backend`, `frontend`, and `mongodb` services defined in `docker-
 - **Sanitisation & Logging**: Structured logging masks sensitive fields and provides correlation IDs (`Backend/Middleware/loggerMiddleware.js`); sanitizers mitigate XSS, NoSQL injection, and HTTP parameter pollution.
 - **Monitoring Hooks**: `/health` and `/api/v1` root endpoints provide readiness signals for load balancers or uptime monitors.
 
+### Role-Based Access Control (RBAC)
+- **Separate Authentication Systems**: Customer and employee authentication use separate JWT tokens and middleware (`Backend/Middleware/authMiddleware.js` vs `Backend/Middleware/employeeAuthMiddleware.js`), preventing privilege escalation between systems.
+- **Employee Roles**: Two distinct roles implemented (`Backend/Models/employeeModel.js`):
+  - **Employee**: Can view pending payments, approve/deny payments, and view payment history
+  - **Admin**: All employee permissions plus employee management (create/delete accounts)
+- **Super Admin Protection**: The initial super admin (identified by `createdBy: null`) has unique privileges:
+  - Only super admin can create additional admin accounts
+  - Super admin account cannot be deleted by anyone
+  - Created via secure seeding script (`Backend/seedSuperAdmin.js`)
+- **Middleware Chain**: Role verification middleware (`Backend/Middleware/employeeAuthMiddleware.js`) enforces:
+  - `verifyEmployeeToken`: Validates JWT and checks token blacklist
+  - `verifyEmployeeRole`: Ensures user is employee or admin
+  - `verifyAdminRole`: Restricts access to admin-only endpoints
+- **Input Validation**: Employee-specific validators (`Backend/Middleware/employeeValidationMiddleware.js`) prevent injection attacks and enforce username/password policies.
+
 ---
 
 ## DevSecOps Pipeline (CircleCI)
@@ -110,7 +201,9 @@ This pipeline satisfies the rubric’s DevSecOps requirement by combining automa
 
 ---
 
-## API Surface (selected endpoints)
+## API Surface
+
+### Customer Endpoints
 
 | Method | Endpoint | Description | Middleware Highlights |
 |--------|----------|-------------|------------------------|
@@ -121,14 +214,71 @@ This pipeline satisfies the rubric’s DevSecOps requirement by combining automa
 | PATCH | `/api/v1/payments/:id/status` | Update payment status | `validateUpdatePaymentStatus`, JWT auth |
 | GET | `/health` | Liveness probe | Public endpoint |
 
+### Employee & Admin Endpoints
+
+| Method | Endpoint | Description | Middleware Highlights |
+|--------|----------|-------------|------------------------|
+| POST | `/api/v1/employee/auth/login` | Employee login | `validateEmployeeLogin`, login limiter |
+| POST | `/api/v1/employee/auth/logout` | Employee logout | `verifyEmployeeToken` |
+| GET | `/api/v1/employee/payments/pending` | Get pending payments | `verifyEmployeeToken`, `verifyEmployeeRole` |
+| PUT | `/api/v1/employee/payments/:paymentId/process` | Approve/deny payment | `verifyEmployeeToken`, `validateProcessPayment` |
+| GET | `/api/v1/employee/payments/history` | Get payment history | `verifyEmployeeToken`, `verifyEmployeeRole` |
+| GET | `/api/v1/employee/admin/employees` | List all employees (admin only) | `verifyEmployeeToken`, `verifyAdminRole` |
+| POST | `/api/v1/employee/admin/employees` | Create employee (admin only) | `verifyEmployeeToken`, `verifyAdminRole`, `validateCreateEmployee` |
+| DELETE | `/api/v1/employee/admin/employees/:employeeId` | Delete employee (admin only) | `verifyEmployeeToken`, `verifyAdminRole` |
+
 Refer to `Backend/Routes/` for the complete routing table.
 
 ---
 
+## Database Models
+
+### Customer Model (`Backend/Models/userModel.js`)
+- **fullName**: Customer's full name (3-100 chars)
+- **idNumber**: South African ID number (13 digits)
+- **accountNumber**: 10-digit account number (unique)
+- **password**: bcrypt hashed password (12 salt rounds)
+- **createdAt**: Account creation timestamp
+
+### Employee Model (`Backend/Models/employeeModel.js`)
+- **username**: Unique username (3-50 alphanumeric chars)
+- **password**: bcrypt hashed password (12 salt rounds)
+- **role**: Either 'admin' or 'employee'
+- **createdBy**: Reference to the admin who created this account (null for super admin)
+- **createdAt**: Account creation timestamp
+
+### Payment Model (`Backend/Models/paymentModel.js`)
+- **userId**: Reference to customer who initiated payment
+- **amount**: Payment amount (decimal)
+- **currency**: Currency code (e.g., USD, EUR, ZAR)
+- **provider**: SWIFT provider code
+- **accountInfo**: Recipient account information
+- **swiftCode**: International SWIFT code
+- **paymentMethod**: Method of payment (e.g., SWIFT)
+- **status**: 'pending', 'approved', or 'denied'
+- **processedBy**: Reference to employee who processed payment
+- **processedAt**: Timestamp of payment processing
+- **createdAt**: Payment creation timestamp
+
+---
+
 ## Troubleshooting
+
+### General Issues
 - **CORS blocked**: Ensure `FRONTEND_URL`/`CORS_ORIGINS` include your frontend origin and restart the backend.
 - **TLS certificate errors**: Delete and regenerate the `certs/` bundle or disable HTTPS locally by setting `USE_HTTPS=false`.
 - **MongoDB connection failures**: Confirm the database is reachable and `MONGODB_URI` matches the environment.
+
+### Employee/Admin Issues
+- **Cannot login as super admin**: Ensure you've run `node seedSuperAdmin.js` from the Backend directory first.
+- **"Super admin already exists" message**: The super admin was already created. Check your password or use the `removeOldAdmin.js` script to reset (use with caution).
+- **Cannot create admin accounts**: Only super admin (the account with `createdBy: null`) can create other admin accounts. Regular admins can only create employee accounts.
+- **Cannot delete employee**: Verify you're logged in as an admin. Super admin accounts cannot be deleted by anyone.
+- **Employee endpoints returning 401**: Check that:
+  - JWT token is valid and not expired (1 hour expiration)
+  - Token is being sent in the `Authorization: Bearer <token>` header
+  - You're accessing employee endpoints (`/api/v1/employee/*`) not customer endpoints
+- **Payment processing not working**: Employees and admins need to be logged in to approve/deny payments. Verify the `verifyEmployeeToken` middleware is passing.
 
 ---
 
@@ -190,3 +340,13 @@ Docker, 2025. Accelerated Container Application Development. Available at: https
 Jestjs.io. (2025) Jest - Getting Started. Available at: https://jestjs.io/docs/getting-started (Accessed: 07 October 2025).
 
 Visionmedia. (2025) supertest - npm. Available at: https://www.npmjs.com/package/supertest (Accessed: 07 October 2025).
+
+Mongoose Team. (2025) Mongoose v8.0.0: Getting Started. Available at: https://mongoosejs.com/docs/index.html (Accessed: 29 October 2025).
+
+Mongoose Team. (2025) Mongoose v8.0.0: Schemas. Available at: https://mongoosejs.com/docs/guide.html (Accessed: 29 October 2025).
+
+Mongoose Team. (2025) Mongoose v8.0.0: Queries. Available at: https://mongoosejs.com/docs/queries.html (Accessed: 29 October 2025).
+
+Npm. (2025) bcryptjs - npm. Available at: https://www.npmjs.com/package/bcryptjs (Accessed: 29 October 2025).
+
+Express.js. (2025) Express.js - Fast, unopinionated, minimalist web framework for Node.js. Available at: https://expressjs.com/ (Accessed: 29 October 2025).
