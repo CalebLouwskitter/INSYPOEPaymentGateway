@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useEmployeeAuth } from "../context/EmployeeAuthContext";
+import Icon from "../components/Icon";
 import cityscapeImage from "../assets/pexels-anete-lusina-4792381.webp";
 import "../styles/branding.css";
 
@@ -273,12 +274,15 @@ export default function EmployeeLogin() {
                   background: 'none',
                   border: 'none',
                   cursor: 'pointer',
-                  fontSize: '1.2rem',
                   color: '#6B7280',
                 }}
                 aria-label={showPassword ? "Hide password" : "Show password"}
               >
-                {showPassword ? '👁️' : '👁️‍🗨️'}
+                <Icon
+                  name={showPassword ? 'visibility_off' : 'visibility'}
+                  size={22}
+                  title={showPassword ? 'Hide password' : 'Show password'}
+                />
               </button>
             </div>
             {fieldErrors.password && (
