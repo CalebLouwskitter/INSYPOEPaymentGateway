@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useEmployeeAuth } from '../context/EmployeeAuthContext';
 import EmployeeNavigation from '../components/EmployeeNavigation';
 import PaymentTable from '../components/PaymentTable';
+import Icon from '../components/Icon';
 import employeePaymentService from '../services/employeePaymentService';
 import {
   COLORS,
@@ -227,22 +228,26 @@ export default function EmployeeDashboard() {
 
         {/* Stats */}
         <section style={statsContainerStyle} aria-label="Payment statistics">
-          <div 
+          <div
             style={statCardStyle}
             onClick={fetchPendingPayments}
             onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-3px)'}
             onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
             role="button"
             tabIndex={0}
-            onKeyPress={(e) => {
+            onKeyDown={(e) => {
               if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
                 fetchPendingPayments();
               }
             }}
             aria-label="Refresh payments data"
           >
-            <div style={statNumberStyle}>{payments.length}</div>
-            <div style={statLabelStyle}>Pending Payments</div>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <Icon name="pending_actions" size={32} title="Pending payments icon" />
+              <div style={statNumberStyle}>{payments.length}</div>
+              <div style={statLabelStyle}>Pending Payments</div>
+            </div>
           </div>
         </section>
 
@@ -293,7 +298,11 @@ export default function EmployeeDashboard() {
         {loading && (
           <div style={LOADING_STYLES.container} role="status" aria-live="polite">
             <div style={LOADING_STYLES.icon}>
-              {retryCount > 0 ? '🔄' : '⏳'}
+              {retryCount > 0 ? (
+                <Icon name="autorenew" size={40} title="Retrying" />
+              ) : (
+                <Icon name="hourglass_top" size={40} title="Loading" />
+              )}
             </div>
             <p style={LOADING_STYLES.text}>
               {retryCount > 0 ? `Retrying... (${retryCount}/3)` : 'Loading payments...'}
@@ -309,7 +318,7 @@ export default function EmployeeDashboard() {
             color: COLORS.gray[500]
           }} role="status">
             <div style={{ fontSize: TYPOGRAPHY.fontSize['5xl'], marginBottom: SPACING.md }}>
-              ✅
+              <Icon name="task_alt" size={40} title="All caught up" />
             </div>
             <h2 style={{ 
               fontSize: TYPOGRAPHY.fontSize['2xl'], 
