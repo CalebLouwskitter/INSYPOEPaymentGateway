@@ -1,16 +1,17 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useEmployeeAuth } from '../context/EmployeeAuthContext';
-import EmployeeNavigation from '../components/EmployeeNavigation';
+// import EmployeeNavigation from '../components/EmployeeNavigation';
 import PaymentTable from '../components/PaymentTable';
 import employeePaymentService from '../services/employeePaymentService';
+import { COLORS, SPACING, TYPOGRAPHY, BUTTON_STYLES } from '../constants/styles.js';
 
 // References:
 // React Team. (2025) useEffect - React. Available at: https://react.dev/reference/react/useEffect (Accessed: 03 November 2025).
 
 export default function PaymentHistory() {
   const navigate = useNavigate();
-  const { isEmployeeAuthenticated, isAdmin } = useEmployeeAuth();
+  const { isEmployeeAuthenticated, isAdmin, employeeUser, employeeLogout } = useEmployeeAuth();
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -57,6 +58,10 @@ export default function PaymentHistory() {
 
   const headerStyle = {
     marginBottom: '2rem',
+    backgroundColor: 'white',
+    padding: '1.5rem 2rem',
+    borderRadius: '10px',
+    boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
   };
 
   const titleStyle = {
@@ -70,25 +75,6 @@ export default function PaymentHistory() {
     fontSize: '1rem',
     color: '#6B7280',
   };
-
-  const filterContainerStyle = {
-    display: 'flex',
-    gap: '1rem',
-    marginBottom: '1.5rem',
-  };
-
-  const filterButtonStyle = (isActive) => ({
-    padding: '0.75rem 1.5rem',
-    borderRadius: '0.5rem',
-    border: 'none',
-    cursor: 'pointer',
-    fontWeight: '600',
-    fontSize: '0.9rem',
-    backgroundColor: isActive ? '#8B5CF6' : 'white',
-    color: isActive ? 'white' : '#6B7280',
-    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-    transition: 'all 0.3s',
-  });
 
   const statsContainerStyle = {
     display: 'grid',
@@ -142,84 +128,123 @@ export default function PaymentHistory() {
 
   return (
     <div style={containerStyle}>
-      <EmployeeNavigation />
       
       <div style={contentStyle}>
-        {/* Header */}
-        <div style={headerStyle}>
-          <h1 style={titleStyle}>Payment History</h1>
-          <p style={subtitleStyle}>
-            View all previously processed payments
-          </p>
+        {/* Integrated Header with actions */}
+        <div style={{
+          ...headerStyle,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '1.5rem',
+          flexWrap: 'wrap'
+        }}>
+          <div>
+            <h1 style={titleStyle}>Payment History</h1>
+            <p style={subtitleStyle}>
+              View all previously processed payments
+            </p>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: SPACING.md, flexWrap: 'wrap' }}>
+            <span style={{ color: COLORS.gray[600], fontWeight: TYPOGRAPHY.fontWeight.semibold }}>
+              {employeeUser?.username} · {isAdmin ? 'Admin' : 'Employee'}
+            </span>
+            <button
+              style={BUTTON_STYLES.secondary()}
+              onClick={() => navigate('/employee/dashboard')}
+              aria-label="Go to Pending Payments"
+            >
+              Pending Payments
+            </button>
+            <button
+              style={BUTTON_STYLES.primary()}
+              onClick={() => navigate('/employee/history')}
+              aria-label="Go to Payment History"
+              aria-current="page"
+            >
+              Payment History
+            </button>
+            <button
+              style={BUTTON_STYLES.danger()}
+              onClick={async () => { await employeeLogout(); navigate('/employee/login', { replace: true }); }}
+              aria-label="Logout"
+            >
+              Logout
+            </button>
+          </div>
         </div>
 
-        {/* Stats */}
+        {/* Stats (clickable to filter) */}
         <div style={statsContainerStyle}>
-          <div style={statCardStyle('#8B5CF6')}>
+          <div
+            style={{
+              ...statCardStyle('#8B5CF6'),
+              cursor: 'pointer',
+              boxShadow: filterStatus === 'all' ? '0 4px 12px rgba(139,92,246,0.25)' : '0 2px 8px rgba(0,0,0,0.1)',
+              borderLeftWidth: filterStatus === 'all' ? '6px' : '4px'
+            }}
+            onClick={() => setFilterStatus('all')}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                setFilterStatus('all');
+              }
+            }}
+            aria-pressed={filterStatus === 'all'}
+            aria-label="Show all payments"
+         >
             <div style={statNumberStyle('#8B5CF6')}>{totalCount}</div>
             <div style={statLabelStyle}>Total Processed</div>
           </div>
-          <div style={statCardStyle('#10B981')}>
+          <div
+            style={{
+              ...statCardStyle('#10B981'),
+              cursor: 'pointer',
+              boxShadow: filterStatus === 'approved' ? '0 4px 12px rgba(16,185,129,0.25)' : '0 2px 8px rgba(0,0,0,0.1)',
+              borderLeftWidth: filterStatus === 'approved' ? '6px' : '4px'
+            }}
+            onClick={() => setFilterStatus('approved')}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                setFilterStatus('approved');
+              }
+            }}
+            aria-pressed={filterStatus === 'approved'}
+            aria-label="Show approved payments"
+          >
             <div style={statNumberStyle('#10B981')}>{approvedCount}</div>
             <div style={statLabelStyle}>Approved</div>
           </div>
-          <div style={statCardStyle('#EF4444')}>
+          <div
+            style={{
+              ...statCardStyle('#EF4444'),
+              cursor: 'pointer',
+              boxShadow: filterStatus === 'denied' ? '0 4px 12px rgba(239,68,68,0.25)' : '0 2px 8px rgba(0,0,0,0.1)',
+              borderLeftWidth: filterStatus === 'denied' ? '6px' : '4px'
+            }}
+            onClick={() => setFilterStatus('denied')}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                setFilterStatus('denied');
+              }
+            }}
+            aria-pressed={filterStatus === 'denied'}
+            aria-label="Show denied payments"
+          >
             <div style={statNumberStyle('#EF4444')}>{deniedCount}</div>
             <div style={statLabelStyle}>Denied</div>
           </div>
         </div>
 
-        {/* Filter buttons */}
-        <div style={filterContainerStyle}>
-          <button
-            style={filterButtonStyle(filterStatus === 'all')}
-            onClick={() => setFilterStatus('all')}
-            onMouseEnter={(e) => {
-              if (filterStatus !== 'all') {
-                e.target.style.backgroundColor = '#F3F4F6';
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (filterStatus !== 'all') {
-                e.target.style.backgroundColor = 'white';
-              }
-            }}
-          >
-            All ({totalCount})
-          </button>
-          <button
-            style={filterButtonStyle(filterStatus === 'approved')}
-            onClick={() => setFilterStatus('approved')}
-            onMouseEnter={(e) => {
-              if (filterStatus !== 'approved') {
-                e.target.style.backgroundColor = '#F3F4F6';
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (filterStatus !== 'approved') {
-                e.target.style.backgroundColor = 'white';
-              }
-            }}
-          >
-            Approved ({approvedCount})
-          </button>
-          <button
-            style={filterButtonStyle(filterStatus === 'denied')}
-            onClick={() => setFilterStatus('denied')}
-            onMouseEnter={(e) => {
-              if (filterStatus !== 'denied') {
-                e.target.style.backgroundColor = '#F3F4F6';
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (filterStatus !== 'denied') {
-                e.target.style.backgroundColor = 'white';
-              }
-            }}
-          >
-            Denied ({deniedCount})
-          </button>
-        </div>
+        {/* Filter buttons removed in favor of clickable stat cards */}
 
         {/* Error message */}
         {error && (

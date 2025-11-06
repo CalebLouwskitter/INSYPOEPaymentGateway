@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useEmployeeAuth } from '../context/EmployeeAuthContext';
-import EmployeeNavigation from '../components/EmployeeNavigation';
+// import EmployeeNavigation from '../components/EmployeeNavigation';
 import PaymentTable from '../components/PaymentTable';
 import Icon from '../components/Icon';
 import employeePaymentService from '../services/employeePaymentService';
@@ -12,7 +12,8 @@ import {
   TYPOGRAPHY,
   SHADOWS,
   MESSAGE_STYLES,
-  LOADING_STYLES
+  LOADING_STYLES,
+  BUTTON_STYLES
 } from '../constants/styles.js';
 
 // References:
@@ -21,7 +22,7 @@ import {
 
 export default function EmployeeDashboard() {
   const navigate = useNavigate();
-  const { isEmployeeAuthenticated, isAdmin } = useEmployeeAuth();
+  const { isEmployeeAuthenticated, isAdmin, employeeUser, employeeLogout } = useEmployeeAuth();
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -215,15 +216,49 @@ export default function EmployeeDashboard() {
 
   return (
     <div style={containerStyle}>
-      <EmployeeNavigation />
       
       <div style={contentStyle}>
-        {/* Header */}
-        <header style={headerStyle}>
-          <h1 style={titleStyle}>Pending Payments</h1>
-          <p style={subtitleStyle}>
-            Review and process customer payment requests
-          </p>
+        <header style={{
+          ...headerStyle,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: SPACING.lg,
+          flexWrap: 'wrap'
+        }}>
+          <div>
+            <h1 style={titleStyle}>Pending Payments</h1>
+            <p style={subtitleStyle}>
+              Review and process customer payment requests
+            </p>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: SPACING.md, flexWrap: 'wrap' }}>
+            <span style={{ color: COLORS.gray[600], fontWeight: TYPOGRAPHY.fontWeight.semibold }}>
+              {employeeUser?.username} · {isAdmin ? 'Admin' : 'Employee'}
+            </span>
+            <button
+              style={BUTTON_STYLES.primary()}
+              onClick={() => navigate('/employee/dashboard')}
+              aria-label="Go to Pending Payments"
+              aria-current="page"
+            >
+              Pending Payments
+            </button>
+            <button
+              style={BUTTON_STYLES.secondary()}
+              onClick={() => navigate('/employee/history')}
+              aria-label="Go to Payment History"
+            >
+              Payment History
+            </button>
+            <button
+              style={BUTTON_STYLES.danger()}
+              onClick={async () => { await employeeLogout(); navigate('/employee/login', { replace: true }); }}
+              aria-label="Logout"
+            >
+              Logout
+            </button>
+          </div>
         </header>
 
         {/* Stats */}
@@ -244,7 +279,6 @@ export default function EmployeeDashboard() {
             aria-label="Refresh payments data"
           >
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <Icon name="pending_actions" size={32} title="Pending payments icon" />
               <div style={statNumberStyle}>{payments.length}</div>
               <div style={statLabelStyle}>Pending Payments</div>
             </div>
