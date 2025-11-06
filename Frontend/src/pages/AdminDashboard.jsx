@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useEmployeeAuth } from '../context/EmployeeAuthContext';
-import EmployeeNavigation from '../components/EmployeeNavigation';
+// import EmployeeNavigation from '../components/EmployeeNavigation';
 import EmployeeTable from '../components/EmployeeTable';
 import Icon from '../components/Icon';
 import adminService from '../services/adminService';
@@ -245,7 +245,7 @@ const CreateEmployeeForm = ({ onSubmit, onCancel, isSubmitting }) => {
 // ============================================================================
 export default function AdminDashboard() {
   const navigate = useNavigate();
-  const { isEmployeeAuthenticated, isAdmin, employeeUser } = useEmployeeAuth();
+  const { isEmployeeAuthenticated, isAdmin, employeeUser, employeeLogout } = useEmployeeAuth();
 
   // State for the main dashboard
   const [employees, setEmployees] = useState([]);
@@ -356,33 +356,32 @@ export default function AdminDashboard() {
 
   return (
     <div style={styles.container}>
-      <EmployeeNavigation />
       
       <div style={styles.content}>
         <header style={styles.header}>
           <h1 style={styles.title}>Employee Management</h1>
-          <button
-            style={showCreateForm ? BUTTON_STYLES.secondary() : BUTTON_STYLES.success()}
-            onClick={() => setShowCreateForm(prev => !prev)}
-            disabled={isSubmitting}
-            aria-expanded={showCreateForm}
-            aria-controls="create-employee-form"
-            aria-label={showCreateForm ? 'Cancel creating employee' : 'Create new employee'}
-            onMouseEnter={(e) => {
-              if (!isSubmitting) {
-                e.target.style.transform = 'translateY(-2px)';
-                e.target.style.boxShadow = '0 4px 12px rgba(72, 187, 120, 0.4)';
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (!isSubmitting) {
-                e.target.style.transform = 'translateY(0)';
-                e.target.style.boxShadow = SHADOWS.md;
-              }
-            }}
-          >
-            {showCreateForm ? '✗ Cancel' : '+ Create Employee'}
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: SPACING.md, flexWrap: 'wrap' }}>
+            <span style={{ color: COLORS.gray[600], fontWeight: TYPOGRAPHY.fontWeight.semibold }}>
+              Signed in as: {employeeUser?.username || 'Admin'}
+            </span>
+            <button
+              style={showCreateForm ? BUTTON_STYLES.secondary() : BUTTON_STYLES.success()}
+              onClick={() => setShowCreateForm(prev => !prev)}
+              disabled={isSubmitting}
+              aria-expanded={showCreateForm}
+              aria-controls="create-employee-form"
+              aria-label={showCreateForm ? 'Cancel creating employee' : 'Create new employee'}
+            >
+              {showCreateForm ? '✗ Cancel' : '+ Create Employee'}
+            </button>
+            <button
+              style={BUTTON_STYLES.secondary()}
+              onClick={() => { employeeLogout(); navigate('/'); }}
+              aria-label="Logout"
+            >
+              Logout
+            </button>
+          </div>
         </header>
 
         {/* --- UI Messages --- */}
