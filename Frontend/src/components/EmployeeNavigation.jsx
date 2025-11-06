@@ -72,14 +72,7 @@ export default function EmployeeNavigation() {
   };
 
   const navLinks = isAdmin
-    ? [
-        {
-          path: '/employee/admin',
-          label: 'Manage Employees',
-          ariaLabel: 'Navigate to manage employees',
-          icon: '👥'
-        },
-      ]
+    ? []
     : [
         {
           path: '/employee/dashboard',
