@@ -7,6 +7,8 @@ const https = require('node:https');
 const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
+const cookieParser = require('cookie-parser');
+const csrf = require('csurf');
 require('dotenv').config();
 
 const app = express();
@@ -24,6 +26,16 @@ const employeeRoutes = require('./Routes/employeeRoutes.js');
 
 // Apply security middlewares
 securityMiddlewares(app);
+app.use(cookieParser());
+const csrfProtection = csrf({
+  cookie: {
+    key: '_csrf',
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
+  },
+});
+app.use(csrfProtection);
 
 // Enforce HTTPS when behind a proxy (e.g., Nginx) only in production
 // or when explicitly enabled via FORCE_HTTPS=true
@@ -66,25 +78,36 @@ if (process.env.NODE_ENV !== 'test') {
   connectMongoDB();
 }
 
-// Health check endpoint
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'healthy', timestamp: new Date().toISOString() });
 });
+app.get('/api/v1/csrf-token', (req, res) => {
+  const token = req.csrfToken();
+  res.cookie('XSRF-TOKEN', token, {
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: false,
+  });
+  res.status(200).json({ csrfToken: token });
+});
 
-// API Routes
 app.get('/api/v1', (req, res) => {
   res.json({ message: 'Backend API is running', version: '1.0.0' });
 });
 
-// Mount API routes with versioning
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/payments', paymentRoutes);
 app.use('/api/v1/test', testRoutes);
 app.use('/api/v1/employee', employeeRoutes);
 
-// 404 handler
 app.use((req, res) => {
   res.status(404).json({ error: 'Route not found' });
+});
+app.use((err, req, res, next) => {
+  if (err.code === 'EBADCSRFTOKEN') {
+    return res.status(403).json({ error: 'Invalid CSRF token' });
+  }
+  next(err);
 });
 
 // Error handler

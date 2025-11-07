@@ -17,6 +17,8 @@ const employeeAxiosInstance = axios.create({
     'Content-Type': 'application/json',
   },
   withCredentials: true, // Include credentials for CORS if server sets cookies
+  xsrfCookieName: 'XSRF-TOKEN',
+  xsrfHeaderName: 'X-CSRF-Token',
 });
 
 // Request interceptor to add auth token

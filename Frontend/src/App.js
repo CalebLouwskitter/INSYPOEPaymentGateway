@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { useEffect } from 'react';
 import { AuthProvider } from "./context/AuthContext.jsx";
 import { EmployeeAuthProvider } from "./context/EmployeeAuthContext.jsx";
 import CoverPage from './pages/CoverPage.jsx'
@@ -7,6 +8,7 @@ import Register from './pages/Register.jsx'
 import Dashboard from './pages/HomeDashboard.jsx'
 import PaymentPortal from './pages/PaymentPortal.jsx'
 import ProtectedRoute from './components/ProtectedRoute.jsx'
+import axiosInstance from './interfaces/axiosInstance';
 
 // Employee portal imports
 import EmployeeLogin from './pages/EmployeeLogin.jsx';
@@ -16,6 +18,9 @@ import AdminDashboard from './pages/AdminDashboard.jsx';
 import EmployeeProtectedRoute from './components/EmployeeProtectedRoute.jsx';
 
 function App() {
+  useEffect(() => {
+    axiosInstance.get('/csrf-token').catch(() => {});
+  }, []);
   return (
     <AuthProvider>
       <EmployeeAuthProvider>

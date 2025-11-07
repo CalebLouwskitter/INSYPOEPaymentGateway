@@ -39,7 +39,7 @@ const corsOptions = {
     // allow the flow of credentials between our backend API and our frontend web portal
     credentials: true,
     // allow these headers
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-CSRF-Token', 'X-XSRF-TOKEN'],
     // expose these headers to the client
     exposedHeaders: ['Authorization'],
     // cache preflight requests for 24 hours

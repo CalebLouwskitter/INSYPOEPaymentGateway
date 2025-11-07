@@ -16,7 +16,9 @@ const axiosInstance = axios.create({
 
 
     // Do not send cookies by default; we use Bearer tokens instead
-    withCredentials: false,
+    withCredentials: true,
+    xsrfCookieName: 'XSRF-TOKEN',
+    xsrfHeaderName: 'X-CSRF-Token',
     // timeout after 10 seconds
     timeout: 10000,
 });
