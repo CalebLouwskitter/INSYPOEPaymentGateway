@@ -430,17 +430,16 @@ describe('API Security Tests', () => {
                 password: 'wrongpassword'
             };
 
-            // Make multiple rapid requests (more than the limit of 5)
-            const requests = [];
+            // Make multiple sequential requests (more than the limit of 5)
+            const responses = [];
             for (let i = 0; i < 7; i++) {
-                requests.push(
-                    request(app)
-                        .post('/api/v1/auth/login')
-                        .send(loginData)
-                );
+                const res = await request(app)
+                    .post('/api/v1/auth/login')
+                    .send(loginData);
+                responses.push(res);
+                // Small delay to ensure rate limiter processes each request
+                await new Promise(resolve => setTimeout(resolve, 10));
             }
-
-            const responses = await Promise.all(requests);
             
             // At least one should be rate limited (429)
             const rateLimited = responses.some(res => res.status === 429);
@@ -448,23 +447,21 @@ describe('API Security Tests', () => {
         }, 15000);
 
         test('should enforce rate limiting on registration attempts', async () => {
-            const requests = [];
-            
-            // Make multiple rapid registration requests (more than the limit of 3)
+            // Make multiple sequential registration requests (more than the limit of 3)
+            const responses = [];
             for (let i = 0; i < 5; i++) {
-                requests.push(
-                    request(app)
-                        .post('/api/v1/auth/register')
-                        .send({
-                            fullName: `User ${i}`,
-                            accountNumber: `${7000000000 + i}`,
-                            nationalId: `${7000000000000 + i}`,
-                            password: 'SecurePass123!'
-                        })
-                );
+                const res = await request(app)
+                    .post('/api/v1/auth/register')
+                    .send({
+                        fullName: `User ${i}`,
+                        accountNumber: `${7000000000 + i}`,
+                        nationalId: `${7000000000000 + i}`,
+                        password: 'SecurePass123!'
+                    });
+                responses.push(res);
+                // Small delay to ensure rate limiter processes each request
+                await new Promise(resolve => setTimeout(resolve, 10));
             }
-
-            const responses = await Promise.all(requests);
             
             // At least one should be rate limited
             const rateLimited = responses.some(res => res.status === 429);
@@ -508,8 +505,8 @@ describe('API Security Tests', () => {
                     password: 'test'
                 });
             
-            // Check for rate limit headers
-            expect(response.headers['ratelimit-limit'] || response.headers['x-ratelimit-limit']).toBeDefined();
+            // Check for rate limit headers (standardHeaders uses lowercase)
+            expect(response.headers['ratelimit-limit']).toBeDefined();
         });
     });
 

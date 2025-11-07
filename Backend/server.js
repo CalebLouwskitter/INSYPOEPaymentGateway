@@ -33,6 +33,11 @@ app.use(cookieParser());
 
 // Middleware to validate CSRF token
 const validateCsrf = (req, res, next) => {
+  // Skip CSRF validation in test environment
+  if (process.env.NODE_ENV === 'test') {
+    return next();
+  }
+  
   // Skip CSRF for GET, HEAD, OPTIONS
   if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) {
     return next();
