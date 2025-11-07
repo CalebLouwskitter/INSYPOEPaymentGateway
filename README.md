@@ -1,4 +1,4 @@
-<img width="527" height="584" alt="image" src="https://github.com/user-attachments/assets/5ff8098d-0e01-47fa-b39c-c21c734401d2" />## INSY POE Payment Gateway
+## INSY POE Payment Gateway
 
 An end-to-end payment portal built for INSY7314 Task 2. The platform demonstrates secure customer onboarding, payment capture, employee payment processing, and comprehensive admin management across a React frontend and Node.js/Express backend backed by MongoDB. The system implements role-based access control with three distinct user types: customers (initiate payments), employees (process payments), and admins (manage employees and process payments).
 
