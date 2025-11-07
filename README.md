@@ -6,10 +6,12 @@ An end-to-end payment portal built for INSY7314 Task 2. The platform demonstrate
 - Demo video: https://youtu.be/SuzQhvoI0qc
 
 ### Contributors
-- Caleb Louwskitter : ST10275378
-- Logan : ST10268888
-- Kyle : ST10085208
-
+| Name | Student Number | Role |
+|------|-----------------|------|
+| Caleb Louwskitter | ST10275378 | [Lead Developer] | 
+| Logan | ST10268888 | [Developer] |
+| Kyle | ST10085208 | [Developer] |
+  
 ---
 
 ## Solution Overview
@@ -23,6 +25,19 @@ An end-to-end payment portal built for INSY7314 Task 2. The platform demonstrate
 - **Built With**: Node.js 18, Express 4, MongoDB & Mongoose, React 18, Docker, CircleCI.
 
 ---
+
+## Features
+
+- **Backend**
+  - Authentication (customers, employees/admins) with JWT and bcrypt.
+  - Payments API with validation, rate limiting, and RBAC.
+  - Security middleware: helmet, CORS, sanitization, HPP, rate limiting.
+- **Customer Portal**
+  - Register, login, initiate international payments, view history.
+- **Employee Portal**
+  - Login, view pending, approve/deny, view history.
+- **Admin Portal**
+  - Manage employees (create/delete), process payments, role restrictions.
 
 ## Getting Started
 
@@ -148,6 +163,17 @@ Before using the employee/admin portal, you must create a super admin account. T
 ---
 
 ## Security Controls (Rubric Alignment)
+
+From Part 1, we prioritized protections against XSS, NoSQL injection, brute-force login, clickjacking, insecure transport, and abusive cross-origin requests. In Parts 2 and 3, these were implemented primarily via the backend middleware stack (`Backend/Middleware/*`):
+
+- XSS/Clickjacking/Headers: `helmet` configuration, CSP, frameguard, HSTS.
+- NoSQL injection/Param pollution: `express-mongo-sanitize`, `hpp`.
+- Brute-force and abuse: `express-rate-limit` with route-specific limiters.
+- Input validation: `express-validator` allowlists and strict schemas.
+- Transport security: HTTPS with bundled certs and `FORCE_HTTPS`.
+- Session/auth hardening: `bcryptjs`, short-lived JWTs, blacklist on logout.
+- RBAC separation: distinct customer vs employee/admin auth middleware.
+
 
 ### Password Security
 - Passwords are never stored in plaintext. Both `userModel` (`Backend/Models/userModel.js`) and `employeeModel` (`Backend/Models/employeeModel.js`) hash every password with `bcryptjs` using 12 salt rounds during the Mongoose `pre('save')` hook, exceeding the rubric's "basic hashing" requirement.
@@ -281,6 +307,19 @@ Refer to `Backend/Routes/` for the complete routing table.
 - **Payment processing not working**: Employees and admins need to be logged in to approve/deny payments. Verify the `verifyEmployeeToken` middleware is passing.
 
 ---
+
+## Changelog
+
+### Part 2 → Part 3
+- Added
+  - Full Employee portal: authentication, pending payments view, approve/deny actions, history view.
+  - Admin enhancements: employee management (create/delete), role restrictions.
+- Changed
+  - Separated customer vs employee/admin auth flows and protected routes in frontend and backend.
+- Security
+  - Consolidated and expanded middleware-based mitigations under `Backend/Middleware/*` (helmet, CORS, sanitizers, rate limiting, validators).
+- Documentation
+  - Updated README to reflect portals, security controls, and workflows.
 
 ## References
 
