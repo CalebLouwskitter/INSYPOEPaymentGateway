@@ -19,7 +19,11 @@ import EmployeeProtectedRoute from './components/EmployeeProtectedRoute.jsx';
 
 function App() {
   useEffect(() => {
-    axiosInstance.get('/csrf-token').catch(() => {});
+    // Fetch CSRF token on app initialization
+    // This sets the XSRF-TOKEN cookie that axios will automatically use
+    axiosInstance.get('/csrf-token').catch((error) => {
+      console.error('Failed to fetch CSRF token:', error);
+    });
   }, []);
   return (
     <AuthProvider>

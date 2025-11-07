@@ -6,7 +6,7 @@ import axios from 'axios';
 // Derive employee API base from REACT_APP_API_URL and append /employee
 const rawBase = (process.env.REACT_APP_API_URL || 'http://localhost:5000/api/v1').replace(/\/$/, '');
 // If someone accidentally sets an https localhost base in dev, prefer http to avoid TLS errors
-const normalizedBase = rawBase.replace(/^https:\/\/localhost/i, 'http://localhost');
+const normalizedBase = rawBase;
 const employeeBaseURL = `${normalizedBase}/employee`;
 
 // Create axios instance for employee API calls
@@ -21,13 +21,36 @@ const employeeAxiosInstance = axios.create({
   xsrfHeaderName: 'X-CSRF-Token',
 });
 
-// Request interceptor to add auth token
+// Request interceptor to add auth token and CSRF token
 employeeAxiosInstance.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('employeeToken');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    
+    // Manually add CSRF token header for non-GET requests
+    // Axios automatic XSRF handling isn't working, so we do it manually
+    if (config.method !== 'get') {
+      const getCookie = (name) => {
+        const match = document.cookie.match(new RegExp('(^|; )' + name + '=([^;]*)'));
+        return match ? decodeURIComponent(match[2]) : null;
+      };
+      
+      const csrfToken = getCookie('XSRF-TOKEN');
+      if (csrfToken) {
+        config.headers['X-CSRF-Token'] = csrfToken;
+      }
+      
+      console.log('[employeeAxiosInstance] Request:', {
+        method: config.method,
+        url: config.url,
+        hasCSRFHeader: !!config.headers['X-CSRF-Token'],
+        csrfToken: csrfToken ? csrfToken.substring(0, 10) + '...' : 'missing',
+        headers: config.headers,
+      });
+    }
+    
     return config;
   },
   (error) => {

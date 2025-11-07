@@ -15,10 +15,11 @@ const axiosInstance = axios.create({
 
 
 
-    // Do not send cookies by default; we use Bearer tokens instead
+    // Enable sending cookies and credentials
     withCredentials: true,
-    xsrfCookieName: 'XSRF-TOKEN',
-    xsrfHeaderName: 'X-CSRF-Token',
+    // Configure CSRF token handling - axios will automatically read the cookie and send the header
+    xsrfCookieName: 'XSRF-TOKEN', // Cookie name to read from
+    xsrfHeaderName: 'X-CSRF-Token', // Header name to send to backend
     // timeout after 10 seconds
     timeout: 10000,
 });
@@ -34,6 +35,17 @@ axiosInstance.interceptors.request.use(
             config.headers.Authorization = `Bearer ${token}`;
         }
         
+        // Debug: Log CSRF token info for non-GET requests
+        if (config.method !== 'get') {
+            console.log('[AXIOS] Request:', {
+                method: config.method,
+                url: config.url,
+                hasAuthToken: !!token,
+                csrfToken: config.headers['X-CSRF-Token'] || config.headers['x-csrf-token'] || 'none',
+                cookies: document.cookie
+            });
+        }
+        
         return config;
     },
     (error) => {
@@ -47,8 +59,15 @@ axiosInstance.interceptors.response.use(
         return response;
     },
     (error) => {
+        console.error('[AXIOS] Response error:', {
+            status: error.response?.status,
+            message: error.response?.data?.message || error.message,
+            url: error.config?.url,
+            method: error.config?.method
+        });
+        
         // Handle 401 Unauthorized errors (token expired or invalid)
-    if (error.response?.status === 401) {
+        if (error.response?.status === 401) {
             // Clear the token and redirect to login
             localStorage.removeItem('token');
             localStorage.removeItem('user');
@@ -57,6 +76,13 @@ axiosInstance.interceptors.response.use(
             if (typeof window !== 'undefined' && window.location?.pathname !== '/login') {
                 window.location.href = '/login';
             }
+        }
+        
+        // Handle 403 CSRF errors
+        if (error.response?.status === 403) {
+            console.error('[AXIOS] CSRF Error - Refetching token');
+            // Try to refetch CSRF token
+            axiosInstance.get('/csrf-token').catch(console.error);
         }
         
         return Promise.reject(error);
