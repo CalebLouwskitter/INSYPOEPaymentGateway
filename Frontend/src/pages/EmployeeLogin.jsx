@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useEmployeeAuth } from "../context/EmployeeAuthContext";
+import Icon from "../components/Icon";
+import cityscapeImage from "../assets/pexels-anete-lusina-4792381.webp";
+import "../styles/branding.css";
 
 // References:
 // React Team. (2025) useState - React. Available at: https://react.dev/reference/react/useState (Accessed: 03 November 2025).
@@ -137,14 +140,22 @@ export default function EmployeeLogin() {
   };
 
   return (
-    <div style={{
-      display: 'flex',
-      minHeight: '100vh',
-      backgroundColor: '#F9FAFB',
-      justifyContent: 'center',
-      alignItems: 'center',
-      padding: '2rem',
-    }}>
+    <div
+      className="brand-auth-page"
+      style={{
+        '--brand-page-image': `url(${cityscapeImage})`,
+        '--brand-page-overlay': 'linear-gradient(135deg, rgba(17, 17, 35, 0.85), rgba(39, 30, 90, 0.9))',
+      }}
+    >
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        minHeight: '100vh',
+        backgroundColor: 'transparent',
+        padding: '2rem',
+        width: '100%',
+      }}>
       <div style={{
         backgroundColor: 'white',
         borderRadius: '20px',
@@ -152,15 +163,10 @@ export default function EmployeeLogin() {
         maxWidth: '500px',
         width: '100%',
         padding: '3rem',
+        margin: 0,
       }}>
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <div style={{
-            fontSize: '3rem',
-            marginBottom: '1rem',
-          }}>
-            🏦
-          </div>
           <h1 style={{
             fontSize: '2rem',
             fontWeight: 'bold',
@@ -268,12 +274,15 @@ export default function EmployeeLogin() {
                   background: 'none',
                   border: 'none',
                   cursor: 'pointer',
-                  fontSize: '1.2rem',
                   color: '#6B7280',
                 }}
                 aria-label={showPassword ? "Hide password" : "Show password"}
               >
-                {showPassword ? '👁️' : '👁️‍🗨️'}
+                <Icon
+                  name={showPassword ? 'visibility_off' : 'visibility'}
+                  size={22}
+                  title={showPassword ? 'Hide password' : 'Show password'}
+                />
               </button>
             </div>
             {fieldErrors.password && (
@@ -330,7 +339,7 @@ export default function EmployeeLogin() {
           color: '#6B7280',
           textAlign: 'center',
         }}>
-          🔒 Secure employee access only. All activity is logged.
+          Secure employee access only. All activity is logged.
         </div>
 
         {/* Customer portal link */}
@@ -362,6 +371,7 @@ export default function EmployeeLogin() {
             Go to Customer Portal
           </span>
         </div>
+      </div>
       </div>
     </div>
   );

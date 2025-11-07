@@ -276,9 +276,6 @@ export default function Login() {
               variant="employee"
               onClick={() => navigate('/employee/login')}
             >
-              <span role="img" aria-label="Employee">
-                👨‍💼
-              </span>{' '}
               Employee Portal
             </BrandButton>
           </div>

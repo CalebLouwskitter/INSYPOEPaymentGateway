@@ -72,14 +72,7 @@ export default function EmployeeNavigation() {
   };
 
   const navLinks = isAdmin
-    ? [
-        {
-          path: '/employee/admin',
-          label: 'Manage Employees',
-          ariaLabel: 'Navigate to manage employees',
-          icon: '👥'
-        },
-      ]
+    ? []
     : [
         {
           path: '/employee/dashboard',
@@ -191,7 +184,7 @@ export default function EmployeeNavigation() {
   return (
     <nav style={navStyle} role="navigation" aria-label="Employee portal navigation">
       <div style={brandStyle}>
-        🏦 Payment Gateway - Employee Portal
+        Payment Gateway - Employee Portal
       </div>
       
       {/* Mobile menu toggle button */}
@@ -208,7 +201,7 @@ export default function EmployeeNavigation() {
       
       <div style={menuStyle}>
         {/* Employee menu items */}
-        {navLinks.map(({ path, label, ariaLabel, icon }) => (
+        {navLinks.map(({ path, label, ariaLabel }) => (
           <div
             key={path}
             role="button"
@@ -221,7 +214,6 @@ export default function EmployeeNavigation() {
             aria-label={ariaLabel}
             aria-current={location.pathname === path ? 'page' : undefined}
           >
-            <span aria-hidden="true">{icon}</span>
             {label}
           </div>
         ))}

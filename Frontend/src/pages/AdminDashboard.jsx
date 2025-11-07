@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useEmployeeAuth } from '../context/EmployeeAuthContext';
-import EmployeeNavigation from '../components/EmployeeNavigation';
+// import EmployeeNavigation from '../components/EmployeeNavigation';
 import EmployeeTable from '../components/EmployeeTable';
 import Icon from '../components/Icon';
 import adminService from '../services/adminService';
@@ -245,7 +245,7 @@ const CreateEmployeeForm = ({ onSubmit, onCancel, isSubmitting }) => {
 // ============================================================================
 export default function AdminDashboard() {
   const navigate = useNavigate();
-  const { isEmployeeAuthenticated, isAdmin, employeeUser } = useEmployeeAuth();
+  const { isEmployeeAuthenticated, isAdmin, employeeUser, employeeLogout } = useEmployeeAuth();
 
   // State for the main dashboard
   const [employees, setEmployees] = useState([]);
@@ -253,6 +253,7 @@ export default function AdminDashboard() {
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [roleFilter, setRoleFilter] = useState(null);
   
   // State to control UI visibility
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -342,6 +343,12 @@ export default function AdminDashboard() {
     };
   }, [employees]);
 
+  const filteredEmployees = useMemo(() => {
+    if (roleFilter === USER_ROLES.ADMIN) return employees.filter(e => e.role === USER_ROLES.ADMIN);
+    if (roleFilter === USER_ROLES.EMPLOYEE) return employees.filter(e => e.role === USER_ROLES.EMPLOYEE);
+    return employees;
+  }, [employees, roleFilter]);
+
   // Render null if user is not an authenticated admin (guard clause)
   if (!isEmployeeAuthenticated || !isAdmin) {
     return null;
@@ -349,33 +356,32 @@ export default function AdminDashboard() {
 
   return (
     <div style={styles.container}>
-      <EmployeeNavigation />
       
       <div style={styles.content}>
         <header style={styles.header}>
           <h1 style={styles.title}>Employee Management</h1>
-          <button
-            style={showCreateForm ? BUTTON_STYLES.secondary() : BUTTON_STYLES.success()}
-            onClick={() => setShowCreateForm(prev => !prev)}
-            disabled={isSubmitting}
-            aria-expanded={showCreateForm}
-            aria-controls="create-employee-form"
-            aria-label={showCreateForm ? 'Cancel creating employee' : 'Create new employee'}
-            onMouseEnter={(e) => {
-              if (!isSubmitting) {
-                e.target.style.transform = 'translateY(-2px)';
-                e.target.style.boxShadow = '0 4px 12px rgba(72, 187, 120, 0.4)';
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (!isSubmitting) {
-                e.target.style.transform = 'translateY(0)';
-                e.target.style.boxShadow = SHADOWS.md;
-              }
-            }}
-          >
-            {showCreateForm ? '✗ Cancel' : '+ Create Employee'}
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: SPACING.md, flexWrap: 'wrap' }}>
+            <span style={{ color: COLORS.gray[600], fontWeight: TYPOGRAPHY.fontWeight.semibold }}>
+              Signed in as: {employeeUser?.username || 'Admin'}
+            </span>
+            <button
+              style={showCreateForm ? BUTTON_STYLES.secondary() : BUTTON_STYLES.success()}
+              onClick={() => setShowCreateForm(prev => !prev)}
+              disabled={isSubmitting}
+              aria-expanded={showCreateForm}
+              aria-controls="create-employee-form"
+              aria-label={showCreateForm ? 'Cancel creating employee' : 'Create new employee'}
+            >
+              {showCreateForm ? '✗ Cancel' : '+ Create Employee'}
+            </button>
+            <button
+              style={BUTTON_STYLES.secondary()}
+              onClick={() => { employeeLogout(); navigate('/'); }}
+              aria-label="Logout"
+            >
+              Logout
+            </button>
+          </div>
         </header>
 
         {/* --- UI Messages --- */}
@@ -385,24 +391,26 @@ export default function AdminDashboard() {
         {/* --- Stats Section --- */}
         <section style={styles.statsContainer} aria-label="Employee statistics">
           <StatCard
-            icon={<Icon name="group" size={36} title="Total employees icon" />}
+            icon={null}
             label="Total Employees"
             value={totalCount}
             color={COLORS.purple}
-            onAction={fetchEmployees}
+            onAction={() => setRoleFilter(null)}
             actionLabel="Refresh employee data"
           />
           <StatCard
-            icon={<Icon name="workspace_premium" size={36} title="Administrators icon" />}
+            icon={null}
             label="Administrators"
             value={adminCount}
             color={COLORS.success}
+            onAction={() => setRoleFilter(USER_ROLES.ADMIN)}
           />
             <StatCard
-            icon={<Icon name="person" size={36} title="Regular employees icon" />}
+            icon={null}
             label="Regular Employees"
             value={employeeCount}
             color={COLORS.info}
+            onAction={() => setRoleFilter(USER_ROLES.EMPLOYEE)}
           />
         </section>
 
@@ -426,7 +434,7 @@ export default function AdminDashboard() {
             </div>
           ) : (
             <EmployeeTable
-              employees={employees}
+              employees={filteredEmployees}
               onDelete={handleDeleteEmployee}
               currentUserId={employeeUser?.id}
             />
