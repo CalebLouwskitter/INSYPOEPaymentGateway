@@ -155,12 +155,6 @@ export default function Register() {
     setFieldErrors({});
 
     try {
-      console.log("Sending registration request:", { 
-        fullName: formData.fullName, 
-        accountNumber: formData.accountNumber,
-        nationalId: formData.nationalId
-      });
-
       // Make API call to register endpoint
       const response = await axiosInstance.post('/auth/register', {
         fullName: formData.fullName,
@@ -168,8 +162,6 @@ export default function Register() {
         nationalId: formData.nationalId,
         password: formData.password
       });
-
-      console.log("Registration Success:", response.data);
 
       // Store token and user info in localStorage
       if (response.data.token) {

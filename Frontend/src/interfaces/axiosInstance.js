@@ -35,17 +35,6 @@ axiosInstance.interceptors.request.use(
             config.headers.Authorization = `Bearer ${token}`;
         }
         
-        // Debug: Log CSRF token info for non-GET requests
-        if (config.method !== 'get') {
-            console.log('[AXIOS] Request:', {
-                method: config.method,
-                url: config.url,
-                hasAuthToken: !!token,
-                csrfToken: config.headers['X-CSRF-Token'] || config.headers['x-csrf-token'] || 'none',
-                cookies: document.cookie
-            });
-        }
-        
         return config;
     },
     (error) => {

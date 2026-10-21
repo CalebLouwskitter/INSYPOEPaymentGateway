@@ -41,14 +41,6 @@ employeeAxiosInstance.interceptors.request.use(
       if (csrfToken) {
         config.headers['X-CSRF-Token'] = csrfToken;
       }
-      
-      console.log('[employeeAxiosInstance] Request:', {
-        method: config.method,
-        url: config.url,
-        hasCSRFHeader: !!config.headers['X-CSRF-Token'],
-        csrfToken: csrfToken ? csrfToken.substring(0, 10) + '...' : 'missing',
-        headers: config.headers,
-      });
     }
     
     return config;
