@@ -25,9 +25,15 @@ const verifyToken = (req, res, next) => {
     // if a token that has been logged out, 401 unauthorized
     if (tokenBlacklist.has(token)) return res.status(401).json({message: "Token has been invalidated"});
     // Auth0. (2025)
-    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+    // pin the algorithm so a token can never choose how it is verified
+    jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] }, (err, decoded) => {
         // 403 - forbidden
         if (err) return res.status(403).json({message: "Invalid or expired token"});
+
+        // employee tokens are signed with the same secret, so check what kind of token this is
+        if (decoded?.type !== 'customer' || !decoded.userId) {
+            return res.status(403).json({message: "Invalid token type"});
+        }
         
         // attach the decoded user information to the request object
         req.user = decoded;

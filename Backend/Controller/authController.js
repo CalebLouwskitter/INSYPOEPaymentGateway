@@ -7,9 +7,12 @@ require('dotenv').config();
 const generateJwt = (fullName, userId) => {
     // signs it using our secret (that it pulls from .env)
     return jwt.sign(
-        { fullName, userId }, 
+        // type lets the middleware tell customer tokens apart from employee tokens,
+        // which are signed with the same secret
+        { fullName, userId, type: 'customer' }, 
         process.env.JWT_SECRET, 
         {
+            algorithm: 'HS256',
             // set an expiry of 1 hour from signing
             expiresIn: "1h",
         }

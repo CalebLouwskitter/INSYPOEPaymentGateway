@@ -552,7 +552,7 @@ describe('API Security Tests', () => {
         // login rate limit, so the employee login returned 429, the token was undefined and
         // "Bearer undefined" failed verification. Signing the token directly removes that
         // dependency and exposes the real behaviour.
-        test.failing('should properly separate employee and user token types', async () => {
+        test('should properly separate employee and user token types', async () => {
             // Create employee
             const employee = new Employee({
                 username: 'test_employee',

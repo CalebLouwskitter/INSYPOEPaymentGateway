@@ -50,7 +50,7 @@ const employeeLogin = async (req, res) => {
                 type: 'employee'
             },
             process.env.JWT_SECRET,
-            { expiresIn: '8h' }
+            { algorithm: 'HS256', expiresIn: '8h' }
         );
 
         res.status(200).json({
