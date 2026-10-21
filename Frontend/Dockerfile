@@ -14,7 +14,9 @@ RUN npm ci --ignore-scripts
 # Copy application files
 COPY . .
 
-# Build the application
+# Build the application. Emit the webpack runtime as a file instead of an inline <script>,
+# so the CSP in nginx.conf can use script-src 'self' without 'unsafe-inline'.
+ENV INLINE_RUNTIME_CHUNK=false
 RUN npm run build
 
 # Stage 2: Production
