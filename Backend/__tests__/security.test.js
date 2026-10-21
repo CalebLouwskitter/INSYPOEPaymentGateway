@@ -136,7 +136,7 @@ describe('Broken access control (OWASP A01)', () => {
             .expect(403);
     });
 
-    test.failing('a deleted employee\'s still-unexpired token stops working immediately', async () => {
+    test('a deleted employee\'s still-unexpired token stops working immediately', async () => {
         const employee = await makeEmployee('teller_one');
         const token = employeeToken(employee);
         await Employee.findByIdAndDelete(employee._id);
@@ -147,7 +147,7 @@ describe('Broken access control (OWASP A01)', () => {
             .expect(401);
     });
 
-    test.failing('a demoted admin loses admin access even though the token still says "admin"', async () => {
+    test('a demoted admin loses admin access even though the token still says "admin"', async () => {
         const admin = await makeEmployee('branch_admin', 'admin');
         const token = employeeToken(admin);
         await Employee.updateOne({ _id: admin._id }, { role: 'employee' });
