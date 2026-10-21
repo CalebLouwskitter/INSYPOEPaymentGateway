@@ -190,55 +190,8 @@ const createPayment = async (req, res) => {
     }
 };
 
-// PUT - update payment status
-const updatePaymentStatus = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { status } = req.body;
-        const userId = req.user.userId;
-
-        // validate status
-        const validStatuses = ['pending', 'completed', 'failed', 'refunded'];
-        if (!status || !validStatuses.includes(status)) {
-            return res.status(400).json({ 
-                success: false,
-                message: "Invalid status. Must be one of: " + validStatuses.join(', ')
-            });
-        }
-
-        // find and update the payment using secure query methods
-        const payment = await Payment.findOne()
-            .where('_id').equals(id)
-            .where('userId').equals(userId);
-
-        if (!payment) {
-            return res.status(404).json({ 
-                success: false,
-                message: "Payment not found" 
-            });
-        }
-
-        // Update the payment securely
-        payment.status = status;
-        payment.updatedAt = Date.now();
-        await payment.save();
-
-        res.status(200).json({
-            success: true,
-            message: "Payment status updated successfully",
-            data: payment
-        });
-    } catch (error) {
-        console.error('Update payment status error:', error);
-        res.status(500).json({ 
-            success: false,
-            message: "Error updating payment status", 
-            error: error.message 
-        });
-    }
-};
-
-// DELETE - delete a payment
+// DELETE - withdraw a payment. Only allowed while it is still pending review:
+// once an employee has processed it, the record is part of the audit trail.
 const deletePayment = async (req, res) => {
     try {
         const { id } = req.params;
@@ -253,6 +206,13 @@ const deletePayment = async (req, res) => {
             return res.status(404).json({ 
                 success: false,
                 message: "Payment not found" 
+            });
+        }
+
+        if (payment.status !== 'pending') {
+            return res.status(409).json({
+                success: false,
+                message: "Only payments that are pending review can be withdrawn"
             });
         }
 
@@ -312,7 +272,6 @@ module.exports = {
     getAllPayments, 
     getPaymentById, 
     createPayment, 
-    updatePaymentStatus, 
     deletePayment,
     getPaymentStats
 };
