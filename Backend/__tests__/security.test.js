@@ -60,7 +60,7 @@ beforeEach(async () => {
 });
 
 describe('Broken access control (OWASP A01)', () => {
-    test.failing('a customer cannot approve their own payment by setting its status', async () => {
+    test('a customer cannot approve their own payment by setting its status', async () => {
         const user = await makeUser(1);
         const payment = await makePayment(user);
 
@@ -73,7 +73,7 @@ describe('Broken access control (OWASP A01)', () => {
         expect(after.status).toBe('pending');
     });
 
-    test.failing('a customer cannot delete a payment an employee has already processed', async () => {
+    test('a customer cannot delete a payment an employee has already processed', async () => {
         const user = await makeUser(1);
         const payment = await makePayment(user, 'approved');
 

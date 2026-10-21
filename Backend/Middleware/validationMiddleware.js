@@ -99,18 +99,6 @@ const validateCreatePayment = [
     handleValidationErrors
 ];
 
-// Validation rules for updating payment status
-// (Express Validator Team, 2025)
-const validateUpdatePaymentStatus = [
-    param('id')
-        .isMongoId()
-        .withMessage('Invalid payment ID'),
-    body('status')
-        .isIn(['pending', 'completed', 'failed', 'refunded'])
-        .withMessage('Invalid status'),
-    handleValidationErrors
-];
-
 // Validation rules for payment ID parameter
 // (Express Validator Team, 2025)
 const validatePaymentId = [
@@ -126,7 +114,6 @@ module.exports = {
     validateRegister,
     validateLogin,
     validateCreatePayment,
-    validateUpdatePaymentStatus,
     validatePaymentId,
     handleValidationErrors
 };
