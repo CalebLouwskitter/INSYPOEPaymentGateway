@@ -23,24 +23,36 @@ const handleValidationErrors = (req, res, next) => {
 // (Express Validator Team, 2025)
 const validateRegister = [
     body('fullName')
+        .isString()
+        .withMessage('Full name must be text')
+        .bail()
         .trim()
         .isLength({ min: 3, max: 100 })
         .withMessage('Full name must be between 3 and 100 characters')
         .matches(/^[a-zA-Z\s]+$/)
         .withMessage('Full name can only contain letters and spaces'),
     body('accountNumber')
+        .isString()
+        .withMessage('Account number must be text')
+        .bail()
         .trim()
         .isLength({ min: 10, max: 10 })
         .withMessage('Account number must be exactly 10 digits')
         .isNumeric()
         .withMessage('Account number must contain only numbers'),
     body('nationalId')
+        .isString()
+        .withMessage('National ID must be text')
+        .bail()
         .trim()
         .isLength({ min: 13, max: 13 })
         .withMessage('National ID must be exactly 13 digits')
         .isNumeric()
         .withMessage('National ID must contain only numbers'),
     body('password')
+        .isString()
+        .withMessage('Password must be text')
+        .bail()
         .isLength({ min: 6 })
         .withMessage('Password must be at least 6 characters long'),
     handleValidationErrors
@@ -48,12 +60,20 @@ const validateRegister = [
 
 // Validation rules for user login
 // (Express Validator Team, 2025)
+// Every field must be a plain string: an object such as { "$ne": null } is rejected here
+// rather than relying on later String() coercion.
 const validateLogin = [
     body('fullName')
+        .isString()
+        .withMessage('Full name must be text')
+        .bail()
         .trim()
         .notEmpty()
         .withMessage('Full name is required'),
     body('accountNumber')
+        .isString()
+        .withMessage('Account number must be text')
+        .bail()
         .trim()
         .notEmpty()
         .withMessage('Account number is required')
@@ -62,6 +82,9 @@ const validateLogin = [
         .isNumeric()
         .withMessage('Account number must contain only numbers'),
     body('nationalId')
+        .isString()
+        .withMessage('National ID must be text')
+        .bail()
         .trim()
         .notEmpty()
         .withMessage('National ID is required')
@@ -70,6 +93,9 @@ const validateLogin = [
         .isNumeric()
         .withMessage('National ID must contain only numbers'),
     body('password')
+        .isString()
+        .withMessage('Password must be text')
+        .bail()
         .notEmpty()
         .withMessage('Password is required'),
     handleValidationErrors
