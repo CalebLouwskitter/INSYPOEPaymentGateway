@@ -8,6 +8,7 @@
     "dev": "nodemon server.js",
     "test": "jest --coverage",
     "test:watch": "jest --watch",
+    "demo:attacks": "node scripts/attack-demo.js",
     "lint": "eslint . --ext .js || echo 'eslint not configured'",
     "audit:fix": "npm audit fix || true"
   },
@@ -18,7 +19,6 @@
     "bcryptjs": "^2.4.3",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
-    "csurf": "^1.11.0",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
     "express-mongo-sanitize": "^2.2.0",
@@ -28,11 +28,11 @@
     "hpp": "^0.2.3",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.0.0",
-    "morgan": "^1.10.0",
-    "xss-clean": "^0.1.4"
+    "morgan": "^1.10.0"
   },
   "devDependencies": {
     "jest": "^29.7.0",
+    "mongodb-memory-server": "^10.4.3",
     "nodemon": "^3.0.1",
     "supertest": "^6.3.3"
   },
@@ -44,7 +44,8 @@
       "**/*.js",
       "!node_modules/**",
       "!coverage/**",
-      "!jest.config.js"
+      "!jest.config.js",
+      "!test-utils/**"
     ],
     "testMatch": [
       "**/__tests__/**/*.js",
@@ -53,6 +54,8 @@
     "coveragePathIgnorePatterns": [
       "/node_modules/",
       "/coverage/"
-    ]
+    ],
+    "globalSetup": "<rootDir>/test-utils/globalSetup.js",
+    "globalTeardown": "<rootDir>/test-utils/globalTeardown.js"
   }
 }

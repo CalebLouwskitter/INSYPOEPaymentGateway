@@ -5,7 +5,6 @@ import { formatCurrency, formatDate } from "../utils/formatters";
 // Import API service functions for handling payments and logout
 import {
 	getAllPayments,
-	updatePaymentStatus,
 	deletePayment,
 	logout as apiLogout,
 } from "../services/paymentService.js";
@@ -17,11 +16,14 @@ import { useAuth } from "../context/AuthContext.jsx";
 import "./HomeDashboard.css";
 
 // Defines how each payment status appears on the dashboard
+// Customers only see a status; approving or denying is done by employees.
 const statusMeta = {
-	pending: { label: "Pending", badgeClass: "badge badge--warning", actionLabel: "Mark Paid" },
-	completed: { label: "Paid", badgeClass: "badge badge--success", actionLabel: "View" },
-	failed: { label: "Failed", badgeClass: "badge badge--danger", actionLabel: "Retry" },
-	refunded: { label: "Refunded", badgeClass: "badge badge--neutral", actionLabel: "View" },
+	pending: { label: "Pending review", badgeClass: "badge badge--warning" },
+	approved: { label: "Approved", badgeClass: "badge badge--success" },
+	denied: { label: "Denied", badgeClass: "badge badge--danger" },
+	completed: { label: "Paid", badgeClass: "badge badge--success" },
+	failed: { label: "Failed", badgeClass: "badge badge--danger" },
+	refunded: { label: "Refunded", badgeClass: "badge badge--neutral" },
 };
 
 // Available payment methods used across forms
@@ -31,14 +33,6 @@ const paymentMethods = [
 	{ value: "paypal", label: "PayPal" },
 	{ value: "bank_transfer", label: "Bank Transfer" },
 	{ value: "mobile_wallet", label: "Mobile Wallet" },
-];
-
-// All valid statuses that can be assigned to a payment
-const allowedStatuses = [
-	{ value: "pending", label: "Pending" },
-	{ value: "completed", label: "Completed" },
-	{ value: "failed", label: "Failed" },
-	{ value: "refunded", label: "Refunded" },
 ];
 
 // Preconfigured quick payment options shown on the dashboard
@@ -89,12 +83,6 @@ export default function HomeDashboard() {
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState("");
 	const [isSubmitting, setIsSubmitting] = useState(false);
-	const [selectedPaymentId, setSelectedPaymentId] = useState("");
-
-	// Stores selected status for updating payments
-	const [updateData, setUpdateData] = useState({
-		status: "pending",
-	});
 
 	// Calculates total amount due for pending/failed payments
 	const totalDue = useMemo(() => {
@@ -170,39 +158,10 @@ export default function HomeDashboard() {
 		return null;
 	}
 
-	// Handles selection of a payment for update
-	const handleSelectPayment = (e) => {
-		const paymentId = e.target.value;
-		setSelectedPaymentId(paymentId);
-		const payment = payments.find((p) => p._id === paymentId);
-		setUpdateData({ status: payment?.status || "pending" });
-	};
-
-	// Submits update to change a payment’s status
-	const handleUpdateStatus = async (e) => {
-		e.preventDefault();
-		if (!selectedPaymentId) {
-			setError("Please select a payment to update");
-			return;
-		}
-
-		try {
-			setIsSubmitting(true);
-			await updatePaymentStatus(selectedPaymentId, updateData.status);
-			await loadPayments();
-		} catch (err) {
-			console.error("Error updating payment status", err);
-			const message = err?.response?.data?.message || err.message || "Unable to update payment";
-			setError(message);
-		} finally {
-			setIsSubmitting(false);
-		}
-	};
-
-	// Deletes a payment record after user confirmation
+	// Withdraws a payment that is still pending review, after user confirmation
 	const handleDeletePayment = async (paymentId) => {
 		if (!paymentId) return;
-		const confirmed = window.confirm("Delete this payment permanently?");
+		const confirmed = window.confirm("Withdraw this payment request?");
 		if (!confirmed) return;
 
 		try {
@@ -368,22 +327,15 @@ export default function HomeDashboard() {
 												<span className={meta.badgeClass}>{meta.label}</span>
 											</td>
 											<td className="payment-table__actions">
-												<button
-													className="btn btn--link"
-													onClick={() => {
-														setSelectedPaymentId(payment._id);
-														setUpdateData({ status: payment.status });
-													}}
-												>
-													{meta.actionLabel}
-												</button>
-												<button
-													className="btn btn--danger"
-													onClick={() => handleDeletePayment(payment._id)}
-													disabled={isSubmitting}
-												>
-													Delete
-												</button>
+												{payment.status === "pending" && (
+													<button
+														className="btn btn--danger"
+														onClick={() => handleDeletePayment(payment._id)}
+														disabled={isSubmitting}
+													>
+														Withdraw
+													</button>
+												)}
 											</td>
 										</tr>
 									);
@@ -393,45 +345,14 @@ export default function HomeDashboard() {
 					)}
 				</div>
 
-				{/* PAYMENT STATUS UPDATE FORM */}
+				{/* HOW PAYMENTS ARE PROCESSED */}
 				<div className="card card--forms">
 					<div className="card__section card__section--border">
-						<h3>Update Payment Status</h3>
-						<form className="form" onSubmit={handleUpdateStatus}>
-							<label className="form__field">
-								<span>Select Payment</span>
-								<select value={selectedPaymentId} onChange={handleSelectPayment}>
-									<option value="">Choose a payment</option>
-									{payments.map((payment) => (
-										<option key={payment._id} value={payment._id}>
-											{payment.description || payment.transactionId}
-										</option>
-									))}
-								</select>
-							</label>
-
-							{/* Choose new status */}
-							<label className="form__field">
-								<span>Status</span>
-								<select
-									name="status"
-									value={updateData.status}
-									onChange={(e) => setUpdateData({ status: e.target.value })}
-									disabled={!selectedPaymentId}
-								>
-									{allowedStatuses.map((status) => (
-										<option key={status.value} value={status.value}>
-											{status.label}
-										</option>
-									))}
-								</select>
-							</label>
-
-							{/* Submit button */}
-							<button type="submit" className="btn btn--primary" disabled={!selectedPaymentId || isSubmitting}>
-								{isSubmitting ? "Updating..." : "Update Status"}
-							</button>
-						</form>
+						<h3>How payments are processed</h3>
+						<p>
+							Every payment you submit stays <strong>pending review</strong> until a member of our payments
+							team approves or denies it. You can withdraw a payment while it is still pending.
+						</p>
 					</div>
 				</div>
 			</section>

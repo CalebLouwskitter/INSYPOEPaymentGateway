@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
-import { createPayment, updatePaymentStatus } from "../services/paymentService.js";
+import { createPayment } from "../services/paymentService.js";
 
 export default function CreatePayment() {
   // Auth context provides user info and authentication status
@@ -276,18 +276,6 @@ export default function CreatePayment() {
     return {};
   };
 
-  const attemptAutoComplete = async (paymentId) => {
-    if (!paymentId) {
-      return;
-    }
-
-    try {
-      await updatePaymentStatus(paymentId, "completed");
-    } catch (statusErr) {
-      console.warn("Unable to auto-complete payment status", statusErr);
-    }
-  };
-
   const handlePaymentFailure = (err) => {
     console.error("Create payment error", err);
 
@@ -344,14 +332,12 @@ export default function CreatePayment() {
         metadata: buildPaymentMetadata(formData),
       });
 
-      const paymentId = response?.data?.data?._id;
       const transactionId = response?.data?.data?.transactionId;
 
-      await attemptAutoComplete(paymentId);
-
+      // The payment stays "pending" until an employee approves or denies it.
       const amountDisplay = `${formData.currency} ${amountNum.toFixed(2)}`;
       const referenceDisplay = transactionId ? ` Reference: ${transactionId}` : "";
-      setMessage(`Payment completed. ${amountDisplay} processed securely.${referenceDisplay}`);
+      setMessage(`Payment submitted. ${amountDisplay} is pending review by our payments team.${referenceDisplay}`);
       setFormData(createInitialFormState());
       setFieldErrors({});
       setError("");

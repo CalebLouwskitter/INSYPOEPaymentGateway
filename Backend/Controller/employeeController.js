@@ -41,26 +41,33 @@ const processPayment = async (req, res) => {
             });
         }
 
-        const payment = await Payment.findById(paymentId);
-        if (!payment) {
-            return res.status(404).json({ 
-                success: false, 
-                message: 'Payment not found' 
-            });
-        }
+        // Check-and-update in one atomic operation. Reading the payment, checking it is
+        // pending and then saving would let two employees approve and deny the same
+        // payment at the same time, with the last write silently winning.
+        const payment = await Payment.findOneAndUpdate(
+            { _id: paymentId, status: 'pending' },
+            {
+                status: action === 'approve' ? 'approved' : 'denied',
+                processedBy: req.user.id,
+                processedAt: new Date(),
+                updatedAt: new Date()
+            },
+            { new: true }
+        );
 
-        if (payment.status !== 'pending') {
-            return res.status(400).json({ 
+        if (!payment) {
+            const exists = await Payment.exists({ _id: paymentId });
+            if (!exists) {
+                return res.status(404).json({ 
+                    success: false, 
+                    message: 'Payment not found' 
+                });
+            }
+            return res.status(409).json({ 
                 success: false, 
                 message: 'Payment has already been processed' 
             });
         }
-
-        // Update payment status
-        payment.status = action === 'approve' ? 'approved' : 'denied';
-        payment.processedBy = req.user.id;
-        payment.processedAt = new Date();
-        await payment.save();
 
         res.status(200).json({
             success: true,
