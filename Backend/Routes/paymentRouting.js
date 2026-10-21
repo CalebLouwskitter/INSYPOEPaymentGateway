@@ -5,14 +5,12 @@ const { verifyToken } = require('../Middleware/authMiddleware.js');
 const { paymentLimiter } = require('../Middleware/rateLimitMiddleware.js');
 const { 
     validateCreatePayment, 
-    validateUpdatePaymentStatus, 
     validatePaymentId 
 } = require('../Middleware/validationMiddleware.js');
 const { 
     getAllPayments, 
     getPaymentById, 
     createPayment, 
-    updatePaymentStatus, 
     deletePayment,
     getPaymentStats
 } = require('../Controller/paymentController.js');
@@ -38,10 +36,10 @@ router.get('/:id', validatePaymentId, getPaymentById);
 // POST - create a new payment
 router.post('/', validateCreatePayment, createPayment);
 
-// PUT - update payment status
-router.put('/:id/status', validateUpdatePaymentStatus, updatePaymentStatus);
+// There is deliberately no customer route for changing a payment's status.
+// Approving or denying is an employee action (PUT /api/v1/employee/payments/:paymentId/process).
 
-// DELETE - delete a payment
+// DELETE - withdraw a payment that is still pending review
 router.delete('/:id', validatePaymentId, deletePayment);
 
 module.exports = router;

@@ -11,8 +11,10 @@ services:
     image: mongo:7.0
     container_name: insy7314-mongodb
     restart: unless-stopped
+    # MongoDB runs without authentication here, so only publish it on the host's loopback
+    # interface (for local tools like Compass). The backend reaches it over insy7314-network.
     ports:
-      - "27017:27017"
+      - "127.0.0.1:27017:27017"
     environment:
       MONGO_INITDB_DATABASE: insy7314
     volumes:
@@ -82,15 +84,16 @@ services:
       dockerfile: Dockerfile
     container_name: insy7314-frontend
     restart: unless-stopped
+    # nginx listens on 8080 (non-root, see Frontend/Dockerfile)
     ports:
-      - "3000:80"
+      - "3000:8080"
     depends_on:
       middleware:
         condition: service_healthy
     networks:
       - insy7314-network
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/health"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
       interval: 30s
       timeout: 10s
       retries: 3

@@ -108,14 +108,12 @@ export default function Login() {
 
     try {
       // Use context login which handles API call and state
-      const response = await login({
+      await login({
         fullName: formData.fullName,
         accountNumber: formData.accountNumber,
         nationalId: formData.nationalId,
         password: formData.password,
       });
-
-      console.log('Login Success:', response?.data);
 
       navigate('/dashboard', { replace: true });
     } catch (err) {

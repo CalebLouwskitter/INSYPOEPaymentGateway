@@ -25,14 +25,10 @@ export const employeeAuthService = {
         return match ? decodeURIComponent(match[2]) : null;
       };
       
-      let csrf = getCookie('XSRF-TOKEN');
-      console.log('[employeeAuthService] CSRF cookie present:', !!csrf, 'All cookies:', document.cookie);
+      const csrf = getCookie('XSRF-TOKEN');
       
       if (!csrf) {
-        console.log('[employeeAuthService] Fetching CSRF token...');
         await axiosInstance.get('/csrf-token');
-        csrf = getCookie('XSRF-TOKEN');
-        console.log('[employeeAuthService] CSRF cookie after fetch:', !!csrf);
       }
       
       // Let axios automatically handle the XSRF token (it's configured with xsrfCookieName and xsrfHeaderName)

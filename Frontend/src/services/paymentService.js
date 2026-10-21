@@ -11,10 +11,7 @@ export const getPaymentById = (id) => axiosInstance.get(`/payments/${id}`);
 // POST request, to create a new payment
 export const createPayment = (paymentData) => axiosInstance.post('/payments', paymentData);
 
-// PUT request, to update payment status
-export const updatePaymentStatus = (id, status) => axiosInstance.put(`/payments/${id}/status`, { status });
-
-// DELETE request, to delete a payment
+// DELETE request, to withdraw a payment that is still pending review
 export const deletePayment = (id) => axiosInstance.delete(`/payments/${id}`);
 
 // GET payment statistics

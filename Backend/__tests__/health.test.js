@@ -5,6 +5,7 @@
 
 const request = require('supertest');
 const mongoose = require('mongoose');
+const jwt = require('jsonwebtoken');
 const app = require('../server');
 const User = require('../Models/userModel');
 const Employee = require('../Models/employeeModel');
@@ -547,6 +548,10 @@ describe('API Security Tests', () => {
                 .expect(401);
         });
 
+        // This test used to pass by accident: earlier tests had already used up the shared
+        // login rate limit, so the employee login returned 429, the token was undefined and
+        // "Bearer undefined" failed verification. Signing the token directly removes that
+        // dependency and exposes the real behaviour.
         test('should properly separate employee and user token types', async () => {
             // Create employee
             const employee = new Employee({
@@ -554,25 +559,21 @@ describe('API Security Tests', () => {
                 password: 'EmployeePass123!',
                 role: 'employee'
             });
-            employee.markModified('password');
             await employee.save();
 
-            const empRes = await request(app)
-                .post('/api/v1/employee/auth/login')
-                .send({
-                    username: 'test_employee',
-                    password: 'EmployeePass123!'
-                });
-            
-            const employeeToken = empRes.body.token;
+            const employeeToken = jwt.sign(
+                { id: employee._id, username: employee.username, role: employee.role, type: 'employee' },
+                process.env.JWT_SECRET,
+                { expiresIn: '8h' }
+            );
 
             // Employee token should not work on user endpoints
             const response = await request(app)
                 .get('/api/v1/payments')
                 .set('Authorization', `Bearer ${employeeToken}`)
                 .expect(403);
-            
-            expect(response.body.message).toContain('Invalid or expired token');
+
+            expect(response.body.message).toContain('Invalid token type');
         });
     });
 

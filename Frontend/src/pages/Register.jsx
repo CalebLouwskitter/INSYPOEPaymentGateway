@@ -128,9 +128,9 @@ export default function Register() {
       validationErrors.nationalId = message;
     }
 
-    // Validate password (min 6 chars)
-    if (formData.password.length < 6) {
-      const message = "Password must be at least 6 characters long.";
+    // Validate password (min 8 chars, matching the API)
+    if (formData.password.length < 8) {
+      const message = "Password must be at least 8 characters long.";
       passwordInput.setCustomValidity(message);
       validationErrors.password = message;
     }
@@ -155,12 +155,6 @@ export default function Register() {
     setFieldErrors({});
 
     try {
-      console.log("Sending registration request:", { 
-        fullName: formData.fullName, 
-        accountNumber: formData.accountNumber,
-        nationalId: formData.nationalId
-      });
-
       // Make API call to register endpoint
       const response = await axiosInstance.post('/auth/register', {
         fullName: formData.fullName,
@@ -168,8 +162,6 @@ export default function Register() {
         nationalId: formData.nationalId,
         password: formData.password
       });
-
-      console.log("Registration Success:", response.data);
 
       // Store token and user info in localStorage
       if (response.data.token) {
