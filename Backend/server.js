@@ -11,6 +11,14 @@ const cookieParser = require('cookie-parser');
 const crypto = require('crypto');
 require('dotenv').config();
 
+// Refuse to start with a missing or placeholder JWT secret (tests set their own)
+const { checkSecurityConfig } = require('./Services/configCheck.js');
+const configProblems = checkSecurityConfig();
+if (configProblems.length && process.env.NODE_ENV !== 'test') {
+  configProblems.forEach((problem) => console.error(`[CONFIG] ${problem}`));
+  process.exit(1);
+}
+
 const app = express();
 
 // Import security middleware
