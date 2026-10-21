@@ -36,7 +36,7 @@ const USER_ROLES = {
   ADMIN: 'admin',
 };
 
-const PASSWORD_MIN_LENGTH = 6;
+const PASSWORD_MIN_LENGTH = 8;
 // NOSONAR: This regex validates password complexity requirements (not a hardcoded credential)
 const PASSWORD_REQUIREMENTS_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/;
 
@@ -180,7 +180,7 @@ const CreateEmployeeForm = ({ onSubmit, onCancel, isSubmitting }) => {
             name={FORM_FIELDS.PASSWORD}
             value={formData.password}
             onChange={handleFormChange}
-            placeholder="Enter password (min 6 chars, uppercase, lowercase, digit)"
+            placeholder="Enter password (min 8 chars, uppercase, lowercase, digit)"
             style={formErrors.password ? styles.inputError : FORM_STYLES.input}
             required
             aria-required="true"

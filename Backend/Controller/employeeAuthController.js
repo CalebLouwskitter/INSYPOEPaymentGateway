@@ -1,10 +1,15 @@
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
+const crypto = require('node:crypto');
 const Employee = require('../Models/employeeModel');
 require('dotenv').config();
 
 // References:
 // Auth0. (2025) jsonwebtoken - npm. Available at: https://www.npmjs.com/package/jsonwebtoken (Accessed: 29 October 2025).
 // Express.js. (2025) Express.js - Fast, unopinionated, minimalist web framework for Node.js. Available at: https://expressjs.com/ (Accessed: 29 October 2025).
+
+// Used when the username does not exist, so a failed lookup costs as much as a wrong password
+const DUMMY_HASH = bcrypt.hashSync(crypto.randomBytes(16).toString('hex'), 12);
 
 // Employee login
 // (Auth0. 2025)
@@ -25,6 +30,7 @@ const employeeLogin = async (req, res) => {
         const employee = await Employee.findOne()
             .where('username').equals(username);
         if (!employee) {
+            await bcrypt.compare(password, DUMMY_HASH);
             return res.status(401).json({ 
                 success: false, 
                 message: 'Invalid credentials' 

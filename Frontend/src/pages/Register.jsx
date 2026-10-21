@@ -128,9 +128,9 @@ export default function Register() {
       validationErrors.nationalId = message;
     }
 
-    // Validate password (min 6 chars)
-    if (formData.password.length < 6) {
-      const message = "Password must be at least 6 characters long.";
+    // Validate password (min 8 chars, matching the API)
+    if (formData.password.length < 8) {
+      const message = "Password must be at least 8 characters long.";
       passwordInput.setCustomValidity(message);
       validationErrors.password = message;
     }

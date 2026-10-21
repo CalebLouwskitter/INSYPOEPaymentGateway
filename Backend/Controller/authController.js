@@ -1,4 +1,6 @@
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
+const crypto = require('node:crypto');
 const { invalidateToken } = require('../Middleware/authMiddleware.js');
 const User = require('../Models/userModel.js');
 require('dotenv').config();
@@ -19,6 +21,9 @@ const generateJwt = (fullName, userId) => {
     );
 };
 
+// Same cost factor as real password hashes (see userModel), so a failed lookup costs the same.
+const DUMMY_HASH = bcrypt.hashSync(crypto.randomBytes(16).toString('hex'), 12);
+
 // The client only ever displays the national ID masked, and it ends up in localStorage,
 // so send the masked form and keep the full number on the server.
 const maskNationalId = (nationalId) => String(nationalId).replace(/\d(?=\d{4})/g, '*');
@@ -38,9 +43,9 @@ const register = async (req, res) => {
             return res.status(400).json({ message: "Full name, account number, national ID, and password are required" });
         }
 
-        if (password.length < 6) {
+        if (password.length < 8) {
             console.log('[AUTH] Registration failed: Password too short');
-            return res.status(400).json({ message: "Password must be at least 6 characters long" });
+            return res.status(400).json({ message: "Password must be at least 8 characters long" });
         }
 
         // Validate account number format (10 digits)
@@ -143,14 +148,17 @@ const login = async (req, res) => {
             nationalId: sanitizedNationalId
         });
         
+        // compare the password even when there is no such user, against a dummy hash, so the
+        // response takes as long either way and its timing does not reveal which accounts exist
+        const matching = user
+            ? await user.comparePassword(password)
+            : await bcrypt.compare(password, DUMMY_HASH).then(() => false);
+
         // if the user is not present in our collection, let them know to try again
         if (!user) {
             console.log('[AUTH] Login failed: User not found');
             return res.status(401).json({ message: "Invalid credentials" });
         }
-
-        // next, if the user DOES exist, we compare their entered password to what we have on file
-    const matching = await user.comparePassword(password);
         
         // if they don't match, say no
         if (!matching) {

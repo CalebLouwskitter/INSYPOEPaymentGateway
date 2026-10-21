@@ -49,8 +49,10 @@ const validateCreateEmployee = [
     body('password')
         .notEmpty()
         .withMessage('Password is required')
-        .isLength({ min: 6 })
-        .withMessage('Password must be at least 6 characters long')
+        .isLength({ min: 8 })
+        .withMessage('Password must be at least 8 characters long')
+        .custom((value) => Buffer.byteLength(String(value), 'utf8') <= 72)
+        .withMessage('Password must be at most 72 bytes long')
         .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
         .withMessage('Password must contain at least one uppercase letter, one lowercase letter, and one number'),
     body('role')

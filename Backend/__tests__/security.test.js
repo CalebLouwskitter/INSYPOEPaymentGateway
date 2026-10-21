@@ -242,7 +242,7 @@ describe('Injection (OWASP A03)', () => {
 });
 
 describe('Authentication hardening (OWASP A07)', () => {
-    test.failing('registration rejects passwords shorter than 8 characters', async () => {
+    test('registration rejects passwords shorter than 8 characters', async () => {
         const res = await request(app)
             .post('/api/v1/auth/register')
             .send({ fullName: 'Short Password', accountNumber: '2000000001', nationalId: '8000000000001', password: 'abc1234' });
@@ -250,7 +250,7 @@ describe('Authentication hardening (OWASP A07)', () => {
         expect(await User.countDocuments()).toBe(0);
     });
 
-    test.failing('login does the same bcrypt work whether or not the account exists (no timing oracle)', async () => {
+    test('login does the same bcrypt work whether or not the account exists (no timing oracle)', async () => {
         const spy = jest.spyOn(bcrypt, 'compare');
         await request(app)
             .post('/api/v1/auth/login')
