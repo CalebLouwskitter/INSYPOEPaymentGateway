@@ -5,6 +5,10 @@ const { body, param, validationResult } = require('express-validator');
 // Express Validator Team. (2025) express-validator - npm. Available at: https://www.npmjs.com/package/express-validator (Accessed: 07 October 2025).
 // Express Validator Team. (2025) express-validator Documentation. Available at: https://express-validator.github.io/docs/ (Accessed: 07 October 2025).
 
+// bcrypt only uses the first 72 bytes of a password; reject longer ones instead of
+// silently ignoring the rest
+const withinBcryptLimit = (value) => Buffer.byteLength(value, 'utf8') <= 72;
+
 // Middleware to check validation results
 // Express Validator Team. (2025)
 const handleValidationErrors = (req, res, next) => {
@@ -53,8 +57,10 @@ const validateRegister = [
         .isString()
         .withMessage('Password must be text')
         .bail()
-        .isLength({ min: 6 })
-        .withMessage('Password must be at least 6 characters long'),
+        .isLength({ min: 8 })
+        .withMessage('Password must be at least 8 characters long')
+        .custom(withinBcryptLimit)
+        .withMessage('Password must be at most 72 bytes long'),
     handleValidationErrors
 ];
 
