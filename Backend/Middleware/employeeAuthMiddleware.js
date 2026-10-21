@@ -22,7 +22,7 @@ const verifyEmployeeToken = (req, res, next) => {
     }
 
     // (Auth0. 2025)
-    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+    jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] }, (err, decoded) => {
         if (err) {
             return res.status(403).json({ message: "Invalid or expired token" });
         }

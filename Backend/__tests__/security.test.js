@@ -107,7 +107,7 @@ describe('Broken access control (OWASP A01)', () => {
             .expect(404);
     });
 
-    test.failing('an employee token is rejected on customer routes and leaks no payments', async () => {
+    test('an employee token is rejected on customer routes and leaks no payments', async () => {
         const alice = await makeUser(1);
         await makePayment(alice);
         const employee = await makeEmployee('teller_one');
