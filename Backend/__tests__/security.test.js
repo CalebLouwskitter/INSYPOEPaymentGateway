@@ -158,7 +158,7 @@ describe('Broken access control (OWASP A01)', () => {
             .expect(403);
     });
 
-    test.failing('two employees racing to approve and deny the same payment: exactly one wins', async () => {
+    test('two employees racing to approve and deny the same payment: exactly one wins', async () => {
         const user = await makeUser(1);
         const payment = await makePayment(user);
         const a = await makeEmployee('teller_one');
