@@ -19,12 +19,18 @@ const generateJwt = (fullName, userId) => {
     );
 };
 
+// The client only ever displays the national ID masked, and it ends up in localStorage,
+// so send the masked form and keep the full number on the server.
+const maskNationalId = (nationalId) => String(nationalId).replace(/\d(?=\d{4})/g, '*');
+
 const register = async (req, res) => {
     try {
         // pull the required information from the incoming request
         const { fullName, accountNumber, nationalId, password } = req.body;
 
-        console.log('[AUTH] Registration attempt:', { fullName, accountNumber, nationalId, hasPassword: !!password });
+        // Never log the request fields: national ID and account number are personal data,
+        // and together with the password they are the login credentials.
+        console.log('[AUTH] Registration attempt');
 
         // validate input
         if (!fullName || !accountNumber || !nationalId || !password) {
@@ -80,7 +86,7 @@ const register = async (req, res) => {
         });
         await newUser.save();
 
-        console.log('[AUTH] User registered successfully:', { id: newUser._id, fullName: newUser.fullName, accountNumber: newUser.accountNumber });
+        console.log('[AUTH] User registered successfully:', { id: newUser._id });
 
         // generate token with user ID
         const token = generateJwt(newUser.fullName, newUser._id);
@@ -92,12 +98,13 @@ const register = async (req, res) => {
                 id: newUser._id,
                 fullName: newUser.fullName,
                 accountNumber: newUser.accountNumber,
-                nationalId: newUser.nationalId
+                nationalId: maskNationalId(newUser.nationalId)
             }
         });
     } catch (error) {
-        console.error('[AUTH] Registration error:', error);
-        res.status(500).json({ message: "Internal server error", error: error.message });
+        // a duplicate-key error message would contain the national ID, so log only its type
+        console.error('[AUTH] Registration error:', error.name, error.code);
+        res.status(500).json({ message: "Internal server error" });
     }
 };
 
@@ -105,7 +112,7 @@ const login = async (req, res) => {
     try {
         const { fullName, accountNumber, nationalId, password } = req.body;
 
-        console.log('[AUTH] Login attempt:', { fullName, accountNumber, nationalId, hasPassword: !!password });
+        console.log('[AUTH] Login attempt');
 
         // validate input
         if (!fullName || !accountNumber || !nationalId || !password) {
@@ -151,7 +158,7 @@ const login = async (req, res) => {
             return res.status(401).json({ message: "Invalid credentials" });
         }
 
-        console.log('[AUTH] User logged in successfully:', { id: user._id, fullName: user.fullName });
+        console.log('[AUTH] User logged in successfully:', { id: user._id });
 
         // otherwise, generate a token and log them in
         const token = generateJwt(user.fullName, user._id);
@@ -163,12 +170,12 @@ const login = async (req, res) => {
                 id: user._id,
                 fullName: user.fullName,
                 accountNumber: user.accountNumber,
-                nationalId: user.nationalId
+                nationalId: maskNationalId(user.nationalId)
             }
         });
     } catch (error) {
-        console.error('[AUTH] Login error:', error);
-        res.status(500).json({ message: "Internal server error", error: error.message });
+        console.error('[AUTH] Login error:', error.name, error.code);
+        res.status(500).json({ message: "Internal server error" });
     }
 };
 
@@ -197,7 +204,7 @@ const logout = async (req, res) => {
         res.status(200).json({ message: "Logged out successfully" });
     } catch (error) {
         console.error('Logout error:', error);
-        res.status(500).json({ message: "Internal server error", error: error.message });
+        res.status(500).json({ message: "Internal server error" });
     }
 };
 

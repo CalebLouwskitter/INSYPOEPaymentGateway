@@ -99,8 +99,7 @@ const getAllPayments = async (req, res) => {
         console.error('Get all payments error:', error);
         res.status(500).json({ 
             success: false,
-            message: "Error retrieving payments", 
-            error: error.message 
+            message: "Error retrieving payments"
         });
     }
 };
@@ -131,8 +130,7 @@ const getPaymentById = async (req, res) => {
         console.error('Get payment by ID error:', error);
         res.status(500).json({ 
             success: false,
-            message: "Error retrieving payment", 
-            error: error.message 
+            message: "Error retrieving payment"
         });
     }
 };
@@ -184,8 +182,7 @@ const createPayment = async (req, res) => {
         console.error('Create payment error:', error);
         res.status(500).json({ 
             success: false,
-            message: "Error creating payment", 
-            error: error.message 
+            message: "Error creating payment"
         });
     }
 };
@@ -227,8 +224,7 @@ const deletePayment = async (req, res) => {
         console.error('Delete payment error:', error);
         res.status(500).json({ 
             success: false,
-            message: "Error deleting payment", 
-            error: error.message 
+            message: "Error deleting payment"
         });
     }
 };
@@ -262,8 +258,7 @@ const getPaymentStats = async (req, res) => {
         console.error('Get payment stats error:', error);
         res.status(500).json({ 
             success: false,
-            message: "Error retrieving payment statistics", 
-            error: error.message 
+            message: "Error retrieving payment statistics"
         });
     }
 };
