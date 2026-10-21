@@ -78,12 +78,12 @@ app.use((req, res, next) => {
 });
 
 // Enforce HTTPS when behind a proxy (e.g., Nginx) only in production
-// or when explicitly enabled via FORCE_HTTPS=true
+// or when explicitly enabled via FORCE_HTTPS=true.
+// req.secure honours X-Forwarded-Proto only from proxies listed in TRUST_PROXY.
 const FORCE_HTTPS = process.env.FORCE_HTTPS === 'true' || process.env.NODE_ENV === 'production';
 app.use((req, res, next) => {
   if (!FORCE_HTTPS) return next();
-  const xfProto = req.headers['x-forwarded-proto'];
-  if (req.secure || xfProto === 'https') return next();
+  if (req.secure) return next();
   if (req.method === 'GET' || req.method === 'HEAD') {
     return res.status(426).json({
       error: 'HTTPS required',
@@ -128,7 +128,7 @@ app.get('/api/v1/csrf-token', (req, res) => {
     console.log('[CSRF] Token generated:', token.substring(0, 10) + '...');
     
     // Set cookie with the token (must be readable by JavaScript)
-    const isSecure = process.env.USE_HTTPS === 'true' || req.secure || req.headers['x-forwarded-proto'] === 'https' || process.env.NODE_ENV === 'production';
+    const isSecure = process.env.USE_HTTPS === 'true' || req.secure || process.env.NODE_ENV === 'production';
     res.cookie('XSRF-TOKEN', token, {
       sameSite: 'none',
       secure: !!isSecure,

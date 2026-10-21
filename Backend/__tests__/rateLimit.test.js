@@ -14,7 +14,7 @@ afterAll(async () => {
     await mongoose.connection.close();
 });
 
-test.failing('spoofing X-Forwarded-For does not reset the login rate limit', async () => {
+test('spoofing X-Forwarded-For does not reset the login rate limit', async () => {
     const statuses = [];
     for (let i = 0; i < 7; i++) {
         const res = await request(app)

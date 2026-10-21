@@ -49,9 +49,17 @@ const corsOptions = {
 
 // this is a function to apply security-related middlewares to an express app
 // (Helmetjs Team. 2025)
+// Which proxies may set X-Forwarded-For / X-Forwarded-Proto. Off unless TRUST_PROXY is set:
+// a number of hops (e.g. 1 behind a single Nginx) or a list such as "loopback, 10.0.0.0/8".
+// Trusting one hop unconditionally meant that, with the API exposed directly, any client could
+// send its own X-Forwarded-For and get a fresh rate-limit bucket on every request.
+const parseTrustProxy = (raw) => {
+    if (!raw || raw === 'false') return false;
+    return /^\d+$/.test(raw) ? Number(raw) : raw;
+};
+
 const securityMiddlewares = (app) => {
-    // Trust reverse proxy for TLS info (e.g., x-forwarded-proto)
-    app.set('trust proxy', 1);
+    app.set('trust proxy', parseTrustProxy(process.env.TRUST_PROXY));
     // Apply Helmet for various header protections
     // (Helmetjs Team. 2025)
     app.use(helmet({
