@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const Employee = require('../Models/employeeModel');
 require('dotenv').config();
 
 // References:
@@ -9,7 +10,7 @@ const employeeTokenBlacklist = new Set();
 
 // Verify employee token
 // (Auth0. 2025)
-const verifyEmployeeToken = (req, res, next) => {
+const verifyEmployeeToken = async (req, res, next) => {
     const authHeader = req.headers["authorization"];
     const token = authHeader?.split(" ")[1];
 
@@ -22,19 +23,31 @@ const verifyEmployeeToken = (req, res, next) => {
     }
 
     // (Auth0. 2025)
-    jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] }, (err, decoded) => {
-        if (err) {
-            return res.status(403).json({ message: "Invalid or expired token" });
+    let decoded;
+    try {
+        decoded = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
+    } catch (err) {
+        return res.status(403).json({ message: "Invalid or expired token" });
+    }
+
+    // Verify this is an employee token
+    if (decoded?.type !== 'employee') {
+        return res.status(403).json({ message: "Invalid token type" });
+    }
+
+    // The role in the token is a snapshot from login time and the token lives for 8 hours.
+    // Load the account so a deleted employee is locked out and a demoted admin loses
+    // admin rights straight away, instead of when the token expires.
+    try {
+        const employee = await Employee.findById(decoded.id).select('role username');
+        if (!employee) {
+            return res.status(401).json({ message: "Account is no longer active" });
         }
-        
-        // Verify this is an employee token
-        if (decoded?.type !== 'employee') {
-            return res.status(403).json({ message: "Invalid token type" });
-        }
-        
-        req.user = decoded;
+        req.user = { ...decoded, role: employee.role, username: employee.username };
         next();
-    });
+    } catch (err) {
+        next(err);
+    }
 };
 
 // Verify admin role
