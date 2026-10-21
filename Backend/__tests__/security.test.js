@@ -211,7 +211,7 @@ describe('Token integrity (OWASP A02/A07)', () => {
 });
 
 describe('Injection (OWASP A03)', () => {
-    test.failing('NoSQL operator injection in customer login is rejected', async () => {
+    test('NoSQL operator injection in customer login is rejected', async () => {
         await makeUser(1);
         const res = await request(app)
             .post('/api/v1/auth/login')
@@ -229,7 +229,7 @@ describe('Injection (OWASP A03)', () => {
         expect(res.body.token).toBeUndefined();
     });
 
-    test.failing('operator keys smuggled into payment metadata are stripped before storage', async () => {
+    test('operator keys smuggled into payment metadata are stripped before storage', async () => {
         const user = await makeUser(1);
         const res = await request(app)
             .post('/api/v1/payments')
@@ -321,7 +321,7 @@ describe('Browser-facing controls (CSRF, CORS, headers)', () => {
         expect(res.status).toBe(200);
     });
 
-    test.failing('an untrusted origin gets no CORS grant', async () => {
+    test('an untrusted origin gets no CORS grant', async () => {
         const res = await request(app)
             .options('/api/v1/auth/login')
             .set('Origin', 'https://evil.example')

@@ -7,7 +7,6 @@ const helmet = require('helmet');
 const cors = require('cors');
 const hpp = require('hpp');
 const mongoSanitize = require('express-mongo-sanitize');
-const xss = require('xss-clean');
 
 // References:
 // Helmetjs Team. (2025) helmet - npm. Available at: https://www.npmjs.com/package/helmet (Accessed: 07 January 2025).
@@ -31,8 +30,9 @@ const corsOptions = {
             ? parseOrigins(process.env.CORS_ORIGINS || process.env.FRONTEND_URL || 'https://localhost:3000')
             : ['http://localhost:3000', 'https://localhost:3000', 'http://localhost:12345', 'https://localhost:5000'];
         if (!origin) return cb(null, true); // allow same-origin/non-browser tools
-        if (allowList.includes(origin)) return cb(null, true);
-        cb(new Error('CORS origin not allowed'));
+        // For any other origin send no CORS headers; the browser then refuses to expose
+        // the response. (Passing an Error here turned every such preflight into a 500.)
+        cb(null, allowList.includes(origin));
     },
     // controlling what types of HTTP requests we will permit
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
@@ -78,14 +78,17 @@ const securityMiddlewares = (app) => {
         // HSTS enabled by default in helmet; ensure TLS termination in front
     }));
 
-    // Apply sanitizers and request hardening
-    app.use(hpp());
-    app.use(mongoSanitize());
-    app.use(xss());
-
-    // Limit body size
+    // Parse bodies first (with a size limit), then sanitise them. The sanitisers only
+    // see what has already been parsed: when they ran before express.json(), req.body was
+    // still undefined and operator keys like $ne or $where in JSON bodies went straight through.
     app.use(require('express').json({ limit: '200kb' }));
     app.use(require('express').urlencoded({ extended: true, limit: '200kb' }));
+
+    app.use(hpp());
+    // strip keys starting with $ or containing . from body, query, params and headers
+    app.use(mongoSanitize());
+    // XSS is handled on output (React escapes everything it renders, plus the CSP above)
+    // rather than by rewriting input, so xss-clean is no longer used.
 
     // Apply CORS with the configured options
     app.use(cors(corsOptions));
