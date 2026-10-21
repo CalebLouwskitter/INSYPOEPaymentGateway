@@ -47,19 +47,9 @@ const validateCsrf = (req, res, next) => {
   const cookieToken = req.cookies['XSRF-TOKEN'];
   const headerToken = req.headers['x-csrf-token'] || req.headers['x-xsrf-token'];
   
-  console.log('[CSRF] Validation:', {
-    method: req.method,
-    url: req.url,
-    allCookies: Object.keys(req.cookies),
-    cookieToken: cookieToken ? cookieToken.substring(0, 10) + '...' : 'missing',
-    headerToken: headerToken ? headerToken.substring(0, 10) + '...' : 'missing',
-    allHeaders: Object.keys(req.headers).filter(h => h.toLowerCase().includes('csrf') || h.toLowerCase().includes('xsrf')),
-    match: cookieToken === headerToken
-  });
-  
   // Validate that both exist and match
   if (!cookieToken || !headerToken || cookieToken !== headerToken) {
-    console.error('[CSRF] Validation failed');
+    console.warn(`[CSRF] Validation failed id=${req.id || '-'} method=${req.method} url=${req.originalUrl}`);
     return res.status(403).json({ 
       error: 'Invalid CSRF token', 
       message: 'CSRF token validation failed' 
@@ -95,8 +85,9 @@ app.use((req, res, next) => {
 
 // Additional Middleware (limits are set in security middleware)
 
-// Body Logging, SET TO FALSE IN PRODUCTION
-const LOG_BODIES = process.env.LOG_REQUEST_BODY === 'false' ? false : true;
+// Request body logging is opt-in (LOG_REQUEST_BODY=true) for local debugging only.
+// Bodies carry national IDs and account numbers; known sensitive keys are masked.
+const LOG_BODIES = process.env.LOG_REQUEST_BODY === 'true';
 app.use(loggerMiddleware({ logBodies: LOG_BODIES }));
 
 // Add a morgan token for request id & concise combined log line
@@ -125,7 +116,6 @@ app.get('/api/v1/csrf-token', (req, res) => {
   try {
     // Generate a random CSRF token
     const token = crypto.randomBytes(32).toString('hex');
-    console.log('[CSRF] Token generated:', token.substring(0, 10) + '...');
     
     // Set cookie with the token (must be readable by JavaScript)
     const isSecure = process.env.USE_HTTPS === 'true' || req.secure || process.env.NODE_ENV === 'production';
@@ -135,8 +125,7 @@ app.get('/api/v1/csrf-token', (req, res) => {
       httpOnly: false, // Must be false so JavaScript can read it
       path: '/',
     });
-    
-    console.log('[CSRF] Cookie set with httpOnly=false');
+
     res.status(200).json({ csrfToken: token });
   } catch (error) {
     console.error('[CSRF] Error generating token:', error);

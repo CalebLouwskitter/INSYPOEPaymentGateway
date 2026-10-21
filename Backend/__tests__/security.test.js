@@ -262,7 +262,7 @@ describe('Authentication hardening (OWASP A07)', () => {
 });
 
 describe('Logging and error handling (OWASP A09/A05)', () => {
-    test.failing('national ID and account number never reach the logs', async () => {
+    test('national ID and account number never reach the logs', async () => {
         const lines = [];
         const capture = (...args) => lines.push(args.map(String).join(' '));
         const spies = ['log', 'info', 'warn', 'error'].map((m) => jest.spyOn(console, m).mockImplementation(capture));
@@ -278,7 +278,7 @@ describe('Logging and error handling (OWASP A09/A05)', () => {
         expect(output).not.toContain(creds.password);
     });
 
-    test.failing('server errors do not echo internal error messages to the client', async () => {
+    test('server errors do not echo internal error messages to the client', async () => {
         const user = await makeUser(1);
         const spy = jest.spyOn(Payment, 'find').mockImplementation(() => {
             throw new Error('MongoServerError: connection to 10.0.3.7:27017 refused');

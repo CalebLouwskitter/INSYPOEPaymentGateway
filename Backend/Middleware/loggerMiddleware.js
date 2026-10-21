@@ -7,7 +7,11 @@ const { randomUUID } = require('node:crypto');
 
 // Fields that should be masked if present in request bodies
  // (Node.js, 2025)
-const SENSITIVE_KEYS = new Set(['password', 'token', 'authorization', 'auth', 'secret']);
+// (compared in lower case)
+const SENSITIVE_KEYS = new Set([
+  'password', 'token', 'authorization', 'auth', 'secret',
+  'nationalid', 'accountnumber', 'cardnumber', 'cvv', 'cardcvv', 'bankaccountnumber',
+]);
 
 // Recursively sanitize an object/array/value by masking sensitive fields
  // (Node.js, 2025)
