@@ -8,6 +8,7 @@
     "dev": "nodemon server.js",
     "test": "jest --coverage",
     "test:watch": "jest --watch",
+    "demo:attacks": "node scripts/attack-demo.js",
     "lint": "eslint . --ext .js || echo 'eslint not configured'",
     "audit:fix": "npm audit fix || true"
   },
