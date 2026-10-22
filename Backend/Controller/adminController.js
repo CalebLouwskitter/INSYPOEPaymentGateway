@@ -1,4 +1,5 @@
 const Employee = require('../Models/employeeModel');
+const { recordAuditEvent } = require('../Services/auditService');
 
 // References:
 // Mongoose Team. (2025) Mongoose v8.0.0: Queries. Available at: https://mongoosejs.com/docs/queries.html (Accessed: 29 October 2025).
@@ -63,7 +64,7 @@ const createEmployee = async (req, res) => {
         }
 
         // Check if employee already exists
-    const existingEmployee = await Employee.findOne().where('username').equals(username);
+        const existingEmployee = await Employee.findOne().where('username').equals(username);
         if (existingEmployee) {
             return res.status(400).json({ 
                 success: false, 
@@ -80,6 +81,21 @@ const createEmployee = async (req, res) => {
         });
 
         await employee.save();
+
+        await recordAuditEvent({
+            actorId: req.user?.id,
+            actorRole: req.user?.role,
+            action: 'EMPLOYEE_CREATED',
+            targetType: 'Employee',
+            targetId: employee._id.toString(),
+            requestId: req.id,
+            ip: req.ip,
+            userAgent: req.get ? req.get('user-agent') : req.headers?.['user-agent'],
+            details: {
+                username: employee.username,
+                role: employee.role
+            }
+        });
 
         res.status(201).json({
             success: true,
@@ -123,7 +139,7 @@ const deleteEmployee = async (req, res) => {
         }
 
         // Determine if requester is super admin (admin with createdBy === null)
-    const requester = await Employee.findById(req.user.id).select('role createdBy');
+        const requester = await Employee.findById(req.user.id).select('role createdBy');
 
         // Never allow deletion of super admin account
         if (employee.role === 'admin' && employee.createdBy === null) {
@@ -144,6 +160,21 @@ const deleteEmployee = async (req, res) => {
         }
 
         await Employee.findByIdAndDelete(employeeId);
+
+        await recordAuditEvent({
+            actorId: req.user?.id,
+            actorRole: req.user?.role,
+            action: 'EMPLOYEE_DELETED',
+            targetType: 'Employee',
+            targetId: employee._id.toString(),
+            requestId: req.id,
+            ip: req.ip,
+            userAgent: req.get ? req.get('user-agent') : req.headers?.['user-agent'],
+            details: {
+                username: employee.username,
+                role: employee.role
+            }
+        });
 
         res.status(200).json({
             success: true,
