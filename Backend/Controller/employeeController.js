@@ -1,5 +1,6 @@
 const Payment = require('../Models/paymentModel');
 const Employee = require('../Models/employeeModel');
+const { recordAuditEvent } = require('../Services/auditService');
 
 // References:
 // Mongoose Team. (2025) Mongoose v8.0.0: Queries. Available at: https://mongoosejs.com/docs/queries.html (Accessed: 29 October 2025).
@@ -68,6 +69,23 @@ const processPayment = async (req, res) => {
                 message: 'Payment has already been processed' 
             });
         }
+
+        await recordAuditEvent({
+            actorId: req.user?.id,
+            actorRole: req.user?.role,
+            action: action === 'approve' ? 'PAYMENT_APPROVED' : 'PAYMENT_DENIED',
+            targetType: 'Payment',
+            targetId: payment._id.toString(),
+            requestId: req.id,
+            ip: req.ip,
+            userAgent: req.get ? req.get('user-agent') : req.headers?.['user-agent'],
+            details: {
+                amount: payment.amount,
+                currency: payment.currency,
+                paymentMethod: payment.paymentMethod,
+                transactionId: payment.transactionId
+            }
+        });
 
         res.status(200).json({
             success: true,
