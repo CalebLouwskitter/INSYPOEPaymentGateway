@@ -3,8 +3,8 @@ import axios from 'axios';
 // References:
 // Axios Team. (2025) axios - npm. Available at: https://www.npmjs.com/package/axios (Accessed: 03 November 2025).
 
-// Derive employee API base from REACT_APP_API_URL and append /employee
-const rawBase = (process.env.REACT_APP_API_URL || 'http://localhost:5000/api/v1').replace(/\/$/, '');
+// Derive employee API base from VITE_API_URL and append /employee
+const rawBase = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1').replace(/\/$/, '');
 // If someone accidentally sets an https localhost base in dev, prefer http to avoid TLS errors
 const normalizedBase = rawBase;
 const employeeBaseURL = `${normalizedBase}/employee`;
