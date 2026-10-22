@@ -42,12 +42,12 @@ jobs:
       - name: Backend production dependencies (fail on high or critical)
         working-directory: Backend
         run: npm audit --omit=dev --audit-level=high
-      # The frontend's high-severity advisories all come from react-scripts' build toolchain
-      # (webpack-dev-server, svgo, jest...), which never ships to the browser. Gate on critical
-      # here; docs/security-case-study.md tracks the migration off Create React App.
-      - name: Frontend dependencies (fail on critical)
+      # Following the Vite migration, Create React App's vulnerable build toolchain is removed.
+      # Gate on high or critical vulnerabilities, matching the backend audit.
+
+      - name: Frontend production dependencies (fail on high or critical)
         working-directory: Frontend
-        run: npm audit --omit=dev --audit-level=critical
+        run: npm audit --omit=dev --audit-level=high
 
   secret-scan:
     name: Secret scan (gitleaks)
