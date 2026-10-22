@@ -301,6 +301,7 @@ From Part 1, we prioritized protections against XSS, NoSQL injection, brute-forc
 | GET | `/api/v1/employee/admin/employees` | List all employees (admin only) | `verifyEmployeeToken`, `verifyAdminRole` |
 | POST | `/api/v1/employee/admin/employees` | Create employee (admin only) | `verifyEmployeeToken`, `verifyAdminRole`, `validateCreateEmployee` |
 | DELETE | `/api/v1/employee/admin/employees/:employeeId` | Delete employee (admin only) | `verifyEmployeeToken`, `verifyAdminRole` |
+| GET | `/api/admin/audit` | Query append-only staff audit log with pagination and filters (admin only) | `verifyEmployeeToken`, `verifyAdminRole`, `apiLimiter` |
 
 Refer to `Backend/Routes/` for the complete routing table.
 
