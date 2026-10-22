@@ -11,26 +11,22 @@
     "react-router-dom": "^6.20.0"
   },
   "devDependencies": {
-    "@testing-library/jest-dom": "^5.16.5",
-    "@testing-library/react": "^13.4.0",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.2.0",
     "@testing-library/user-event": "^14.4.3",
     "@vitejs/plugin-react": "^4.7.0",
-    "react-scripts": "5.0.1",
+    "@vitest/coverage-v8": "^4.1.12",
+    "jsdom": "^26.1.0",
     "typescript": "4.9.5",
-    "vite": "^6.4.5"
+    "vite": "^6.4.5",
+    "vitest": "^4.1.12"
   },
   "scripts": {
     "start": "vite",
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "react-scripts test --coverage --watchAll=false"
-  },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
+    "test": "vitest run"
   },
   "browserslist": {
     "production": [
