@@ -1,4 +1,6 @@
+const mongoose = require('mongoose');
 const Employee = require('../Models/employeeModel');
+const { AuditEvent } = require('../Models/auditEventModel');
 const { recordAuditEvent } = require('../Services/auditService');
 
 // References:
@@ -189,8 +191,94 @@ const deleteEmployee = async (req, res) => {
     }
 };
 
+// Query audit logs with pagination and filters (admin only)
+const getAuditLogs = async (req, res) => {
+    try {
+        const {
+            action,
+            actorId,
+            startDate,
+            endDate,
+            from,
+            to,
+            since,
+            until,
+            page = 1,
+            limit = 20
+        } = req.query;
+
+        const query = {};
+
+        // Filter by action
+        if (action) {
+            query.action = String(action);
+        }
+
+        // Filter by actorId
+        if (actorId) {
+            if (mongoose.Types.ObjectId.isValid(actorId)) {
+                query.actorId = new mongoose.Types.ObjectId(actorId);
+            } else {
+                query.actorId = actorId;
+            }
+        }
+
+        // Filter by date range
+        const fromDate = from || startDate || since;
+        const toDate = to || endDate || until;
+        if (fromDate || toDate) {
+            query.at = {};
+            if (fromDate) {
+                const parsedFrom = new Date(fromDate);
+                if (!isNaN(parsedFrom.getTime())) {
+                    query.at.$gte = parsedFrom;
+                }
+            }
+            if (toDate) {
+                const parsedTo = new Date(toDate);
+                if (!isNaN(parsedTo.getTime())) {
+                    query.at.$lte = parsedTo;
+                }
+            }
+        }
+
+        const pageNum = Math.max(1, parseInt(page, 10) || 1);
+        const limitNum = Math.max(1, Math.min(100, parseInt(limit, 10) || 20));
+        const skip = (pageNum - 1) * limitNum;
+
+        const [total, events] = await Promise.all([
+            AuditEvent.countDocuments(query),
+            AuditEvent.find(query)
+                .select('_id actorId actorRole action targetType targetId requestId ip userAgent at details prevHash hash')
+                .populate('actorId', 'username role')
+                .sort({ at: -1, _id: -1 })
+                .skip(skip)
+                .limit(limitNum)
+                .lean()
+        ]);
+
+        const totalPages = Math.ceil(total / limitNum) || 1;
+
+        res.status(200).json({
+            success: true,
+            count: events.length,
+            total,
+            page: pageNum,
+            totalPages,
+            events
+        });
+    } catch (error) {
+        console.error('Error fetching audit logs:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Server error fetching audit logs' 
+        });
+    }
+};
+
 module.exports = {
     getAllEmployees,
     createEmployee,
-    deleteEmployee
+    deleteEmployee,
+    getAuditLogs
 };
