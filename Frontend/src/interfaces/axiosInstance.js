@@ -5,7 +5,7 @@ const axiosInstance = axios.create({
     // this is the BASE URL, meaning that it must go before any API call we make with axios
 
 
-    baseURL: process.env.REACT_APP_API_URL || 'http://localhost:5000/api/v1',
+    baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1',
 
     // we also tell it that we want to ask the server to respond with JSON, rather than cleartext
     headers: {
