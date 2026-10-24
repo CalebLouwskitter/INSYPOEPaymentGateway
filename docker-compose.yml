@@ -36,7 +36,7 @@ services:
     networks:
       - insy7314-network
     healthcheck:
-      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      test: mongosh --tls --tlsCAFile /etc/ssl/certs/mongo/ca.pem --host localhost -u $$MONGO_INITDB_ROOT_USERNAME -p $$MONGO_INITDB_ROOT_PASSWORD --authenticationDatabase admin --eval 'db.adminCommand("ping").ok' --quiet
       interval: 30s
       timeout: 10s
       retries: 5
