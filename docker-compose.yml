@@ -17,8 +17,12 @@ services:
       - "127.0.0.1:27017:27017"
     environment:
       MONGO_INITDB_DATABASE: insy7314
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+      MONGO_APP_PASSWORD: ${MONGO_APP_PASSWORD}
     volumes:
       - mongodb_data:/data/db
+      - ./mongo-init/01-create-app-user.js:/docker-entrypoint-initdb.d/01-create-app-user.js:ro
     networks:
       - insy7314-network
     healthcheck:
@@ -37,7 +41,7 @@ services:
     ports:
       - "5000:5000"
     environment:
-      - MONGODB_URI=mongodb://mongodb:27017/insy7314
+      - MONGODB_URI=mongodb://insy7314_app:${MONGO_APP_PASSWORD}@mongodb:27017/insy7314?authSource=insy7314
       - JWT_SECRET=${JWT_SECRET}
       - PORT=5000
       - NODE_ENV=production
