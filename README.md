@@ -57,7 +57,7 @@ Against the code as originally submitted, 6 of these 12 attacks succeeded. The m
 | Abuse | Per-route rate limits that cannot be reset by spoofing proxy headers | [`rateLimitMiddleware.js`](Backend/Middleware/rateLimitMiddleware.js) |
 | Logging | Request ids, personal data masked or omitted, generic error responses | [`loggerMiddleware.js`](Backend/Middleware/loggerMiddleware.js) |
 | Configuration | Refuses to start without a strong JWT secret; MongoDB not published beyond localhost; no keys or `.env` files in git | [`configCheck.js`](Backend/Services/configCheck.js), [`docker-compose.yml`](docker-compose.yml) |
-| CI | Tests and the attack demo, an `npm audit` gate, gitleaks over the full history, CodeQL | [`.github/workflows/security.yml`](.github/workflows/security.yml) |
+| CI | Tests and the attack demo, an `npm audit` gate, gitleaks over the full history, CodeQL, and OWASP ZAP baseline DAST scanning | [`.github/workflows/security.yml`](.github/workflows/security.yml), [`.github/workflows/dast.yml`](.github/workflows/dast.yml) |
 
 The case study's [remaining risks](docs/security-case-study.md#7-remaining-risks) section lists what is still open, the biggest being that the session token is kept in `localStorage`.
 
@@ -263,6 +263,7 @@ From Part 1, we prioritized protections against XSS, NoSQL injection, brute-forc
 2. `npm audit` gate: backend production dependencies fail on high, frontend on critical.
 3. Gitleaks secret scan over the full git history.
 4. CodeQL static analysis with the `security-extended` queries.
+5. Dynamic scanning (DAST): OWASP ZAP baseline scan in a separate workflow ([`.github/workflows/dast.yml`](.github/workflows/dast.yml)) against the containerised frontend and API stack.
 
 **CircleCI** (`.circleci/config.yml`), from the original coursework:
 
