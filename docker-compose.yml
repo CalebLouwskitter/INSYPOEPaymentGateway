@@ -17,12 +17,26 @@ services:
       - "127.0.0.1:27017:27017"
     environment:
       MONGO_INITDB_DATABASE: insy7314
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+      MONGO_APP_PASSWORD: ${MONGO_APP_PASSWORD}
+    command:
+      - mongod
+      - --tlsMode
+      - requireTLS
+      - --tlsCertificateKeyFile
+      - /etc/ssl/certs/mongo/mongodb.pem
+      - --tlsCAFile
+      - /etc/ssl/certs/mongo/ca.pem
+      - --tlsAllowConnectionsWithoutCertificates
     volumes:
       - mongodb_data:/data/db
+      - ./mongo-init/01-create-app-user.js:/docker-entrypoint-initdb.d/01-create-app-user.js:ro
+      - ./certs/mongo:/etc/ssl/certs/mongo:ro
     networks:
       - insy7314-network
     healthcheck:
-      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      test: mongosh --tls --tlsCAFile /etc/ssl/certs/mongo/ca.pem --host localhost -u $$MONGO_INITDB_ROOT_USERNAME -p $$MONGO_INITDB_ROOT_PASSWORD --authenticationDatabase admin --eval 'db.adminCommand("ping").ok' --quiet
       interval: 30s
       timeout: 10s
       retries: 5
@@ -37,10 +51,13 @@ services:
     ports:
       - "5000:5000"
     environment:
-      - MONGODB_URI=mongodb://mongodb:27017/insy7314
+      - MONGODB_URI=mongodb://insy7314_app:${MONGO_APP_PASSWORD}@mongodb:27017/insy7314?authSource=insy7314&tls=true&tlsCAFile=/certs/mongo/ca.pem
+      - MONGODB_TLS_CA_FILE=/certs/mongo/ca.pem
       - JWT_SECRET=${JWT_SECRET}
       - PORT=5000
       - NODE_ENV=production
+    volumes:
+      - ./certs/mongo/ca.pem:/certs/mongo/ca.pem:ro
     depends_on:
       mongodb:
         condition: service_healthy

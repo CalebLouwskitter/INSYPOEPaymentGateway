@@ -121,6 +121,51 @@ docker compose up --build
 ```
 `docker-compose.yml` defines `mongodb`, `backend`, `middleware` and `frontend` services. Note: the `middleware` service currently has no code or Dockerfile in `Middleware/`, so the stack does not build as-is.
 
+### Running the stack with authenticated, encrypted MongoDB
+
+MongoDB in Docker Compose runs with authentication enforced and requires TLS encryption. An initialization script creates a least-privilege application user (`insy7314_app`) with `readWrite` permissions on only the `insy7314` database.
+
+1. **Generate TLS certificates:**
+   Generate the local Certificate Authority (CA) and server certificate for MongoDB:
+   - On Linux / macOS / Git Bash:
+     ```bash
+     bash scripts/gen-mongo-certs.sh
+     ```
+   - On Windows (PowerShell):
+     ```powershell
+     .\scripts\gen-mongo-certs.ps1
+     ```
+   This generates `ca.pem`, `mongodb.crt`, `mongodb.key`, and `mongodb.pem` into `certs/mongo/` (git-ignored; private keys are never committed).
+
+2. **Fill in `.env`:**
+   Copy `.env.example` to `.env` and set strong passwords:
+   ```bash
+   cp .env.example .env
+   ```
+   Configure:
+   - `MONGO_INITDB_ROOT_USERNAME` and `MONGO_INITDB_ROOT_PASSWORD` for MongoDB root administration
+   - `MONGO_APP_PASSWORD` for the least-privilege application user
+   - `MONGODB_URI` using the `insy7314_app` user and TLS (`mongodb://insy7314_app:<password>@mongodb:27017/insy7314?authSource=insy7314&tls=true&tlsCAFile=/certs/mongo/ca.pem`)
+   - `JWT_SECRET` (at least 32 random characters in production)
+
+3. **Start the stack:**
+   ```bash
+   docker compose up --build
+   ```
+
+   > **Upgrading from the unauthenticated setup:** MongoDB only runs `mongo-init/` and creates the root user on an **empty** data volume. If you already have a `mongodb_data` volume from before this change, `mongod` starts with auth enabled but no users, and the backend can't connect. Either start fresh, which **deletes all local data**:
+   > ```bash
+   > docker compose down -v
+   > docker compose up --build
+   > ```
+   > or keep the data: export it first with `mongodump` against the old stack, then start fresh and restore it with `mongorestore` as the app user.
+
+4. **Check the security controls** (not yet run against this configuration in Docker; these are the expected results):
+   - **Backend connection:** the backend should connect as `insy7314_app` and verify MongoDB's TLS certificate with the mounted CA.
+   - **Unauthenticated connections:** `mongosh` without credentials should be refused.
+   - **Plain non-TLS connections:** `mongosh` without TLS should be refused.
+   - **Healthcheck:** The container healthcheck queries MongoDB status using root credentials over TLS.
+
 ### Super Admin Setup
 
 Before using the employee/admin portal, you must create a super admin account. This is a one-time setup:
