@@ -153,6 +153,13 @@ MongoDB in Docker Compose runs with authentication enforced and requires TLS enc
    docker compose up --build
    ```
 
+   > **Upgrading from the unauthenticated setup:** MongoDB only runs `mongo-init/` and creates the root user on an **empty** data volume. If you already have a `mongodb_data` volume from before this change, `mongod` starts with auth enabled but no users, and the backend can't connect. Either start fresh, which **deletes all local data**:
+   > ```bash
+   > docker compose down -v
+   > docker compose up --build
+   > ```
+   > or keep the data: export it first with `mongodump` against the old stack, then start fresh and restore it with `mongorestore` as the app user.
+
 4. **Verify security controls:**
    - **Backend connection:** The backend connects using the `insy7314_app` user and verifies the MongoDB TLS certificate using the mounted CA.
    - **Unauthenticated connections rejected:** Connecting with `mongosh` without credentials is refused.
