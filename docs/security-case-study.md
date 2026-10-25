@@ -162,11 +162,13 @@ The test suite also covers things the demo does not: a demoted admin losing admi
 In addition to static checks and scripted attack scenarios, I added an automated DAST stage running the OWASP ZAP baseline scan against the containerised stack in CI ([`.github/workflows/dast.yml`](../.github/workflows/dast.yml)).
 
 - **Method**: The full Docker Compose stack (`mongodb`, `backend`, `frontend`) is built and started with ephemeral CI credentials. OWASP ZAP runs in a container (`zaproxy/action-baseline` pinned to commit SHA `de8ad967d3548d44ef623df22cf95c3b0baf8b25`, v0.15.0) on the host network, executing two baseline scans: one against the React frontend (`http://localhost:3000`) and one against the Express API (`http://localhost:5000/api/v1`).
-- **Date**: 2026-10-25.
+- **Status**: the workflow was added on 2026-10-25 and **has not produced a scan report yet**. The scan was not run locally because Docker was not available, so its first CI run will be the first real result.
 - **Fail policy**: Any High-severity finding fails the build immediately. Medium findings fail if they appear on the explicit gate list (missing CSP or missing HSTS); other Medium alerts are tracked as accepted risks.
 - **Rules tuning**: Tuned via [`.zap/rules.tsv`](../.zap/rules.tsv) to suppress false positives (such as Webpack asset hash timestamp matches) and document environmental caveats.
 
-**Findings and outcomes**
+**Expected findings (from a configuration review, not yet observed by ZAP)**
+
+These are the alerts ZAP's baseline rules would be expected to raise, based on reading the Nginx config, the Helmet setup and the cookie code. The two "Fixed" rows are real code changes on this branch. Every row needs confirming or correcting against the first CI scan report, and any alert ZAP raises that isn't listed here gets added.
 
 | Alert | Risk | Where | Outcome |
 |-------|------|-------|---------|
