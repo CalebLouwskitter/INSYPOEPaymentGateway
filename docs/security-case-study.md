@@ -16,7 +16,7 @@ This is a security review of a payments portal I led as a team project for INSY7
 
 | Part | Technology | Notes |
 |------|------------|-------|
-| Customer and staff UI | React 18 single-page app (Create React App), served by Nginx | Customer portal plus an employee/admin portal |
+| Customer and staff UI | React 18 single-page app (Vite), served by Nginx | Customer portal plus an employee/admin portal |
 | API | Node.js, Express 4 | `Backend/` holds the routes, middleware and controllers |
 | Database | MongoDB with Mongoose 8 | Users, employees, payments |
 | Auth | JWT (HS256) in an `Authorization: Bearer` header; bcrypt (cost 12) password hashes | Customer tokens last 1 h, employee tokens 8 h |
@@ -164,7 +164,7 @@ In addition to static checks and scripted attack scenarios, I added an automated
 - **Method**: The full Docker Compose stack (`mongodb`, `backend`, `frontend`) is built and started with ephemeral CI credentials. OWASP ZAP runs in a container (`zaproxy/action-baseline` pinned to commit SHA `de8ad967d3548d44ef623df22cf95c3b0baf8b25`, v0.15.0) on the host network, executing two baseline scans: one against the React frontend (`http://localhost:3000`) and one against the Express API (`http://localhost:5000/api/v1`).
 - **Status**: the workflow was added on 2026-10-25 and **has not produced a scan report yet**. The scan was not run locally because Docker was not available, so its first CI run will be the first real result.
 - **Fail policy**: Any High-severity finding fails the build immediately. Medium findings fail if they appear on the explicit gate list (missing CSP or missing HSTS); other Medium alerts are tracked as accepted risks.
-- **Rules tuning**: Tuned via [`.zap/rules.tsv`](../.zap/rules.tsv) to suppress false positives (such as Webpack asset hash timestamp matches) and document environmental caveats.
+- **Rules tuning**: Tuned via [`.zap/rules.tsv`](../.zap/rules.tsv) to suppress false positives (such as hashed asset filenames that look like timestamps) and document environmental caveats.
 
 **Expected findings (from a configuration review, not yet observed by ZAP)**
 
@@ -174,12 +174,12 @@ These are the alerts ZAP's baseline rules would be expected to raise, based on r
 |-------|------|-------|---------|
 | Server Leaks Version Information via 'Server' HTTP Response Header Field (10036) | Low | Frontend (`Nginx`) | **Fixed**: Added `server_tokens off;` to `Frontend/nginx.conf` so responses emit `Server: nginx` without the version number. |
 | CSP: `script-src` and `style-src` contain `unsafe-inline` (10055) | Medium | Backend (`Express`) | **Fixed**: Removed `'unsafe-inline'` from Helmet's CSP directives in `Backend/Middleware/securityMiddleware.js`. The backend is a JSON API and needs no inline execution. Verified with an automated test in `security.test.js`. |
-| CSP: `style-src` contains `unsafe-inline` (10055) | Medium | Frontend (`React SPA`) | **Accepted risk**: Create React App dynamic runtime injects styles into the DOM for component rendering and Google Fonts. Documented in `.zap/rules.tsv`. |
+| CSP: `style-src` contains `unsafe-inline` (10055) | Medium | Frontend (`React SPA`) | **Accepted for now**: the Nginx CSP still allows inline styles. Removing `'unsafe-inline'` from `style-src` needs a check of which components rely on inline styles. Documented in `.zap/rules.tsv`. |
 | Cookie Without Secure Flag (10011) | Medium | Backend (`/api/v1/csrf-token`) | **Accepted risk in HTTP test environments**: The double-submit `XSRF-TOKEN` cookie is set without `Secure` in local/CI plain-HTTP stacks; `Secure` is strictly enforced when running in HTTPS production (`USE_HTTPS=true` or `NODE_ENV=production`). Documented in `.zap/rules.tsv`. |
 | Cookie Without SameSite Attribute (10054) | Low | Backend (`/api/v1/csrf-token`) | **Accepted risk**: `SameSite=None` is set to allow cross-origin API communication between frontend and backend in local development; paired with `Secure` in production. Documented in `.zap/rules.tsv`. |
 | Strict-Transport-Security Header Not Set (10035) | Low | Frontend & Backend | **Accepted risk in HTTP test environments**: Both servers configure HSTS (`max-age=15552000`), but scanners only acknowledge HSTS over HTTPS. Documented in `.zap/rules.tsv`. |
 | Incomplete or No Cache-control and Pragma HTTP Header Set (10015) | Low | Backend (`/health`, `/api/v1`) | **Accepted risk**: API responses are dynamic JSON and health probes; static assets on the frontend already enforce `expires 1y`. Documented in `.zap/rules.tsv`. |
-| Timestamp Disclosure - Unix (10096) | Low | Frontend (`/static/js/*.js`) | **False positive**: Webpack chunk filenames (e.g. `main.[hash].js`) matched Unix epoch timestamp patterns. Ignored with justification in `.zap/rules.tsv`. |
+| Timestamp Disclosure - Unix (10096) | Low | Frontend (`/assets/*.js`) | **False positive**: hashed Vite asset filenames (e.g. `assets/index-[hash].js`) matched Unix epoch timestamp patterns. Ignored with justification in `.zap/rules.tsv`. |
 | Permissions Policy Header Not Set (10063) | Low / Info | Backend (`Express`) | **Accepted risk**: API serves JSON endpoints where browser features (camera, microphone, geolocation) cannot be invoked. Documented in `.zap/rules.tsv`. |
 
 ---
@@ -318,7 +318,7 @@ Not a security issue, but worth recording: `docker compose up` does not currentl
 6. **Data protection.** MongoDB with authentication, TLS and a least-privilege application user. Field-level encryption for national IDs, with an HMAC for lookups. A retention policy and POPIA-aligned data minimisation.
 7. **TLS at the edge.** A managed certificate at a load balancer or reverse proxy, HTTP redirected to HTTPS, HSTS preload once stable, and `TRUST_PROXY` set to exactly that hop.
 8. **Detection.** Ship structured logs to a central store, keep an append-only audit trail of staff actions (who approved, created or deleted what, from where), and alert on brute-force patterns, CSRF failures and unusual approval volumes.
-9. **Supply chain and CI.** Dependabot or Renovate, migrate off Create React App, pin GitHub Actions by commit SHA, produce an SBOM, sign container images, and maintain the DAST stage (OWASP ZAP baseline scanning is now in place in `.github/workflows/dast.yml` against the running frontend and backend stack).
+9. **Supply chain and CI.** Dependabot or Renovate, pin GitHub Actions by commit SHA, produce an SBOM, sign container images, and maintain the DAST stage (OWASP ZAP baseline scanning is now in place in `.github/workflows/dast.yml` against the running frontend and backend stack).
 
 ---
 
