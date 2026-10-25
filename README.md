@@ -160,10 +160,10 @@ MongoDB in Docker Compose runs with authentication enforced and requires TLS enc
    > ```
    > or keep the data: export it first with `mongodump` against the old stack, then start fresh and restore it with `mongorestore` as the app user.
 
-4. **Verify security controls:**
-   - **Backend connection:** The backend connects using the `insy7314_app` user and verifies the MongoDB TLS certificate using the mounted CA.
-   - **Unauthenticated connections rejected:** Connecting with `mongosh` without credentials is refused.
-   - **Plain non-TLS connections rejected:** Connecting with `mongosh` without TLS is refused.
+4. **Check the security controls** (not yet run against this configuration in Docker; these are the expected results):
+   - **Backend connection:** the backend should connect as `insy7314_app` and verify MongoDB's TLS certificate with the mounted CA.
+   - **Unauthenticated connections:** `mongosh` without credentials should be refused.
+   - **Plain non-TLS connections:** `mongosh` without TLS should be refused.
    - **Healthcheck:** The container healthcheck queries MongoDB status using root credentials over TLS.
 
 ### Super Admin Setup
