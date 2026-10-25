@@ -14,16 +14,15 @@ RUN npm ci --ignore-scripts
 # Copy application files
 COPY . .
 
-# Build the application. Emit the webpack runtime as a file instead of an inline <script>,
+# Build the application. Vite outputs external module scripts instead of inline <script> tags,
 # so the CSP in nginx.conf can use script-src 'self' without 'unsafe-inline'.
-ENV INLINE_RUNTIME_CHUNK=false
 RUN npm run build
 
 # Stage 2: Production
 FROM nginx:alpine
 
 # Copy built files from build stage
-COPY --from=build /app/build /usr/share/nginx/html
+COPY --from=build /app/dist /usr/share/nginx/html
 
 # Copy nginx configuration
 COPY nginx.conf /etc/nginx/conf.d/default.conf
