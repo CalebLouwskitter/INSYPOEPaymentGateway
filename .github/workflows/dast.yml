@@ -1,0 +1,190 @@
+name: DAST baseline scan
+
+on:
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    # Run weekly on Mondays at 06:00 UTC to catch newly discovered issues
+    - cron: '0 6 * * 1'
+
+permissions:
+  contents: read
+
+jobs:
+  zap-baseline-scan:
+    name: OWASP ZAP baseline DAST scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 20
+
+      # Generate CI-only ephemeral secrets. No real secrets or production credentials.
+      # Also set up stubs and configuration overrides needed for local docker compose stack.
+      - name: Configure CI environment and service stubs
+        run: |
+          # Generate a secure 64-character hex secret for JWT signing in CI
+          CI_JWT_SECRET=$(node -e "console.log(require('crypto').randomBytes(32).toString('hex'))")
+          echo "JWT_SECRET=${CI_JWT_SECRET}" >> .env
+
+          # Docker compose override: run backend in development mode so plain-HTTP healthchecks
+          # and ZAP scans succeed without requiring production TLS certificates.
+          cat << 'EOF' > docker-compose.override.yml
+          services:
+            backend:
+              environment:
+                - NODE_ENV=development
+          EOF
+
+          # Create a lightweight stub for the legacy middleware service defined in docker-compose.yml
+          # so all dependent services can build and satisfy healthcheck conditions in CI.
+          cat << 'EOF' > Middleware/Dockerfile
+          FROM node:20-alpine
+          WORKDIR /app
+          RUN echo 'require("http").createServer((req, res) => { res.writeHead(200); res.end("OK"); }).listen(4000);' > server.js
+          CMD ["node", "server.js"]
+          EOF
+
+      - name: Build and start application stack
+        run: docker compose up -d --build
+
+      - name: Wait for services to become healthy
+        run: |
+          echo "Waiting for Backend health endpoint (http://localhost:5000/health)..."
+          timeout 90 bash -c 'until curl -sf http://localhost:5000/health; do sleep 2; done'
+          echo "Backend is healthy."
+
+          echo "Waiting for Frontend health endpoint (http://localhost:3000/health)..."
+          timeout 90 bash -c 'until curl -sf http://localhost:3000/health; do sleep 2; done'
+          echo "Frontend is healthy."
+
+      # Run ZAP baseline scan against the React Frontend served by Nginx.
+      # zaproxy/action-baseline pinned to commit SHA (v0.15.0)
+      - name: ZAP baseline scan - Frontend
+        uses: zaproxy/action-baseline@de8ad967d3548d44ef623df22cf95c3b0baf8b25 # v0.15.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          target: 'http://localhost:3000'
+          rules_file_name: '.zap/rules.tsv'
+          cmd_options: '-a -m 1'
+          allow_issue_writing: false
+          artifact_name: 'zap-frontend-scan'
+
+      - name: Archive Frontend ZAP reports
+        run: |
+          cp report_json.json report_frontend.json
+          cp report_html.html report_frontend.html
+
+      # Run ZAP baseline scan against the Express API base URL.
+      # zaproxy/action-baseline pinned to commit SHA (v0.15.0)
+      - name: ZAP baseline scan - Backend API
+        uses: zaproxy/action-baseline@de8ad967d3548d44ef623df22cf95c3b0baf8b25 # v0.15.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          target: 'http://localhost:5000/api/v1'
+          rules_file_name: '.zap/rules.tsv'
+          cmd_options: '-a -m 1'
+          allow_issue_writing: false
+          artifact_name: 'zap-backend-scan'
+
+      - name: Archive Backend ZAP reports
+        run: |
+          cp report_json.json report_backend.json
+          cp report_html.html report_backend.html
+
+      # Fail Policy:
+      # - The job fails on any High finding (riskcode: 3).
+      # - Medium findings (riskcode: 2) are reported as warnings and do not fail the build,
+      #   UNLESS they are in the explicit failure list:
+      #     * 10038: Content Security Policy (CSP) Header Not Set
+      #     * 10035: Strict-Transport-Security (HSTS) Header Not Set
+      # - Low and Informational alerts are logged for review.
+      - name: Enforce DAST fail policy
+        run: |
+          node -e '
+          const fs = require("fs");
+          const explicitMediumFailList = ["10038", "10035"];
+          const reports = [
+            { name: "Frontend", file: "report_frontend.json" },
+            { name: "Backend API", file: "report_backend.json" }
+          ];
+
+          let highFindings = [];
+          let explicitMediumFindings = [];
+          let otherMediumFindings = [];
+
+          for (const rep of reports) {
+            if (!fs.existsSync(rep.file)) {
+              console.warn(`[WARN] Report file not found: ${rep.file}`);
+              continue;
+            }
+            const data = JSON.parse(fs.readFileSync(rep.file, "utf8"));
+            const sites = Array.isArray(data.site) ? data.site : [data.site].filter(Boolean);
+
+            for (const site of sites) {
+              for (const alert of (site.alerts || [])) {
+                const item = {
+                  target: rep.name,
+                  alert: alert.alert,
+                  risk: alert.riskdesc,
+                  riskcode: String(alert.riskcode),
+                  pluginid: String(alert.pluginid)
+                };
+
+                if (item.riskcode === "3") {
+                  highFindings.push(item);
+                } else if (item.riskcode === "2") {
+                  if (explicitMediumFailList.includes(item.pluginid)) {
+                    explicitMediumFindings.push(item);
+                  } else {
+                    otherMediumFindings.push(item);
+                  }
+                }
+              }
+            }
+          }
+
+          console.log("\n=== DAST Baseline Scan Summary ===");
+          if (highFindings.length > 0) {
+            console.error(`\n[FAIL] High-risk alerts found (${highFindings.length}):`);
+            highFindings.forEach(f => console.error(`  - [${f.target}] ${f.alert} (id: ${f.pluginid})`));
+          }
+
+          if (explicitMediumFindings.length > 0) {
+            console.error(`\n[FAIL] Gated medium-risk alerts found (${explicitMediumFindings.length}):`);
+            explicitMediumFindings.forEach(f => console.error(`  - [${f.target}] ${f.alert} (id: ${f.pluginid})`));
+          }
+
+          if (otherMediumFindings.length > 0) {
+            console.warn(`\n[WARN] Accepted / monitored medium-risk alerts (${otherMediumFindings.length}):`);
+            otherMediumFindings.forEach(f => console.warn(`  - [${f.target}] ${f.alert} (id: ${f.pluginid})`));
+          }
+
+          if (highFindings.length > 0 || explicitMediumFindings.length > 0) {
+            console.error("\nDAST policy check failed: High findings or gated Medium findings detected.");
+            process.exit(1);
+          }
+
+          console.log("\nDAST policy check passed: No High findings and no gated Medium findings.");
+          '
+
+      # Upload all HTML and JSON reports as artifacts
+      - name: Upload ZAP DAST scan reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: zap-dast-baseline-reports
+          path: |
+            report_frontend.html
+            report_frontend.json
+            report_backend.html
+            report_backend.json
+
+      - name: Stop application stack
+        if: always()
+        run: docker compose down -v
