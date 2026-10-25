@@ -68,9 +68,9 @@ const securityMiddlewares = (app) => {
             directives: {
                 // allow scripts from the website itself
                 'default-src': ["'self'"],
-                // keep inline minimal (React dev may need it)
-                'script-src': ["'self'", "'unsafe-inline'"],
-                'style-src': ["'self'", "'unsafe-inline'"],
+                // JSON API does not require inline scripts or styles
+                'script-src': ["'self'"],
+                'style-src': ["'self'"],
                 'img-src': ["'self'", "data:", "https:"],
                 'frame-ancestors': ["'none'"],
                 'connect-src': ["'self'"],

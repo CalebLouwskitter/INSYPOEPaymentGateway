@@ -334,6 +334,7 @@ describe('Browser-facing controls (CSRF, CORS, headers)', () => {
         const res = await request(app).get('/health').expect(200);
         expect(res.headers['strict-transport-security']).toMatch(/max-age=\d+/);
         expect(res.headers['content-security-policy']).toContain("frame-ancestors 'none'");
+        expect(res.headers['content-security-policy']).not.toContain("'unsafe-inline'");
         expect(res.headers['x-powered-by']).toBeUndefined();
     });
 });
