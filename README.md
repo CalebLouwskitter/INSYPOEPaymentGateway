@@ -199,7 +199,7 @@ Before using the employee/admin portal, you must create a super admin account. T
 ### Testing & Quality Gates
 - Backend: `cd Backend && npm test` (unit, API and attack-scenario tests against an in-memory MongoDB)
 - Attack demo: `cd Backend && npm run demo:attacks`
-- Frontend: `cd Frontend && CI=true npm test -- --watchAll=false`
+- Frontend: `cd Frontend && npm test`
 - Coverage output stored under respective `coverage/` directories and published as CircleCI artifacts.
 
 ---
