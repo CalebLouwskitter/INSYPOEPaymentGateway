@@ -121,6 +121,44 @@ docker compose up --build
 ```
 `docker-compose.yml` defines `mongodb`, `backend`, `middleware` and `frontend` services. Note: the `middleware` service currently has no code or Dockerfile in `Middleware/`, so the stack does not build as-is.
 
+### Running the stack with authenticated, encrypted MongoDB
+
+MongoDB in Docker Compose runs with authentication enforced and requires TLS encryption. An initialization script creates a least-privilege application user (`insy7314_app`) with `readWrite` permissions on only the `insy7314` database.
+
+1. **Generate TLS certificates:**
+   Generate the local Certificate Authority (CA) and server certificate for MongoDB:
+   - On Linux / macOS / Git Bash:
+     ```bash
+     bash scripts/gen-mongo-certs.sh
+     ```
+   - On Windows (PowerShell):
+     ```powershell
+     .\scripts\gen-mongo-certs.ps1
+     ```
+   This generates `ca.pem`, `mongodb.crt`, `mongodb.key`, and `mongodb.pem` into `certs/mongo/` (git-ignored; private keys are never committed).
+
+2. **Fill in `.env`:**
+   Copy `.env.example` to `.env` and set strong passwords:
+   ```bash
+   cp .env.example .env
+   ```
+   Configure:
+   - `MONGO_INITDB_ROOT_USERNAME` and `MONGO_INITDB_ROOT_PASSWORD` for MongoDB root administration
+   - `MONGO_APP_PASSWORD` for the least-privilege application user
+   - `MONGODB_URI` using the `insy7314_app` user and TLS (`mongodb://insy7314_app:<password>@mongodb:27017/insy7314?authSource=insy7314&tls=true&tlsCAFile=/certs/mongo/ca.pem`)
+   - `JWT_SECRET` (at least 32 random characters in production)
+
+3. **Start the stack:**
+   ```bash
+   docker compose up --build
+   ```
+
+4. **Verify security controls:**
+   - **Backend connection:** The backend connects using the `insy7314_app` user and verifies the MongoDB TLS certificate using the mounted CA.
+   - **Unauthenticated connections rejected:** Connecting with `mongosh` without credentials is refused.
+   - **Plain non-TLS connections rejected:** Connecting with `mongosh` without TLS is refused.
+   - **Healthcheck:** The container healthcheck queries MongoDB status using root credentials over TLS.
+
 ### Super Admin Setup
 
 Before using the employee/admin portal, you must create a super admin account. This is a one-time setup:
