@@ -93,4 +93,10 @@ coverage/
 certs/*.pem
 certs/*.key
 certs/*.crt
+certs/mongo/*.pem
+certs/mongo/*.key
+certs/mongo/*.crt
+certs/mongo/*.csr
+certs/mongo/*.srl
+certs/mongo/*.ext
 !certs/README.md

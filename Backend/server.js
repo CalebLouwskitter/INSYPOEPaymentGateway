@@ -109,7 +109,11 @@ app.use(morgan(morganFormat));
 // MongoDB Connection using top-level await
 const connectMongoDB = async () => {
   try {
-    await mongoose.connect(process.env.MONGODB_URI);
+    const mongoOptions = {};
+    if (process.env.MONGODB_TLS_CA_FILE) {
+      mongoOptions.tlsCAFile = process.env.MONGODB_TLS_CA_FILE;
+    }
+    await mongoose.connect(process.env.MONGODB_URI, mongoOptions);
     console.log('MongoDB connected successfully');
   } catch (err) {
     console.error('MongoDB connection error:', err);
