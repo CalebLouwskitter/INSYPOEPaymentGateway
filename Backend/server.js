@@ -31,6 +31,9 @@ const authRoutes = require('./Routes/Authrouting.js');
 const paymentRoutes = require('./Routes/paymentRouting.js');
 const testRoutes = require('./Routes/testRoutes.js');
 const employeeRoutes = require('./Routes/employeeRoutes.js');
+const { getAuditLogs } = require('./Controller/adminController.js');
+const { verifyEmployeeToken, verifyAdminRole } = require('./Middleware/employeeAuthMiddleware.js');
+const { apiLimiter } = require('./Middleware/rateLimitMiddleware.js');
 
 // Apply security middlewares
 securityMiddlewares(app);
@@ -149,6 +152,8 @@ app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/payments', paymentRoutes);
 app.use('/api/v1/test', testRoutes);
 app.use('/api/v1/employee', employeeRoutes);
+app.get('/api/admin/audit', verifyEmployeeToken, verifyAdminRole, apiLimiter, getAuditLogs);
+app.get('/api/v1/admin/audit', verifyEmployeeToken, verifyAdminRole, apiLimiter, getAuditLogs);
 
 app.use((req, res) => {
   res.status(404).json({ error: 'Route not found' });

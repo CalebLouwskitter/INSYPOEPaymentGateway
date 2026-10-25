@@ -1,7 +1,7 @@
 const express = require('express');
 const { employeeLogin, employeeLogout } = require('../Controller/employeeAuthController');
 const { getPendingPayments, processPayment, getPaymentHistory } = require('../Controller/employeeController');
-const { getAllEmployees, createEmployee, deleteEmployee } = require('../Controller/adminController');
+const { getAllEmployees, createEmployee, deleteEmployee, getAuditLogs } = require('../Controller/adminController');
 const { verifyEmployeeToken, verifyAdminRole, verifyEmployeeRole } = require('../Middleware/employeeAuthMiddleware');
 const { loginLimiter, apiLimiter, paymentLimiter } = require('../Middleware/rateLimitMiddleware');
 const { 
@@ -29,5 +29,6 @@ router.get('/payments/history', verifyEmployeeToken, verifyEmployeeRole, apiLimi
 router.get('/admin/employees', verifyEmployeeToken, verifyAdminRole, apiLimiter, getAllEmployees);
 router.post('/admin/employees', verifyEmployeeToken, verifyAdminRole, apiLimiter, validateCreateEmployee, createEmployee);
 router.delete('/admin/employees/:employeeId', verifyEmployeeToken, verifyAdminRole, apiLimiter, validateDeleteEmployee, deleteEmployee);
+router.get('/admin/audit', verifyEmployeeToken, verifyAdminRole, apiLimiter, getAuditLogs);
 
 module.exports = router;
